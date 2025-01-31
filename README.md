@@ -191,7 +191,7 @@ TODO
 Clone this repository wherever. Then you should copy `early-init.el`, `init.el`, and (optionally, recommended) `extras/` into your `~/.emacs.d/` repository:
 
 ```bash
-git clone https://git.sr.ht/~ashton314/emacs-bedrock
+git clone https://codeberg.org/ashton314/emacs-bedrock.git
 mkdir -p ~/.emacs.d/
 cp emacs-bedrock/early-init.el ~/.emacs.d/
 cp emacs-bedrock/init.el ~/.emacs.d/
