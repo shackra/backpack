@@ -64,6 +64,9 @@
   ;; Narrowing lets you restrict results to certain groups of candidates
   (setq consult-narrow-key "<"))
 
+(use-package embark-consult
+  :ensure t)
+
 ;; Embark: supercharged context-dependent menu; kinda like a
 ;; super-charged right-click.
 (use-package embark
@@ -85,9 +88,6 @@
   ;; After invoking avy-goto-char-timer, hit "." to run embark at the next
   ;; candidate you select
   (setf (alist-get ?. avy-dispatch-alist) 'bedrock/avy-action-embark))
-
-(use-package embark-consult
-  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

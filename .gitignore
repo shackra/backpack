@@ -1,8 +1,9 @@
 /.cache/
+/auto-save-list/
 /eln-cache/
 /elpa/
-/history
-/transient/
-/auto-save-list/
 /eshell/
+/history
 /projects
+/transient/
+/tree-sitter/
