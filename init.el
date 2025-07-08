@@ -86,6 +86,15 @@ If the new path's directories does not exist, create them."
     backupFilePath))
 (setopt make-backup-file-name-function 'bedrock--backup-file-name)
 
+;; The above creates nested directories in the backup folder. If
+;; instead you would like all backup files in a flat structure, albeit
+;; with their full paths concatenated into a filename, then you can
+;; use the following configuration:
+;; (Run `'M-x describe-variable RET backup-directory-alist RET' for more help)
+;;
+;; (let ((backup-dir (expand-file-name "emacs-backup/" user-emacs-directory)))
+;;   (setopt backup-directory-alist `(("." . ,backup-dir))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;   Discovery aids
