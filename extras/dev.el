@@ -45,6 +45,11 @@
   ;; Auto parenthesis matching
   ((prog-mode . electric-pair-mode)))
 
+(use-package project
+  :custom
+  (when (>= emacs-major-version 30)
+    (project-mode-line t)))         ; show project name in modeline
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;   Version Control
@@ -63,6 +68,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package markdown-mode
+  :ensure t
   :hook ((markdown-mode . visual-line-mode)))
 
 (use-package yaml-mode
