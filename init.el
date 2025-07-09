@@ -173,6 +173,10 @@ If the new path's directories does not exist, create them."
 ;; Use common keystrokes by default
 (cua-mode)
 
+;; For terminal users, make the mouse more useful
+
+(xterm-mouse-mode 1)
+
 ;; Display line numbers in programming mode
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 (setopt display-line-numbers-width 3)           ; Set a minimum width
