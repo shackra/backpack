@@ -129,16 +129,19 @@ wgrep makes grep buffers editable. This means you can `consult-ripgrep` → sear
 Packages this extra adds:
 
  - [magit](https://magit.vc)
+ - [TempEL](https://github.com/minad/tempel)
  - Markdown, YAML, and JSON modes
 
 Magit is the best Git interface in the known universe. Some people use Emacs just so they can use Magit. It's that good. Entry point is bound to `C-c g` by default.
+
+TempEL is a lightweight template library. Bedrock comes with a few templates provided in the TempEL README. Try opening a text file, type `shrug`, then hit `M-+` to expand that template. Templates are defined in `templates`, but this can be moved around by configuring `tempel-path`.
 
 Built-in packages that this extra configures:
 
  - [Eglot](https://github.com/joaotavora/eglot) ([Language Server Protocol (LSP) client](https://microsoft.github.io/language-server-protocol/))
  - Treesit ([Tree-Sitter](https://github.com/tree-sitter) support)
 
-Both of these packages are new in Emacs 29. **Be sure to run `M-x treesit-install-language-grammar` to install the language grammar you'll need before editing a file the respective language for the first time!** This is a quirk of how the built-in tree-sitter works; packages like [treesit-auto](https://github.com/renzmann/treesit-auto) can help with this if it becomes too much of an annoyance.
+Both of these packages are new in Emacs 29. **Be sure to run `M-x treesit-install-language-grammar` to install the language grammar you'll need before editing a file the respective language for the first time!** This is a quirk of how the built-in tree-sitter works; packages like [treesit-auto](https://github.com/renzmann/treesit-auto) can help with this if it becomes too much of an annoyance. Emacs 31 should have some utilities to make this less of a headache.
 
 #### Org-mode: `extras/org.el`
 
@@ -212,6 +215,8 @@ As an example of a deliberate choice, the `help-quick` buffer pops open on start
 
 When I started learning Emacs, my dad gave me his `.emacs` file. (That's what we used back in ye olden days instead of `.emacs.d/init.el` and stuff.) I used it without modification for many years. Eventually I learned how to write my own functions and customizations. This package aims to give other users a similar experience. When someone comes to me and expresses their desire to learn Emacs, I can point them at this to help them get over the initial hump, but not coddle them so much that they're afraid or unable to change things to their liking.
 
+> …Freely ye have received, freely give…
+
 ## Requirements
 
 Emacs 29.1 or later.
@@ -225,11 +230,11 @@ Emacs 29.1 is, as of 2023-09-04, the latest stable release. The specific feature
 
 ## Development
 
-This is version `1.3.1`.
+This is version `1.5.0`.
 
 As of `1.0.0`, no new `use-package` declarations will be added to `init.el`. No promises on the extras! 
 
-I welcome any feedback you may have. You can [open issues](https://todo.sr.ht/~ashton314/emacs-bedrock) or [drop me a line](https://lambdaland.org/#contact) directly with any comments or suggestions.
+I welcome any feedback you may have. You can [open issues](https://codeberg.org/ashton314/emacs-bedrock/issues) or [drop me a line](https://lambdaland.org/#contact) directly with any comments or suggestions.
 
 Thanks to all the folks who have contributed suggestions and bug reports. Thank you also for being patient with me as I work on this project as a hobby. :)
 
@@ -238,6 +243,14 @@ Thanks to all the folks who have contributed suggestions and bug reports. Thank 
 See the [issue tracker](https://codeberg.org/ashton314/emacs-bedrock/issues) on Codeberg.
 
 ## Changelog
+
+ - 1.5.0
+ 
+   Add TempEL to `extras/dev.el`.
+
+   Add a few small things specific to Emacs 30: turn on `visual-wrap-prefix-mode` and `project-mode-line`.
+   
+   Miscellaneous bug fixes.
 
  - 1.4.0
 
