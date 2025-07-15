@@ -72,7 +72,7 @@
 (use-package embark
   :ensure t
   :demand t
-  :after avy
+  :after (avy embark-consult)
   :bind (("C-c a" . embark-act))        ; bind this to an easy key to hit
   :init
   ;; Add the option to run embark when using avy
