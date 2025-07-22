@@ -1,3 +1,0 @@
-[submodule "straight/repos/straight.el"]
-	path = straight/repos/straight.el
-	url = https://github.com/radian-software/straight.el.git
