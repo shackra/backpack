@@ -30,11 +30,30 @@
 (setq emacs-backpack--is-backpack (file-directory-p (file-name-concat user-emacs-directory "emacs-backpack")))
 (setq emacs-backpack--base-backpack-dir (if emacs-backpack--is-backpack (file-name-concat user-emacs-directory "emacs-backpack") user-emacs-directory))
 
-(add-to-list 'load-path (file-name-concat emacs-backpack--base-backpack-dir "packages" "leaf.el"))
-(add-to-list 'load-path (file-name-concat emacs-backpack--base-backpack-dir "packages" "no-littering"))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            emacs-backpack--base-backpack-dir)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+(straight-use-package 'leaf)
+(straight-use-package 'leaf-keywords)
+(straight-use-package 'no-littering)
 
 (require 'no-littering)
 (require 'leaf)
+(require 'leaf-keywords)
+(leaf-keywords-init)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
