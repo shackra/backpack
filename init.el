@@ -26,29 +26,24 @@
 (when (< emacs-major-version 29)
   (error "Emacs Bedrock only works with Emacs 29 and newer; you have version %s" emacs-major-version))
 
+;; needed goodies
+(setq emacs-backpack--is-backpack (file-directory-p (file-name-concat user-emacs-directory "emacs-backpack")))
+(setq emacs-backpack--base-backpack-dir (if emacs-backpack--is-backpack (file-name-concat user-emacs-directory "emacs-backpack") user-emacs-directory))
+
+(add-to-list 'load-path (file-name-concat emacs-backpack--base-backpack-dir "packages" "leaf.el"))
+(add-to-list 'load-path (file-name-concat emacs-backpack--base-backpack-dir "packages" "no-littering"))
+
+(require 'no-littering)
+(require 'leaf)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;   Basic settings
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Package initialization
-;;
-;; We'll stick to the built-in GNU and non-GNU ELPAs (Emacs Lisp Package
-;; Archive) for the base install, but there are some other ELPAs you could look
-;; at if you want more packages. MELPA in particular is very popular. See
-;; instructions at:
-;;
-;;    https://melpa.org/#/getting-started
-;;
-;; You can simply uncomment the following if you'd like to get started with
-;; MELPA packages quickly:
-;;
-;; (with-eval-after-load 'package
-;;   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
-
 ;; If you want to turn off the welcome screen, uncomment this
-;(setopt inhibit-splash-screen t)
+					;(setopt inhibit-splash-screen t)
 
 (setopt initial-major-mode 'fundamental-mode)  ; default mode for the *scratch* buffer
 (setopt display-time-default-load-average nil) ; this information is useless for most
@@ -73,27 +68,6 @@
 ;; Make right-click do something sensible
 (when (display-graphic-p)
   (context-menu-mode))
-
-;; Don't litter file system with *~ backup files; put them all inside
-;; ~/.emacs.d/backup or wherever
-(defun bedrock--backup-file-name (fpath)
-  "Return a new file path of a given file path.
-If the new path's directories does not exist, create them."
-  (let* ((backupRootDir (concat user-emacs-directory "emacs-backup/"))
-         (filePath (replace-regexp-in-string "[A-Za-z]:" "" fpath )) ; remove Windows driver letter in path
-         (backupFilePath (replace-regexp-in-string "//" "/" (concat backupRootDir filePath "~") )))
-    (make-directory (file-name-directory backupFilePath) (file-name-directory backupFilePath))
-    backupFilePath))
-(setopt make-backup-file-name-function 'bedrock--backup-file-name)
-
-;; The above creates nested directories in the backup folder. If
-;; instead you would like all backup files in a flat structure, albeit
-;; with their full paths concatenated into a filename, then you can
-;; use the following configuration:
-;; (Run `'M-x describe-variable RET backup-directory-alist RET' for more help)
-;;
-;; (let ((backup-dir (expand-file-name "emacs-backup/" user-emacs-directory)))
-;;   (setopt backup-directory-alist `(("." . ,backup-dir))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -210,7 +184,7 @@ If the new path's directories does not exist, create them."
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package emacs
+(leaf emacs
   :config
   (load-theme 'modus-vivendi))          ; for light theme, use modus-operandi
 
@@ -225,26 +199,26 @@ If the new path's directories does not exist, create them."
 
 ;; UI/UX enhancements mostly focused on minibuffer and autocompletion interfaces
 ;; These ones are *strongly* recommended!
-;(load-file (expand-file-name "extras/base.el" user-emacs-directory))
+;(load-file (expand-file-name "extras/base.el" emacs-backpack--base-backpack-dir))
 
 ;; Packages for software development
-;(load-file (expand-file-name "extras/dev.el" user-emacs-directory))
+;(load-file (expand-file-name "extras/dev.el" emacs-backpack--base-backpack-dir))
 
 ;; Vim-bindings in Emacs (evil-mode configuration)
-;(load-file (expand-file-name "extras/vim-like.el" user-emacs-directory))
+;(load-file (expand-file-name "extras/vim-like.el" emacs-backpack--base-backpack-dir))
 
 ;; Org-mode configuration
 ;; WARNING: need to customize things inside the elisp file before use! See
 ;; the file extras/org-intro.txt for help.
-;(load-file (expand-file-name "extras/org.el" user-emacs-directory))
+;(load-file (expand-file-name "extras/org.el" emacs-backpack--base-backpack-dir))
 
 ;; Email configuration in Emacs
 ;; WARNING: needs the `mu' program installed; see the elisp file for more
 ;; details.
-;(load-file (expand-file-name "extras/email.el" user-emacs-directory))
+;(load-file (expand-file-name "extras/email.el" emacs-backpack--base-backpack-dir))
 
 ;; Tools for academic researchers
-;(load-file (expand-file-name "extras/researcher.el" user-emacs-directory))
+;(load-file (expand-file-name "extras/researcher.el" emacs-backpack--base-backpack-dir))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
