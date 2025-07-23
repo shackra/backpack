@@ -40,7 +40,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Jinx: Enchanted spell-checking
-(use-package jinx
+(leaf jinx
   :ensure t
   :hook (((text-mode prog-mode) . jinx-mode))
   :bind (("C-;" . jinx-correct))
@@ -64,7 +64,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Olivetti: Set the window margins so your text is centered
-(use-package olivetti
+(leaf olivetti
   :ensure t
   ;; Uncomment below to make olivetti-mode turn on automatically in certain modes
   ; :hook ((markdown-mode . olivetti-mode))

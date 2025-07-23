@@ -44,20 +44,20 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package citar
+(leaf citar
   :ensure t
   :bind (("C-c b" . citar-insert-citation)
          :map minibuffer-local-map
          ("M-b" . citar-insert-preset))
   :custom
   ;; Allows you to customize what citar-open does
-  (citar-file-open-functions '(("html" . citar-file-open-external)
-                               ;; ("pdf" . citar-file-open-external)
-                               (t . find-file))))
+  (citar-file-open-functions . '(("html" . citar-file-open-external)
+				 ;; ("pdf" . citar-file-open-external)
+				 (t . find-file))))
 
 ;; Optional: if you have the embark package installed, enable the ability to act
 ;; on citations with Citar by invoking `embark-act'.
-;(use-package citar-embark
+;(leaf citar-embark
 ;  :after citar embark
 ;  :diminish ""
 ;  :no-require
@@ -76,24 +76,24 @@
 ;;
 ;;     https://protesilaos.com/emacs/denote
 ;;
-(use-package denote
+(leaf denote
   :config
   (denote-rename-buffer-mode)
   (require 'denote-journal-extras))
 
 ;; Integrate citar and Denote: take notes on bibliographic entries
 ;; through Denote
-(use-package citar-denote
+(leaf citar-denote
   :after (:any citar denote)
   :custom
-  (citar-denote-file-type 'org)
-  (citar-denote-keyword "bib")
-  (citar-denote-signature nil)
-  (citar-denote-subdir "")
-  (citar-denote-template nil)
-  (citar-denote-title-format "title")
-  (citar-denote-title-format-andstr "and")
-  (citar-denote-title-format-authors 1)
-  (citar-denote-use-bib-keywords t)
+  (citar-denote-file-type . 'org)
+  (citar-denote-keyword . "bib")
+  (citar-denote-signature . nil)
+  (citar-denote-subdir . "")
+  (citar-denote-template . nil)
+  (citar-denote-title-format . "title")
+  (citar-denote-title-format-andstr . "and")
+  (citar-denote-title-format-authors . 1)
+  (citar-denote-use-bib-keywords . t)
   :init
   (citar-denote-mode))

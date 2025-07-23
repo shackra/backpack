@@ -54,6 +54,7 @@
 (require 'leaf)
 (require 'leaf-keywords)
 (leaf-keywords-init)
+(setq leaf-alias-keyword-alist '((:ensure . :straight)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

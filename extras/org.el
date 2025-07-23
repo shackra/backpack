@@ -89,23 +89,23 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package org
-  :hook ((org-mode . visual-line-mode)  ; wrap lines at word breaks
-         (org-mode . flyspell-mode))    ; spell checking!
+(leaf org
+      :hook ((org-mode . visual-line-mode)  ; wrap lines at word breaks
+             (org-mode . flyspell-mode))    ; spell checking!
 
-  :bind (:map global-map
-              ("C-c l s" . org-store-link)          ; Mnemonic: link → store
-              ("C-c l i" . org-insert-link-global)) ; Mnemonic: link → insert
-  :config
-  (require 'oc-csl)                     ; citation support
-  (add-to-list 'org-export-backends 'md)
+      :bind (:map global-map
+		  ("C-c l s" . org-store-link)          ; Mnemonic: link → store
+		  ("C-c l i" . org-insert-link-global)) ; Mnemonic: link → insert
+      :config
+      (require 'oc-csl)                     ; citation support
+      (add-to-list 'org-export-backends 'md)
 
-  ;; Make org-open-at-point follow file links in the same window
-  (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
+      ;; Make org-open-at-point follow file links in the same window
+      (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
 
-  ;; Make exporting quotes better
-  (setq org-export-with-smart-quotes t)
-  )
+      ;; Make exporting quotes better
+      (setq org-export-with-smart-quotes t)
+      )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -113,44 +113,44 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Yes, you can have multiple use-package declarations. It's best if their
+;; Yes, you can have multiple leaf declarations. It's best if their
 ;; configs don't overlap. Once you've reached Phase 2, I'd recommend merging the
 ;; config from Phase 1. I've broken it up here for the sake of clarity.
-(use-package org
-  :config
-  ;; Instead of just two states (TODO, DONE) we set up a few different states
-  ;; that a task can be in. Run
-  ;;     M-x describe-variable RET org-todo-keywords RET
-  ;; for documentation on how these keywords work.
-  (setq org-todo-keywords
-        '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
+(leaf org
+      :config
+      ;; Instead of just two states (TODO, DONE) we set up a few different states
+      ;; that a task can be in. Run
+      ;;     M-x describe-variable RET org-todo-keywords RET
+      ;; for documentation on how these keywords work.
+      (setq org-todo-keywords
+            '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
 
-  ;; Refile configuration
-  (setq org-outline-path-complete-in-steps nil)
-  (setq org-refile-use-outline-path 'file)
+      ;; Refile configuration
+      (setq org-outline-path-complete-in-steps nil)
+      (setq org-refile-use-outline-path 'file)
 
-  (setq org-capture-templates
-        '(("c" "Default Capture" entry (file "inbox.org")
-           "* TODO %?\n%U\n%i")
-          ;; Capture and keep an org-link to the thing we're currently working with
-          ("r" "Capture with Reference" entry (file "inbox.org")
-           "* TODO %?\n%U\n%i\n%a")
-          ;; Define a section
-          ("w" "Work")
-          ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
-           "** TODO %?\n%U\n%i\n%a")
-          ("wr" "Work report" entry (file+headline "work.org" "Reports")
-           "** TODO %?\n%U\n%i\n%a")))
+      (setq org-capture-templates
+            '(("c" "Default Capture" entry (file "inbox.org")
+               "* TODO %?\n%U\n%i")
+              ;; Capture and keep an org-link to the thing we're currently working with
+              ("r" "Capture with Reference" entry (file "inbox.org")
+               "* TODO %?\n%U\n%i\n%a")
+              ;; Define a section
+              ("w" "Work")
+              ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
+               "** TODO %?\n%U\n%i\n%a")
+              ("wr" "Work report" entry (file+headline "work.org" "Reports")
+               "** TODO %?\n%U\n%i\n%a")))
 
-  ;; An agenda view lets you see your TODO items filtered and
-  ;; formatted in different ways. You can have multiple agenda views;
-  ;; please see the org-mode documentation for more information.
-  (setq org-agenda-custom-commands
-        '(("n" "Agenda and All Todos"
-           ((agenda)
-            (todo)))
-          ("w" "Work" agenda ""
-           ((org-agenda-files '("work.org")))))))
+      ;; An agenda view lets you see your TODO items filtered and
+      ;; formatted in different ways. You can have multiple agenda views;
+      ;; please see the org-mode documentation for more information.
+      (setq org-agenda-custom-commands
+            '(("n" "Agenda and All Todos"
+               ((agenda)
+		(todo)))
+              ("w" "Work" agenda ""
+               ((org-agenda-files '("work.org")))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

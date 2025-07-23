@@ -28,7 +28,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package emacs
+(leaf emacs
   :config
   ;; Treesitter config
 
@@ -46,10 +46,10 @@
   ;; Auto parenthesis matching
   ((prog-mode . electric-pair-mode)))
 
-(use-package project
-  :custom
-  (when (>= emacs-major-version 30)
-    (project-mode-line t)))         ; show project name in modeline
+(leaf project
+      :config
+      (when (>= emacs-major-version 30)
+	(setq project-mode-line t)))         ; show project name in modeline
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -58,7 +58,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Magit: best Git client to ever exist
-(use-package magit
+(leaf magit
   :ensure t
   :bind (("C-x g" . magit-status)))
 
@@ -68,14 +68,14 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package markdown-mode
+(leaf markdown-mode
   :ensure t
   :hook ((markdown-mode . visual-line-mode)))
 
-(use-package yaml-mode
+(leaf yaml-mode
   :ensure t)
 
-(use-package json-mode
+(leaf json-mode
   :ensure t)
 
 ;; Emacs ships with a lot of popular programming language modes. If it's not
@@ -92,23 +92,23 @@
 ;;
 ;;  - https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-sources-eldoc
 
-(use-package eglot
-  ;; no :ensure t here because it's built-in
+(leaf eglot
+      ;; no :ensure t here because it's built-in
 
-  ;; Configure hooks to automatically turn-on eglot for selected modes
-  ; :hook
-  ; (((python-mode ruby-mode elixir-mode) . eglot-ensure))
+      ;; Configure hooks to automatically turn-on eglot for selected modes
+					; :hook
+					; (((python-mode ruby-mode elixir-mode) . eglot-ensure))
 
-  :custom
-  (eglot-send-changes-idle-time 0.1)
-  (eglot-extend-to-xref t)              ; activate Eglot in referenced non-project files
+      :custom
+      (eglot-send-changes-idle-time . 0.1)
+      (eglot-extend-to-xref . t) ; activate Eglot in referenced non-project files
 
-  :config
-  (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
-  ;; Sometimes you need to tell Eglot where to find the language server
-  ; (add-to-list 'eglot-server-programs
-  ;              '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
-  )
+      :config
+      (fset #'jsonrpc--log-event #'ignore) ; massive perf boost---don't log every event
+      ;; Sometimes you need to tell Eglot where to find the language server
+      ;; (add-to-list 'eglot-server-programs
+      ;;              '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
+      )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -116,7 +116,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package tempel
+(leaf tempel
   :ensure t
   ;; By default, tempel looks at the file "templates" in
   ;; user-emacs-directory, but you can customize that with the
@@ -125,12 +125,12 @@
   ;; (tempel-path (concat user-emacs-directory "custom_template_file"))
   :bind (("M-*" . tempel-insert)
          ("M-+" . tempel-complete)
-         :map tempel-map
-         ("C-c RET" . tempel-done)
-         ("C-<down>" . tempel-next)
-         ("C-<up>" . tempel-previous)
-         ("M-<down>" . tempel-next)
-         ("M-<up>" . tempel-previous))
+         (:tempel-map
+          ("C-c RET" . tempel-done)
+          ("C-<down>" . tempel-next)
+          ("C-<up>" . tempel-previous)
+          ("M-<down>" . tempel-next)
+          ("M-<up>" . tempel-previous)))
   :init
   ;; Make a function that adds the tempel expansion function to the
   ;; list of completion-at-point-functions (capf).
