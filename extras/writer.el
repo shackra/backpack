@@ -42,11 +42,11 @@
 ;; Jinx: Enchanted spell-checking
 (leaf jinx
   :ensure t
-  :hook (((text-mode prog-mode) . jinx-mode))
+  :hook (((text-mode-hook prog-mode-hook) . jinx-mode))
   :bind (("C-;" . jinx-correct))
   :custom
-  (jinx-camel-modes '(prog-mode))
-  (jinx-delay 0.01))
+  (jinx-camel-modes . '(prog-mode))
+  (jinx-delay . 0.01))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
