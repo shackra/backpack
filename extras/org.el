@@ -90,7 +90,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (leaf org
-      :hook ((org-mode . visual-line-mode)) ; wrap lines at word breaks
+      :hook ((org-mode-hook . visual-line-mode)) ; wrap lines at word breaks
 
       :bind (:map global-map
 		  ("C-c l s" . org-store-link)          ; Mnemonic: link → store

@@ -44,7 +44,7 @@
           (python-mode . python-ts-mode)))
   :hook
   ;; Auto parenthesis matching
-  ((prog-mode . electric-pair-mode)))
+  ((prog-mode-hook . electric-pair-mode)))
 
 (leaf project
       :config
@@ -70,7 +70,7 @@
 
 (leaf markdown-mode
   :ensure t
-  :hook ((markdown-mode . visual-line-mode)))
+  :hook ((markdown-mode-hook . visual-line-mode)))
 
 (leaf yaml-mode
   :ensure t)

@@ -129,7 +129,7 @@
 (leaf corfu-popupinfo
       :after corfu
       :ensure nil
-      :hook (corfu-mode . corfu-popupinfo-mode)
+      :hook (corfu-mode-hook . corfu-popupinfo-mode)
       :custom
       (corfu-popupinfo-delay . '(0.25 . 0.1))
       (corfu-popupinfo-hide  . nil)
@@ -165,7 +165,7 @@
 	;; Something funny is going on with how Eshell sets up its keymaps; this is
 	;; a work-around to make C-r bound in the keymap
 	(keymap-set eshell-mode-map "C-r" 'consult-history))
-      :hook ((eshell-mode . bedrock/setup-eshell)))
+      :hook ((eshell-mode-hook . bedrock/setup-eshell)))
 
 ;; Eat: Emulate A Terminal
 (leaf eat
