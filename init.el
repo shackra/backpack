@@ -26,36 +26,6 @@
 (when (< emacs-major-version 29)
   (error "Emacs Bedrock only works with Emacs 29 and newer; you have version %s" emacs-major-version))
 
-;; needed goodies
-(setq emacs-backpack--is-backpack (file-directory-p (file-name-concat user-emacs-directory "emacs-backpack")))
-(setq emacs-backpack--base-backpack-dir (if emacs-backpack--is-backpack (file-name-concat user-emacs-directory "emacs-backpack") user-emacs-directory))
-
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
-(straight-use-package 'leaf)
-(straight-use-package 'leaf-keywords)
-(straight-use-package 'no-littering)
-
-(require 'no-littering)
-(require 'leaf)
-(require 'leaf-keywords)
-(leaf-keywords-init)
-(setq leaf-alias-keyword-alist '((:ensure . :straight)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;   Basic settings
