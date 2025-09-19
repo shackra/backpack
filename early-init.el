@@ -26,6 +26,8 @@
   (make-directory backpack--eln-cache-dir t))
 
 (setq native-comp-eln-load-path (list backpack--eln-cache-dir))
+
+;; configuration variables for elpaca
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name ".cache/elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -41,5 +43,7 @@
 
 (leaf-keywords-init)
 
+;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
+
 (add-hook 'after-init-hook #'elpaca-process-queues)
