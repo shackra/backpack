@@ -9,6 +9,23 @@
 (setq native-comp-async-report-warnings-errors 'silent)
 
 (setq inhibit-startup-echo-area-message (user-login-name))
+
+;; move auto-save-list to another location
+(setq auto-save-list-directory (expand-file-name ".cache/emacs/auto-save-list/" user-emacs-directory))
+
+(unless (file-directory-p auto-save-list-directory)
+  (make-directory auto-save-list-directory t))
+
+(setq auto-save-list-file-prefix
+      (expand-file-name ".saves-" auto-save-list-directory))
+
+;; move eln-cache to another location
+(setq backpack--eln-cache-dir (expand-file-name ".cache/emacs/eln-cache/" user-emacs-directory))
+
+(unless (file-directory-p backpack--eln-cache-dir)
+  (make-directory backpack--eln-cache-dir t))
+
+(setq native-comp-eln-load-path (list backpack--eln-cache-dir))
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name ".cache/elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
