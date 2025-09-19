@@ -1,5 +1,14 @@
 (setq package-enable-at-startup nil)
 
+;; shamelessly copied from Emacs Bedrock
+(setq backpack--initial-gc-threshold gc-cons-threshold)
+(setq gc-cons-threshold 10000000)
+
+(setq byte-compile-warnings '(not obsolete))
+(setq warning-suppress-log-types '((comp) (bytecomp)))
+(setq native-comp-async-report-warnings-errors 'silent)
+
+(setq inhibit-startup-echo-area-message (user-login-name))
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name ".cache/elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
