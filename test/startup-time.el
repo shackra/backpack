@@ -3,7 +3,7 @@
 (defun measure-emacs-startup ()
   (float-time (time-subtract after-init-time before-init-time)))
 
-(ert-deftest temacs-startup-time ()
+(ert-deftest test-emacs-startup-time ()
   :tags '(performance startup-time)
   (let ((load-time (measure-emacs-startup)))
     (should numberp load-time)
