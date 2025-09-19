@@ -16,3 +16,4 @@
 /straight/repos/gnu-elpa-mirror/
 /straight/repos/melpa/
 /straight/repos/nongnu-elpa/
+*.elc
