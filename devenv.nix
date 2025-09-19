@@ -31,7 +31,9 @@ let
   prepareAndRunTest = pkgs.writeShellScriptBin "prepare-and-run" ''
     TEST_HOME=$(mktemp -d)
     git clone --recurse-submodules $2 $TEST_HOME/.emacs.d
-    HOME=$TEST_HOME $1 -batch -l $HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
+
+    HOME=$TEST_HOME $1 -batch -l ert -l $TEST_HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
+
     rm -rf $TEST_HOME
   '';
 in
