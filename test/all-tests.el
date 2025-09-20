@@ -4,5 +4,6 @@
 (load (expand-file-name "init.el" user-emacs-directory))
 
 (load-file (expand-file-name  "test/startup-time.el" user-emacs-directory))
+(load-file (expand-file-name  "test/pouch/pouch.el" user-emacs-directory))
 
 (provide 'all-tests)
