@@ -37,6 +37,10 @@ let
   );
 in
 {
+  env = {
+    EMACS_VERSIONS_TO_TEST = "emacs-rolling emacs-30-1 emacs-29-3 emacs-29-2 emacs-29-1 emacs-28-2 emacs-28-1 emacs-27-2 emacs-27-1";
+  };
+
   packages = [
     pkgs.git
     prepareAndRunTest
