@@ -36,11 +36,11 @@
 (add-to-list 'load-path (expand-file-name "base-packages/elpaca" user-emacs-directory))
 (add-to-list 'load-path (expand-file-name "base-packages/leaf.el" user-emacs-directory))
 (add-to-list 'load-path (expand-file-name "base-packages/leaf-keywords.el" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "pouch" user-emacs-directory))
 
 (require 'elpaca)
 (require 'leaf)
 (require 'leaf-keywords)
-
 (leaf-keywords-init)
 
 ;; alias :ensure to :elpaca
