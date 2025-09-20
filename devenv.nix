@@ -28,29 +28,29 @@ let
     };
 
   # TODO(shackra): add scripts for running emacs in -nw and as a daemon
-  prepareAndRunTest = pkgs.writeShellScriptBin "prepare-and-run" ''
-    TEST_HOME=$(mktemp -d)
-    git clone --recurse-submodules $2 $TEST_HOME/.emacs.d
+  prepareAndRunTest = (
+    pkgs.writeShellScriptBin "prepare-and-run" (builtins.readFile ./etc/scripts/prepare-and-run.sh)
+  );
 
-    HOME=$TEST_HOME $1 -batch -l ert -l $TEST_HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
-
-    rm -rf $TEST_HOME
-  '';
+  run-for-each-emacs = (
+    pkgs.writeShellScriptBin "for-each-emacs" (builtins.readFile ./etc/scripts/for-each-emacs.sh)
+  );
 in
 {
   packages = [
     pkgs.git
     prepareAndRunTest
-    # (renameEmacs pkgs "emacsRolling")
-    # (renameEmacs pkgs-30-1 "emacs-30-1")
+    run-for-each-emacs
+    (renameEmacs pkgs "emacsRolling")
+    (renameEmacs pkgs-30-1 "emacs-30-1")
     # (renameEmacs pkgs-29-4 "emacs-29-4")
-    # (renameEmacs pkgs-29-3 "emacs-29-3")
-    # (renameEmacs pkgs-29-2 "emacs-29-2")
-    # (renameEmacs pkgs-29-1 "emacs-29-1")
-    # (renameEmacs pkgs-28-2 "emacs-28-2")
-    # (renameEmacs pkgs-28-1 "emacs-28-1")
-    # (renameEmacs pkgs-27-2 "emacs-27-2")
-    # (renameEmacs pkgs-27-1 "emacs-27-1")
+    (renameEmacs pkgs-29-3 "emacs-29-3")
+    (renameEmacs pkgs-29-2 "emacs-29-2")
+    (renameEmacs pkgs-29-1 "emacs-29-1")
+    (renameEmacs pkgs-28-2 "emacs-28-2")
+    (renameEmacs pkgs-28-1 "emacs-28-1")
+    (renameEmacs pkgs-27-2 "emacs-27-2")
+    (renameEmacs pkgs-27-1 "emacs-27-1")
   ];
   enterShell = ''
     git --version
