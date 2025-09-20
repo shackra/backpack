@@ -41,7 +41,7 @@ in
     pkgs.git
     prepareAndRunTest
     run-for-each-emacs
-    (renameEmacs pkgs "emacsRolling")
+    (renameEmacs pkgs "emacs-rolling")
     (renameEmacs pkgs-30-1 "emacs-30-1")
     # (renameEmacs pkgs-29-4 "emacs-29-4")
     (renameEmacs pkgs-29-3 "emacs-29-3")
