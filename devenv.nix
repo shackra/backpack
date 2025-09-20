@@ -56,12 +56,8 @@ in
     (renameEmacs pkgs-27-2 "emacs-27-2")
     (renameEmacs pkgs-27-1 "emacs-27-1")
   ];
-  enterShell = ''
-    git --version
-  '';
-
   enterTest = ''
-    echo "Running tests"
-    prepare-and-run `which emacs` $DEVENV_ROOT
+    mkdir -p $DEVENV_ROOT/artifacts
+    for-each-emacs $DEVENV_ROOT $DEVENV_ROOT/artifacts
   '';
 }
