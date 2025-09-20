@@ -1,2 +1,2 @@
-* Emacs Backpack 📦
+* Emacs Backpack 🎒
 An Emacs starter kit inspired after [[https://codeberg.org/ashton314/emacs-bedrock][Bedrock]] and [[https://github.com/doomemacs/doomemacs][Doom]] 
