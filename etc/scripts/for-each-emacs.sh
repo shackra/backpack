@@ -1,7 +1,7 @@
 IFS=' '
 
-if [ -n "${EMACS_VERSION_TO_TEST+x}" ]; then
-    echo "EMACS_VERSION_TO_TEST is not defined"
+if [ ! -n "${EMACS_VERSIONS_TO_TEST+x}" ]; then
+    echo "EMACS_VERSIONS_TO_TEST is not defined"
     exit 1
 fi
 
