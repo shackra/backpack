@@ -8,22 +8,18 @@
   "Declare the GEAR to use."
   `(setq backpack--gear ',gear))
 
-(defun backpack--gear-load-gear (gears)
-  "Load GEARS defined by `gear!`."
-  (while gears
-    (let* ((category (pop gears))
-           (mods     (pop gears)))
-      (dolist (m mods)
-        (let* ((name (if (symbolp m) m (car m)))
-               (flags (when (listp m) (cdr m)))
-               (path (expand-file-name
-                      (format "gear/%s/%s" category name)
-                      user-emacs-directory)))
-	  (when backpack-log-loading
-            (message "Loading gear %s with flags %s" name flags))
-          (when (file-directory-p path)
-            (let ((init-file (expand-file-name "init.el" path)))
-              (when (file-exists-p init-file)
-                (load init-file nil t)))))))))
+(defmacro gearp! (category &optional gear flag)
+  "Check if GEAR is in use.
+
+For example, if `(gear! :ui (theme +doom-one))' then:
+(gearp! :ui) => t
+(gearp! :ui theme) => t
+(gearp! :ui theme +doom-one) => t
+(gearp! :ui emacs) => nil
+(gearp! :other) => nil"
+  `(backpack--gearp!-impl ',category ',gear ',flag))
+
+(defun backpack--gearp!-impl (category &optional gear flag)
+  nil)
 
 (provide 'pouch)
