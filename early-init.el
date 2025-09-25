@@ -1,4 +1,18 @@
+(when (version< emacs-version "27.1")
+  (error "Backpack is only compatible with Emacs version 27.1 and up"))
+
 (setq package-enable-at-startup nil)
+(setq load-prefer-newer t)
+
+;; directories
+(defvar backpack--base-packages-dir (expand-file-name "base-packages" user-emacs-directory))
+(defvar backpack--elpaca (expand-file-name "elpaca" backpack--base-packages-dir))
+(defvar backpack--leaf (expand-file-name "leaf.el" backpack--base-packages-dir))
+(defvar backpack--leaf-keywords (expand-file-name "leaf-keywords.el" backpack--base-packages-dir))
+
+(add-to-list 'load-path backpack--leaf)
+(add-to-list 'load-path backpack--leaf-keywords)
+(add-to-list 'load-path (expand-file-name "pouch" user-emacs-directory))
 
 ;; shamelessly copied from Emacs Bedrock
 (setq backpack--initial-gc-threshold gc-cons-threshold)
@@ -33,17 +47,24 @@
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 
-(add-to-list 'load-path (expand-file-name "base-packages/elpaca" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "base-packages/leaf.el" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "base-packages/leaf-keywords.el" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "pouch" user-emacs-directory))
+;; this is a slimmed down version of the bootstrap code offered in the readme
+;; due to shipping elpaca already as a Git submodule
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (default-directory repo)) ;; everything happens in the repo directory
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo) 		;; copy the Git submodule to ~/.emacs.d/.cache/elpaca/repo/elpaca
+    (copy-directory backpack--elpaca repo t t t))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
 
-(require 'elpaca)
+(add-hook 'after-init-hook #'elpaca-process-queues)
+
 (require 'leaf)
 (require 'leaf-keywords)
 (leaf-keywords-init)
 
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
-
-(add-hook 'after-init-hook #'elpaca-process-queues)
