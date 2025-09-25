@@ -22,4 +22,4 @@ For example, if `(gear! :ui (theme +doom-one))' then:
 (defun backpack--gearp!-impl (category &optional gear flag)
   nil)
 
-(provide 'pouch)
+(provide 'backpack-pouch)
