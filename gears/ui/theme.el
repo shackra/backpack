@@ -1,13 +1,14 @@
 (leaf theme
   :doc "Emacs theme configuration"
-  :custom
-  (doom-themes-enable-bold . t)
-  (doom-themes-enable-italic . t)
-  :config
+  :tag "ui" "theme"
+  :config ;; TODO(shackra): Indicate in theme that only one flag/feature can be chosen
   (leaf doom-one
-    :disabled nil
+    :disabled t
     :doc "inspired by Atom One Dark (ported by @hlissner)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-one t))
   
@@ -15,6 +16,9 @@
     :disabled t
     :doc "ported from VSCode's 1337 theme (ported by @ccmywish)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-1337 t))
   
@@ -22,6 +26,9 @@
     :disabled t
     :doc "an original dark theme (ported by @gagbo)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-acario-dark t))
   
@@ -29,6 +36,9 @@
     :disabled t
     :doc "an original light theme (ported by @gagbo)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-acario-light t))
   
@@ -36,6 +46,9 @@
     :disabled t
     :doc "inspired by Ayu Dark (ported by @ashton)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-ayu-dark t))
   
@@ -43,6 +56,9 @@
     :disabled t
     :doc "inspirted by Ayu Light (ported by @LoveSponge)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-ayu-light t))
   
@@ -50,6 +66,9 @@
     :disabled t
     :doc "inspired by Ayu Mirage (ported by @LoveSponge)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-ayu-mirage t))
   
@@ -57,6 +76,9 @@
     :disabled t
     :doc "inspired by cann's Badger colorscheme (ported by @jsoa)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-badger t))
   
@@ -64,6 +86,9 @@
     :disabled t
     :doc "inspired by Vim's Challenger Deep theme (ported by @fuxialexander)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-challenger-deep t))
   
@@ -71,6 +96,9 @@
     :disabled t
     :doc "inspired by Atom's City Lights theme (ported by @fuxialexander)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-city-lights t))
   
@@ -78,6 +106,9 @@
     :disabled t
     :doc "ported from equinusocio's VSCode Theme, dark+ (ported by @ema2159)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-dark+ t))
   
@@ -85,6 +116,9 @@
     :disabled t
     :doc "inspired by the popular Dracula theme (ported by @fuxialexander)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-dracula t))
   
@@ -92,6 +126,9 @@
     :disabled t
     :doc "a gentle color scheme, for code (ported by @JuneKelly)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-earl-grey t))
   
@@ -99,6 +136,9 @@
     :disabled t
     :doc "inspired by the Ephemeral Theme from elenapan's dotfiles (ported by @karetsu)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-ephemeral t))
   
@@ -106,6 +146,9 @@
     :disabled t
     :doc "a candy colored theme by sailorhg (ported by @ema2159)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-fairy-floss t))
   
@@ -113,6 +156,9 @@
     :disabled t
     :doc "a purple-tinted theme, inspired by doom-one (by @Plunne)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-feather-dark t))
   
@@ -120,6 +166,9 @@
     :disabled t
     :doc "a light variable of feather-dark, inspired by doom-one (by @Plunne)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-feather-light t))
   
@@ -127,6 +176,9 @@
     :disabled t
     :doc "inspired by Atom's Flatwhite Syntax theme (ported by @JuneKelly)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-flatwhite t))
   
@@ -134,6 +186,9 @@
     :disabled t
     :doc "inspired by morhetz's Gruvbox (ported by @JongW)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-gruvbox t))
   
@@ -141,6 +196,9 @@
     :disabled t
     :doc "inspired by morhetz's Gruvbox (light) (ported by @jsoa)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-gruvbox-light t))
   
@@ -148,6 +206,9 @@
     :disabled t
     :doc "based on VSCode's Henna theme (ported by @jsoa)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-henna t))
   
@@ -155,6 +216,9 @@
     :disabled t
     :doc "a minimalistic, colorless theme inspired by eziam, tao, and jbeans (ported by @mskorzhinskiy)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-homage-black t))
   
@@ -162,6 +226,9 @@
     :disabled t
     :doc "minimal white theme inspired by editors from 2000s (ported by @mskorzhinskiy)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-homage-white t))
   
@@ -169,6 +236,9 @@
     :disabled t
     :doc "ported from VSCode Horizon (ported by @karetsu)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-horizon t))
   
@@ -176,6 +246,9 @@
     :disabled t
     :doc "ported from the default dark theme for Adobe Brackets (ported by @neutaaaaan)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-Iosvkem t))
   
@@ -183,6 +256,9 @@
     :disabled t
     :doc "ported from Vim's ir_black colorscheme (ported by @legendre6891)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-ir-black t))
   
@@ -190,6 +266,9 @@
     :disabled t
     :doc "based on Gitleptune's Lantern theme (ported by @paladhammika)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-lantern t))
   
@@ -197,6 +276,9 @@
     :disabled t
     :doc "a clean synthwave/outrun theme inspired by VSCode's Laserwave (ported by @hyakt)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-laserwave t))
   
@@ -204,6 +286,9 @@
     :disabled t
     :doc "an original autumn-inspired dark theme (ported by @kenranunderscore)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-managarm t))
   
@@ -211,6 +296,9 @@
     :disabled t
     :doc "adapted from equinusocio's Material themes (ported by @tam5)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-material t))
   
@@ -218,6 +306,9 @@
     :disabled t
     :doc "inspired by Material Theme by xrei (ported by @trev-dev)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-material-dark t))
   
@@ -225,6 +316,9 @@
     :disabled t
     :doc "a dark (mostly) monochromatic theme (ported by @spacefrogg)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-meltbus t))
   
@@ -232,6 +326,9 @@
     :disabled t
     :doc "a port of Franbach's Miramare theme; a variant of Grubox (ported by @sagittaros)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-miramare t))
   
@@ -239,6 +336,9 @@
     :disabled t
     :doc "inspired by Tomas Restrepo's Molokai (ported by @hlissner)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-molokai t))
   
@@ -246,6 +346,9 @@
     :disabled t
     :doc "port of Monokai Classic (ported by @ema2159)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-monokai-classic t))
   
@@ -253,6 +356,9 @@
     :disabled t
     :doc "port of Monokai Classic (ported by @minikN)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-monokai-machine t))
   
@@ -260,6 +366,9 @@
     :disabled t
     :doc "port of Monokai Octagon (ported by @minikN)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-monokai-octagon t))
   
@@ -267,6 +376,9 @@
     :disabled t
     :doc "Port of Monokai Pro (ported by @minikN)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-monokai-pro t))
   
@@ -274,6 +386,9 @@
     :disabled t
     :doc "Port of Monokai Ristretto (ported by @minikN)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-monokai-ristretto t))
   
@@ -281,6 +396,9 @@
     :disabled t
     :doc "port of Monokai Spectrum (ported by @minikN)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-monokai-spectrum t))
   
@@ -288,6 +406,9 @@
     :disabled t
     :doc "inspired by VS code's Moonlight (ported by @Brettm12345)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-moonlight t))
   
@@ -295,6 +416,9 @@
     :disabled t
     :doc "dark variant of Nord (ported by @fuxialexander)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-nord t))
   
@@ -302,6 +426,9 @@
     :disabled t
     :doc "a light variant of Nord (ported by @MoskitoHero)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-nord-aurora t))
   
@@ -309,6 +436,9 @@
     :disabled t
     :doc "light variant of Nord (ported by @fuxialexander)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-nord-light t))
   
@@ -316,6 +446,9 @@
     :disabled t
     :doc "inspired by Trevord Miller's Nova (ported by @bigardone)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-nova t))
   
@@ -323,6 +456,9 @@
     :disabled t
     :doc "inspired by Oceanic Next (ported by @juanwolf)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-oceanic-next t))
   
@@ -330,6 +466,9 @@
     :disabled t
     :doc "an OKLab variant of Solarized dark (ported by @logc)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-oksolar-dark t))
   
@@ -337,6 +476,9 @@
     :disabled t
     :doc "an OKLab variant of Solarized light (ported by @logc)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-oksolar-light t))
   
@@ -344,6 +486,9 @@
     :disabled t
     :doc "inspired by An Old Hope, in a galaxy far far away (ported by @teesloane)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-old-hope t))
   
@@ -351,6 +496,9 @@
     :disabled t
     :doc "inspired by Atom One Light (ported by @ztlevi)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-one-light t))
   
@@ -358,6 +506,9 @@
     :disabled t
     :doc "an original light theme (ported by @jwintz)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-opera t))
   
@@ -365,6 +516,9 @@
     :disabled t
     :doc "an original light theme (ported by @jwintz)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-opera-light t))
   
@@ -372,6 +526,9 @@
     :disabled t
     :doc "a high contrast, neon theme inspired by Outrun Electric on VSCode (ported by @ema2159)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-outrun-electric t))
   
@@ -379,6 +536,9 @@
     :disabled t
     :doc "adapted from equinusocio's Material themes (ported by @Brettm12345)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-palenight t))
   
@@ -386,6 +546,9 @@
     :disabled t
     :doc "inspired by daylerees' Peacock (ported by @teesloane)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-peacock t))
   
@@ -393,6 +556,9 @@
     :disabled t
     :doc "a green flavor of doom-gruvbox (by @RomanHargrave)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-pine t))
   
@@ -400,6 +566,9 @@
     :disabled t
     :doc "inspired by gko's plain theme for VSCode (ported by @das-s)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-plain t))
   
@@ -407,6 +576,9 @@
     :disabled t
     :doc "inspired by gko's plain theme for VSCode (ported by @das-s)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-plain-dark t))
   
@@ -414,6 +586,9 @@
     :disabled t
     :doc "ported from VSCode's Rouge Theme (ported by @das-s)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-rouge t))
   
@@ -421,6 +596,9 @@
     :disabled t
     :doc "a port of VSCode's Shades of Purple (ported by @jwbaldwin)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-shades-of-purple t))
   
@@ -428,6 +606,9 @@
     :disabled t
     :doc "inspired by Hyper Snazzy (ported by @ar1a)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-snazzy t))
   
@@ -435,6 +616,9 @@
     :disabled t
     :doc "a dark variant of Solarized (ported by @ema2159)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-solarized-dark t))
   
@@ -442,6 +626,9 @@
     :disabled t
     :doc "a high-contrast variant of Solarized Dark (ported by @jmorag)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-solarized-dark-high-contrast t))
   
@@ -449,6 +636,9 @@
     :disabled t
     :doc "a light variant of Solarized (ported by @fuxialexander)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-solarized-light t))
   
@@ -456,6 +646,9 @@
     :disabled t
     :doc "a port of xero's Sourcerer (ported by @fm0xb)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-sourcerer t))
   
@@ -463,6 +656,9 @@
     :disabled t
     :doc "I'm sure you've heard of it (ported by @teesloane)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-spacegrey t))
   
@@ -470,6 +666,9 @@
     :disabled t
     :doc "inspired by VSCode's Tokyo Night theme (ported by @FosterHangdaan)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-tokyo-night t))
   
@@ -477,6 +676,9 @@
     :disabled t
     :doc "a light variant of Tomorrow (ported by @emacswatcher)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-tomorrow-day t))
   
@@ -484,6 +686,9 @@
     :disabled t
     :doc "One of the dark variants of Tomorrow (ported by @hlissner)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-tomorrow-night t))
   
@@ -491,6 +696,9 @@
     :disabled t
     :doc "a more vibrant variant of doom-one (ported by @hlissner)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-vibrant t))
   
@@ -498,6 +706,9 @@
     :disabled t
     :doc "port of Ian Pan's Wilmersdorf (ported by @ema2159)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-wilmersdorf t))
   
@@ -505,6 +716,9 @@
     :disabled t
     :doc "based off of Apple's Xcode Dark Theme (ported by @kadenbarlow)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-xcode t))
   
@@ -512,5 +726,8 @@
     :disabled t
     :doc "port of the popular Zenburn theme (ported by @jsoa)"
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
+    :custom
+    (doom-themes-enable-bold . t)
+    (doom-themes-enable-italic . t)
     :config
     (load-theme 'doom-zenburn t)))
