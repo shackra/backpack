@@ -1,5 +1,4 @@
 (require 'backpack-pouch)
-(require 'backpack-manual)
 
 (load-file (expand-file-name "gears/ui/theme.el" user-emacs-directory))
 
