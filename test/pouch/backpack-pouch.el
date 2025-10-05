@@ -46,3 +46,10 @@
    theme)
 
   (should-not (gearp! :ui not-included)))
+
+(ert-deftest benchmark-gearp! ()
+  (gear!
+   :ui
+   (theme doom-one)
+
+   (should (< (benchmark-run 10000 (gearp! :ui theme)) 0.1))))
