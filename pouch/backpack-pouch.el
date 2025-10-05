@@ -8,15 +8,19 @@
   "Declare the GEAR to use."
   `(setq backpack--gear ',gear))
 
-(defmacro gearp! (category gear &optional flag)
-  "Check if GEAR is in use.
+(defmacro gearp! (pouch gear &optional flag)
+  "Check if GEAR in POUCH was enabled
 
 For example, if `(gear! :ui (theme doom-one))' then:
 (gearp! :ui) => nil
 (gearp! :ui theme) => t
 (gearp! :ui theme doom-one) => t
 (gearp! :ui emacs) => nil"
-  `(backpack--gearp!-impl ',category ',gear ',flag))
+  `(backpack--gearp!-impl ',pouch ',gear ',flag))
+
+(defmacro gear-keep-disabledp! (pouch gear &optional flag)
+  "Check if GEAR in POUCH should remain disabled."
+  `(not (backpack--gearp!-impl ',pouch ',gear ',flag)))
 
 (defun backpack--gearp!-impl (pouch gear &optional flag)
   "Internal helper for `gearp!`."
