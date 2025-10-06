@@ -3,6 +3,7 @@
 (leaf themes
   :doc "Change the color theme of your Emacs"
   :tag "ui" "theme"
+  :config
   (leaf doom-themes
     :doc "Theme collection from Doom Emacs"
     :tag "ui" "theme" "doom"
