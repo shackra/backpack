@@ -7,7 +7,31 @@
   (leaf doom-themes
     :doc "Theme collection from Doom Emacs"
     :tag "ui" "theme" "doom"
-    :when (gearp! :ui theme doom)
+    :when (gear-with-any-flagp! :ui theme
+				doom-one doom-1337 doom-acario-dark
+				doom-acario-light doom-ayu-dark
+				doom-ayu-light doom-ayu-mirage
+				doom-badger doom-challenger-deep
+				doom-city-lights doom-dark+ doom-dracula
+				doom-earl-grey doom-ephemeral doom-fairy-floss
+				doom-feather-dark doom-feather-light
+				doom-flatwhite doom-gruvbox doom-gruvbox-light
+				doom-henna doom-homage-black doom-homage-white
+				doom-horizon doom-Iosvkem doom-ir-black doom-latern
+				doom-laserwave doom-manegarm doom-material
+				doom-meltbus doom-miramare doom-molokai
+				doom-monokai-classic doom-monokai-machine
+				doom-monokai-octagon doom-monokai-pro doom-monokai-ristretto
+				doom-monokai-spectrum doom-moonlight doom-nord doom-nord-aurora
+				doom-nord-light doom-nova doom-oceanic-next
+				doom-oksolar-dark doom-oksolar-light doom-old-hope doom-one-light
+				doom-opera doom-opera-light doom-outrun-electric doom-palenight
+				doom-peacock doom-pine doom-plain doom-plain-dark doom-rouge
+				doom-shades-of-purple doom-snazzy doom-solarized-dark
+				doom-solarized-dark-high-contrast doom-solarized-light
+				doom-sourcerer doom-spacegrey doom-tokyo-night doom-tomorrow-day
+				doom-tomorrow-night doom-vibrant doom-wilmersdorf
+				doom-xcode doom-zenburn)
     :ensure (doom-themes :ref "556598955c67540eac8811835b327f299ffb58c7")
     :custom
     (doom-themes-enable-bold . t)

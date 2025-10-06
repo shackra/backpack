@@ -20,9 +20,23 @@ For example, if `(gear! :ui (theme doom-one))' then:
 (gearp! :ui emacs) => nil"
   `(backpack--gearp!-impl ',pouch ',gear ',flag))
 
-(defmacro gear-keep-disabledp! (pouch gear &optional flag)
-  "Check if GEAR in POUCH should remain disabled."
-  `(not (backpack--gearp!-impl ',pouch ',gear ',flag)))
+(defmacro gear-with-any-flagp! (pouch gear &rest flags)
+  "Check if GEAR in POUCH was enabled with any FLAGS."
+  (let ((flags-sym (gensym "flags"))
+        (flag-sym (gensym "flag"))
+        (found-sym (gensym "found")))
+    `(let ((,flags-sym (list ,@(mapcar (lambda (f) `',f) flags)))
+           ,flag-sym
+           ,found-sym)
+       (when (null ,flags-sym)
+         (error "No flags passed"))
+       (while (and ,flags-sym (not ,found-sym))
+         (setq ,flag-sym (pop ,flags-sym))
+         (when (backpack--gearp!-impl ',pouch ',gear ,flag-sym)
+           (setq ,found-sym t)))
+       ,found-sym)))
+
+(require 'cl-lib)
 
 (defun backpack--gearp!-impl (pouch gear &optional flag)
   "Internal helper for `gearp!`.
