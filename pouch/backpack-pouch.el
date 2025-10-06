@@ -55,12 +55,8 @@ For example, if `(gear! :ui (theme doom-one))' then:
 	  (setq f flag)))))
 
     ;; return whatever was found
-    (let ((found-principals (and category module)))
-      (or 
-       (and flag
-	    found-principals
-	    f)
-       (and found-principals
-	    (null f))))))
+    (or
+     (and (eq pouch category) (eq gear module) (null flag))
+     (and (eq pouch category) (eq gear module) (eq f flag)))))
 
 (provide 'backpack-pouch)
