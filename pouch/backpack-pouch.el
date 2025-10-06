@@ -11,7 +11,7 @@
   `(setq backpack--gear ',gear))
 
 (defmacro gearp! (pouch gear &optional flag)
-  "Check if GEAR in POUCH was enabled
+  "Check if GEAR in POUCH was enabled.
 
 For example, if `(gear! :ui (theme doom-one))' then:
 (gearp! :ui) => nil
