@@ -1,3 +1,5 @@
+(require 'cl-lib)
+
 (defvar backpack--gear '()
   "List of gear in use by the user.")
 
@@ -23,40 +25,47 @@ For example, if `(gear! :ui (theme doom-one))' then:
   `(not (backpack--gearp!-impl ',pouch ',gear ',flag)))
 
 (defun backpack--gearp!-impl (pouch gear &optional flag)
-  "Internal helper for `gearp!`."
-  (let ((gears (copy-sequence backpack--gear))
-	thing
-	category
-	module
-	f)
-    (while (setq thing (pop gears))
-      (cond
-       ;; the first element is not a pouch/category
-       ((and (null category)
-	     (not (keywordp thing)))
-	(throw "gear '%s' is not part of a pouch" thing))
-       ;; two pouches are defined one after the other without defining gears
-       ((and (null module)
-	     category
-	     (keywordp thing))
-	(throw "last pouch '%s' did not use any gear" category))
-       ;; found pouch/category
-       ((and (keywordp thing)
-	     (eq thing pouch))
-	(setq category thing))
-       ;; found gear/module
-       ((and (symbolp thing)
-	     (eq thing gear))
-	(setq module thing))
-       ;; found a list!
-       ((listp thing)
-	(setq module (pop thing))
-	(when (memq flag thing)
-	  (setq f flag)))))
+  "Internal helper for `gearp!`.
 
-    ;; return whatever was found
+Return non-nil if GEAR in POUCH is active, optionally with FLAG."
+  (let ((category nil)
+        (module nil)
+        (ourflagnil))
+    (cl-loop for thing in backpack--gear
+	     unless (or
+		     (and (eq pouch category) (eq gear module) (null flag))
+		     (and (eq pouch category) (eq gear module) (eq ourflag flag)))
+             do
+             (cond
+              ;; the first element is not a pouch/category
+              ((and (null category)
+                    (not (keywordp thing)))
+               (error "gear '%s' is not part of a pouch" thing))
+
+              ;; two pouches in a row without defining gears
+              ((and (null module)
+                    category
+                    (keywordp thing))
+               (error "last pouch '%s' did not use any gear" category))
+
+              ;; found a pouch/category
+              ((keywordp thing)
+               (setq category thing))
+
+              ;; found a gear/module symbol
+              ((and (symbolp thing)
+                    (eq thing gear))
+               (setq module thing))
+
+              ;; found a list! => gear + flags
+              ((listp thing)
+               (setq module (pop thing))
+               (when (memq flag thing)
+                 (setq ourflag flag)))))
+
+    ;; return result
     (or
      (and (eq pouch category) (eq gear module) (null flag))
-     (and (eq pouch category) (eq gear module) (eq f flag)))))
+     (and (eq pouch category) (eq gear module) (eq ourflag flag)))))
 
 (provide 'backpack-pouch)
