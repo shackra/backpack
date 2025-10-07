@@ -89,6 +89,10 @@
 (require 'leaf-keywords)
 (leaf-keywords-init)
 
+;;; add additional keywords to leaf block
+;; :doctor defines binaries to check on the user's system
+(plist-put leaf-keywords :doctor '`(,@leaf--body))
+
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
 
