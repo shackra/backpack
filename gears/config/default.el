@@ -25,17 +25,24 @@
   (switch-to-buffer-obey-display-actions	.	t) ; make switching buffers more consistent
   (x-underline-at-descent-line			.	nil) ; prettier underlines
   (indicate-buffer-boundaries			.	'left) ; Show buffer top and bottom in the margin
-  (auto-revert-avoid-polling			.	t)
-  (auto-revert-interval				.	5)
-  (auto-revert-check-vc-info			.	t)
   (mouse-wheel-tilt-scroll			.	t) ; enable horizontal scrolling
   (mouse-wheel-flip-direction			.	t)
-  (use-short-answers . t)
+  (use-short-answers				.	t)
   :config
-  (global-auto-revert-mode)
+  (leaf autorevert
+    :tag "builtin"
+    :global-minor-mode global-auto-revert-mode
+    :custom
+    (auto-revert-avoid-polling	.	t)
+    (auto-revert-interval	.	5)
+    (auto-revert-check-vc-info	.	t))
+
+  (leaf savehist
+    :tag "builtin"
+    :global-minor-mode savehist-mode)
+
   (line-number-mode t)		     ; show current line in modeline
   (column-number-mode t)	     ; show current column in modeline
-  (savehist-mode)
 
   (when (gearp! :config default cua)
     (cua-mode))
