@@ -20,6 +20,8 @@ This should set `backpack--gear'"
     (error "no user configuration exists, please create one"))
   (load (expand-file-name "init.el" backpack-user-directory) nil backpack-log-loading)
   (unless backpack--gear
-    (warn "no configuration defined, was gear! even used?")))
+    (warn "no configuration defined, was gear! even used?"))
+  (setq custom-file (expand-file-name "customs.el" backpack-user-directory))
+  (add-hook 'elpaca-after-init-hook (lambda () (load custom-file 'noerror))))
 
 (provide 'backpack-user)
