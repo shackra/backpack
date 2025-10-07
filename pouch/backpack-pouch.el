@@ -44,7 +44,7 @@ For example, if `(gear! :ui (theme doom-one))' then:
 Return non-nil if GEAR in POUCH is active, optionally with FLAG."
   (let ((category nil)
         (module nil)
-        (ourflagnil))
+        (ourflag nil))
     (cl-loop for thing in backpack--gear
 	     unless (or
 		     (and (eq pouch category) (eq gear module) (null flag))
