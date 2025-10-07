@@ -22,7 +22,7 @@ fi
 
 if [ "$ACTION" = "ensure" ]; then
     echo "✅ Running Emacs in batch mode..."
-    emacs --kill -nw --eval "(elpaca-wait)"
+    emacs -nw --eval "(progn (elpaca-wait) (save-default-bg-fg-colors) (kill-emacs 0))"
     exit $?
 else
     echo "❌ Error: unknown action '$ACTION'" >&2

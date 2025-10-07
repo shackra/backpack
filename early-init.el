@@ -10,6 +10,10 @@
 (defvar backpack--leaf-keywords (expand-file-name "leaf-keywords.el" backpack--base-packages-dir))
 (defvar backpack--cache-emacs (expand-file-name ".cache/emacs" user-emacs-directory))
 
+(let ((colors-file (expand-file-name "default-colors.el" backpack--cache-emacs)))
+  (when (file-exists-p colors-file)
+    (load colors-file)))
+
 (add-to-list 'load-path backpack--leaf)
 (add-to-list 'load-path backpack--leaf-keywords)
 (add-to-list 'load-path (expand-file-name "pouch" user-emacs-directory))
@@ -87,3 +91,12 @@
 
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
+
+(defun save-default-bg-fg-colors ()
+  "Save the current theme's foreground and background colors into a file."
+  (let ((bg (face-attribute 'default :background))
+	(fg (face-attribute 'default :foreground)))
+    (with-temp-file (expand-file-name "default-colors.el" backpack--cache-emacs)
+      (insert (format "(setq default-frame-alist '((background-color . \"%s\") (foreground-color . \"%s\")))"
+                      bg fg)))))
+
