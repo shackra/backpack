@@ -65,6 +65,12 @@
   (when (gearp! :config default no-splash)
     (setq inhibit-splash-screen t))
 
+  (when (gearp! :config default hide-tool-bar)
+    (tool-bar-mode -1))
+
+  (when (gearp! :config default hide-menu-bar)
+    (menu-bar-mode -1))
+
   (unless (gearp! :config default -pixel-scroll)
     (pixel-scroll-precision-mode))
 
