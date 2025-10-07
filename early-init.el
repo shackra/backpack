@@ -3,6 +3,7 @@
 
 (setq package-enable-at-startup nil)
 (setq load-prefer-newer t)
+(setq native-comp-deferred-compilation nil)
 
 ;; directories
 (defvar backpack--base-packages-dir (expand-file-name "base-packages" user-emacs-directory))
