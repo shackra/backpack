@@ -22,9 +22,7 @@ fi
 
 if [ "$ACTION" = "ensure" ]; then
     echo "✅ Running Emacs in batch mode..."
-    emacs --batch \
-          --load "$INIT_DIR/early-init.el" \
-          --load "$INIT_DIR/init.el"
+    emacs --kill -nw --eval "(elpaca-wait)"
     exit $?
 else
     echo "❌ Error: unknown action '$ACTION'" >&2
