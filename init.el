@@ -1,3 +1,5 @@
+;; -*- no-byte-compile: t; -*-
+
 (require 'backpack-pouch)
 (require 'backpack-user)
 

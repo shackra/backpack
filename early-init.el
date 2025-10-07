@@ -1,3 +1,5 @@
+;; -*- no-byte-compile: t; -*-
+
 (when (version< emacs-version "29.1")
   (error "Backpack is only compatible with Emacs version 29.1 and up"))
 
