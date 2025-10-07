@@ -4,6 +4,144 @@
   :doc "Change the color theme of your Emacs"
   :tag "ui" "theme"
   :config
+  (leaf adwaita
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme adwaita)
+    :config
+    (load-theme 'adwaita t))
+
+  (leaf deeper-blue
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme deeper-blue)
+    :config
+    (load-theme 'deeper-blue t))
+
+  (leaf dichromacy
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme dichromacy)
+    :config
+    (load-theme 'dichromacy t))
+
+  (leaf leuven
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme leuven)
+    :config
+    (load-theme 'leuven t))
+
+  (leaf leuven-dark
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme leuven-dark)
+    :config
+    (load-theme 'leuven-dark t))
+
+  (leaf light-blue
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme light-blue)
+    :config
+    (load-theme 'light-blue t))
+
+  (leaf manoj-dark
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme manoj-dark)
+    :config
+    (load-theme 'manoj-dark t))
+
+  (leaf misterioso
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme misterioso)
+    :config
+    (load-theme 'misterioso t))
+
+  (leaf modus-operandi
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-operandi)
+    :config
+    (load-theme 'modus-operandi t))
+
+  (leaf modus-operandi-deuteranopia
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-operandi-deuteranopia)
+    :config
+    (load-theme 'modus-operandi-deuteranopia t))
+
+  (leaf modus-operandi-tinted
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-operandi-tinted)
+    :config
+    (load-theme 'modus-operandi-tinted t))
+
+  (leaf modus-operandi-tritanopia
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-operandi-tritanopia)
+    :config
+    (load-theme 'modus-operandi-tritanopia t))
+
+  (leaf modus-vivendi
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-vivendi)
+    :config
+    (load-theme 'modus-vivendi t))
+
+  (leaf modus-vivendi-deuteranopia
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-vivendi-deuteranopia)
+    :config
+    (load-theme 'modus-vivendi-deuteranopia t))
+
+  (leaf modus-vivendi-tinted
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-vivendi-tinted)
+    :config
+    (load-theme 'modus-vivendi-tinted t))
+
+  (leaf modus-vivendi-tritanopia
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme modus-vivendi-tritanopia)
+    :config
+    (load-theme 'modus-vivendi-tritanopia t))
+
+  (leaf tango
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme tango)
+    :config
+    (load-theme 'tango t))
+
+  (leaf tango-dark
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme tango-dark)
+    :config
+    (load-theme 'tango-dark t))
+
+  (leaf tsdh-dark
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme tsdh-dark)
+    :config
+    (load-theme 'tsdh-dark t))
+
+  (leaf tsdh-light
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme tsdh-light)
+    :config
+    (load-theme 'tsdh-light t))
+
+  (leaf wheatgrass
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme wheatgrass)
+    :config
+    (load-theme 'wheatgrass t))
+
+  (leaf whiteboard
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme whiteboard)
+    :config
+    (load-theme 'whiteboard t))
+
+  (leaf wombat
+    :tag "ui" "theme" "builtin"
+    :when (gearp! :ui theme wombat)
+    :config
+    (load-theme 'wombat t))
+
   (leaf doom-themes
     :doc "Theme collection from Doom Emacs"
     :tag "ui" "theme" "doom"
