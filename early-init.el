@@ -8,6 +8,7 @@
 (defvar backpack--base-packages-dir (expand-file-name "base-packages" user-emacs-directory))
 (defvar backpack--leaf (expand-file-name "leaf.el" backpack--base-packages-dir))
 (defvar backpack--leaf-keywords (expand-file-name "leaf-keywords.el" backpack--base-packages-dir))
+(defvar backpack--cache-emacs (expand-file-name ".cache/emacs" user-emacs-directory))
 
 (add-to-list 'load-path backpack--leaf)
 (add-to-list 'load-path backpack--leaf-keywords)
@@ -24,7 +25,7 @@
 (setq inhibit-startup-echo-area-message (user-login-name))
 
 ;; move auto-save-list to another location
-(setq auto-save-list-directory (expand-file-name ".cache/emacs/auto-save-list/" user-emacs-directory))
+(setq auto-save-list-directory (expand-file-name "auto-save-list/" backpack--cache-emacs))
 
 (unless (file-directory-p auto-save-list-directory)
   (make-directory auto-save-list-directory t))
@@ -33,7 +34,7 @@
       (expand-file-name ".saves-" auto-save-list-directory))
 
 ;; move eln-cache to another location
-(setq backpack--eln-cache-dir (expand-file-name ".cache/emacs/eln-cache/" user-emacs-directory))
+(setq backpack--eln-cache-dir (expand-file-name "eln-cache/" backpack--cache-emacs))
 
 (unless (file-directory-p backpack--eln-cache-dir)
   (make-directory backpack--eln-cache-dir t))
