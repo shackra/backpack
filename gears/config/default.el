@@ -66,6 +66,8 @@
   :emacs>= '28.1
   :when (gearp! :config default)
   :doc "Sane defaults for Emacs (28.1+)"
+  :setq
+  (use-short-answers . t)
   :config
   (when (display-graphic-p)
     (context-menu-mode))) ;; make right-click do something sensible
