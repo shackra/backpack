@@ -5,8 +5,11 @@
   :when (gearp! :config default)
   :doc "Sane defaults for Emacs"
   :leaf-defer nil
-  :bind (:minibuffer-mode-map
-	 ("TAB" . minibuffer-complete))
+  :bind
+  ("C-x k" . kill-current-buffer)
+  ("C-z" . nil)
+  (:minibuffer-mode-map
+   ("TAB" . minibuffer-complete))
   :setq
   (sentence-end-double-space			.	nil) ; fix archaic default
   (enable-recursive-minibuffers			.	t) ; use the minibuffer whilst in the minibuffer
@@ -27,6 +30,7 @@
   (auto-revert-check-vc-info			.	t)
   (mouse-wheel-tilt-scroll			.	t) ; enable horizontal scrolling
   (mouse-wheel-flip-direction			.	t)
+  (use-short-answers . t)
   :config
   (global-auto-revert-mode)
   (line-number-mode t)		     ; show current line in modeline
@@ -52,22 +56,10 @@
 	     (add-hook hook #'hl-line-mode)))
 
   (when (gearp! :config default no-splash)
-    (setq inhibit-splash-screen t)))
+    (setq inhibit-splash-screen t))
 
-(leaf default
-  :emacs>= '29.1
-  :when (gearp! :config default)
-  :doc "Sane defaults for Emacs (29.1+)"
-  :config
   (unless (gearp! :config default -pixel-scroll)
-    (pixel-scroll-precision-mode)))
+    (pixel-scroll-precision-mode))
 
-(leaf default
-  :emacs>= '28.1
-  :when (gearp! :config default)
-  :doc "Sane defaults for Emacs (28.1+)"
-  :setq
-  (use-short-answers . t)
-  :config
   (when (display-graphic-p)
-    (context-menu-mode))) ;; make right-click do something sensible
+    (context-menu-mode)))

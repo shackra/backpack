@@ -1,5 +1,5 @@
-(when (version< emacs-version "27.1")
-  (error "Backpack is only compatible with Emacs version 27.1 and up"))
+(when (version< emacs-version "29.1")
+  (error "Backpack is only compatible with Emacs version 29.1 and up"))
 
 (setq package-enable-at-startup nil)
 (setq load-prefer-newer t)
