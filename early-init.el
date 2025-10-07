@@ -82,7 +82,7 @@
     (require 'elpaca)
     (elpaca-generate-autoloads "elpaca" repo)
     (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
-(add-hook 'after-init-hook #'elpaca-process-queues)
+(add-hook 'after-init-hook #'elpaca-process-queues -100)
 (elpaca `(,@elpaca-order))
 
 (require 'leaf)
@@ -100,3 +100,8 @@
       (insert (format "(setq default-frame-alist '((background-color . \"%s\") (foreground-color . \"%s\")))"
                       bg fg)))))
 
+(leaf benchmark-init
+  :ensure t
+  :config
+  (add-hook 'after-init-hook  #'benchmark-init/deactivate 100)
+  (benchmark-init/activate))
