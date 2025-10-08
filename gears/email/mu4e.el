@@ -7,6 +7,18 @@
   :require t
   :leaf-defer nil)
 
+(leaf mu4e-contrib
+  :unless (gearp! :email mu4e -fix-msg-background-color)
+  :when (gearp! :email mu4e)
+  :preface
+  (defun shr-no-colourise-region (&rest ignore))
+  :custom
+  (mu4e-html2text-command . 'mu4e-shr2text)
+  (shr-color-visible-luminance-min . 60)
+  (shr-color-visible-distance-min . 5)
+  :advice
+  (:around shr-colorize-region shr-no-colourise-region))
+
 (leaf mu4e
   :when (gearp! :email mu4e)
   :tag "email" "mu4e"
