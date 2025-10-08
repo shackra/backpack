@@ -22,7 +22,7 @@ fi
 
 if [ "$ACTION" = "ensure" ]; then
     echo "✅ Running Emacs in batch mode..."
-    emacs -nw --eval "(progn (elpaca-wait) (save-default-bg-fg-colors) (kill-emacs 0))"
+    emacs -nw --eval '(load (expand-file-name "ensure.el" user-emacs-directory))'
     exit $?
 else
     echo "❌ Error: unknown action '$ACTION'" >&2
