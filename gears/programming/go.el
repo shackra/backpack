@@ -22,4 +22,7 @@
   (leaf go-rename
     :doc "Integration of the 'gorename' tool into Emacs"
     :when (gearp! :programming go rename)
-    :doctor ("gorename" . "command that performs precise type-safe renaming of identifiers in Go source code")))
+    :doctor ("gorename" . "command that performs precise type-safe renaming of identifiers in Go source code"))
+
+  (unless (gearp! :programming go -treesit)
+    (add-to-list 'treesit-auto-langs 'go)))
