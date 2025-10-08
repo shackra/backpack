@@ -1,7 +1,7 @@
 (require 'backpack-pouch)
 
 (leaf emacs-lisp
-  :when (gearp! :programming emacs-lisp)
+  :when (gearp! :editing emacs-lisp)
   :doc "Emacs lisp programming language"
   :config
   (leaf lispy
