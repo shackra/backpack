@@ -25,4 +25,6 @@
     :doctor ("gorename" . "command that performs precise type-safe renaming of identifiers in Go source code"))
 
   (unless (gearp! :programming go -treesit)
-    (add-to-list 'treesit-auto-langs 'go)))
+    (add-to-list 'treesit-auto-langs 'go)
+    (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
+    (setq go-ts-mode-hook go-mode-hook)))
