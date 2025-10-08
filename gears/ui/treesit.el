@@ -9,7 +9,7 @@
   (treesit-auto-install . 'always)
   (treesit-auto-langs . '()) ;; start fresh
   :config
-  (when (gearp! :programming hyprland)
+  (when (gearp! :editing hyprland)
     (add-to-list
      'treesit-auto-recipe-list
      (make-treesit-auto-recipe
