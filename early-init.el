@@ -112,3 +112,16 @@
   :config
   (add-hook 'after-init-hook  #'benchmark-init/deactivate 100)
   (benchmark-init/activate))
+
+(leaf no-littering
+  :ensure t
+  :pre-setq
+  `(no-littering-etc-directory . ,(expand-file-name "etc" backpack--cache-emacs))
+  `(no-littering-var-directory . ,(expand-file-name "var" backpack--cache-emacs))
+  :config
+  (with-eval-after-load "recentf"
+    (add-to-list 'recentf-exclude
+		 (recentf-expand-file-name no-littering-var-directory))
+    (add-to-list 'recentf-exclude
+		 (recentf-expand-file-name no-littering-etc-directory)))
+  (no-littering-theme-backups))
