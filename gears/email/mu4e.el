@@ -1,5 +1,12 @@
 (require 'backpack-pouch)
 
+(leaf mu4e-query
+  :when (gearp! :email mu4e)
+  :doc "use Emacs lisp to create valid mu queries"
+  :ensure (mu4e-query :host github :repo "mickeynp/mu4e-query" :ref "dca407e1dd9c5d7a84a242b8bb8ceff27037a429")
+  :require t
+  :leaf-defer nil)
+
 (leaf mu4e
   :when (gearp! :email mu4e)
   :tag "email" "mu4e"
@@ -102,10 +109,6 @@
 						  (:from	. 30)
 						  (:subject	. 92)))
   :config
-  (leaf mu4e-query
-    :doc "use Emacs lisp to create valid mu queries"
-    :ensure (mu4e-query :host github :repo "mickeynp/mu4e-query" :ref "dca407e1dd9c5d7a84a242b8bb8ceff27037a429"))
-
   (setf (alist-get 'trash mu4e-marks)
 	'(:char ("d" . "▼")
 		:prompt "dtrash"
