@@ -23,7 +23,7 @@ Now that you have the starter kit cloned with its corresponding sub-modules (rig
   (gear!
     :ui
     (theme modus-vivendi)
-    :programming
+    :editing
     (go -treesit lsp)
     :config
     default)
@@ -51,7 +51,7 @@ In short:
   - to turn off the splash screen use flag =no-splash=.
 - Tree Sitter support for major modes that we support, turned on by default. Use flag =-treesit= to turn it off.
 - Language Server Protocol for major modes that we support. Use flag =lsp= to turn it on.
-- =:programming=: different major modes for "software development"
+- =:editing=: different major modes for editing text files
   - =go=: Go programming language support.
   - =emacs-lisp=: Emacs lisp... this only is for activating lispy with my favorite defaults.
   - =hyprland=: For the hyprlang configuration language used in Hyprland.
