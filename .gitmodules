@@ -1,0 +1,6 @@
+[submodule "base-packages/leaf.el"]
+	path = base-packages/leaf.el
+	url = https://github.com/conao3/leaf.el.git
+[submodule "base-packages/leaf-keywords.el"]
+	path = base-packages/leaf-keywords.el
+	url = https://github.com/conao3/leaf-keywords.el.git

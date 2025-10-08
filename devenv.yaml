@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
+nixpkgs:
+  permittedInsecurePackages:
+    - "emacs-29.4"
+
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  nixpkgs-27-1:
+    url: github:NixOS/nixpkgs/54c1e44240d8a527a8f4892608c4bce5440c3ecb
+  nixpkgs-27-2:
+    url: github:NixOS/nixpkgs/0343e3415784b2cd9c68924294794f7dbee12ab3
+  nixpkgs-28-1:
+    url: github:NixOS/nixpkgs/994df04c3c700fe9edb1b69b82ba3c627e5e04ff
+  nixpkgs-28-2:
+    url: github:NixOS/nixpkgs/09ec6a0881e1a36c29d67497693a67a16f4da573
+  nixpkgs-29-1:
+    url: github:NixOS/nixpkgs/160b762eda6d139ac10ae081f8f78d640dd523eb
+  nixpkgs-29-2:
+    url: github:NixOS/nixpkgs/20bc93ca7b2158ebc99b8cef987a2173a81cde35
+  nixpkgs-29-3:
+    url: github:NixOS/nixpkgs/1afc5440469f94e7ed26e8648820971b102afdc3
+  nixpkgs-29-4:
+    url: github:NixOS/nixpkgs/b58e19b11fe72175fd7a9e014a4786a91e99da5f
+  nixpkgs-30-1:
+    url: github:NixOS/nixpkgs/bf9fa86a9b1005d932f842edf2c38eeecc98eef3
+
+# If you're using non-OSS software, you can set allowUnfree to true.
+# allowUnfree: true
+
+# If you have more than one devenv you can merge them
+#imports:
+# - ./backend

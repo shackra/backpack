@@ -16,3 +16,15 @@
 /straight/repos/gnu-elpa-mirror/
 /straight/repos/melpa/
 /straight/repos/nongnu-elpa/
+*.elc
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+*~
+artifacts/

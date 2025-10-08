@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive   # importante para traer submódulos
+          fetch-depth: 0          # asegura historial completo si lo necesitas
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+
+      - name: Configure Cachix cache for devenv
+        uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+
+      - name: install devenv
+        run: nix profile install nixpkgs#devenv
+
+      - name: Test
+        run: devenv test
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log-output-artifacts
+          path: artifacts/
