@@ -9,7 +9,7 @@
 
 (leaf mu4e-contrib
   :unless (gearp! :email mu4e -fix-msg-background-color)
-  :when (gearp! :email mu4e)
+  :after mu4e
   :preface
   (defun shr-no-colourise-region (&rest ignore))
   :custom
