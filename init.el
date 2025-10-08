@@ -2,6 +2,7 @@
 
 (require 'backpack-pouch)
 (require 'backpack-user)
+(require 'backpack-email-utils)
 
 (backpack-load-user-configuration)
 
@@ -9,6 +10,7 @@
 (load (expand-file-name "gears/ui/theme.el" user-emacs-directory))
 (load (expand-file-name "gears/tools/magit.el" user-emacs-directory))
 (load (expand-file-name "gears/checkers/spellchecking.el" user-emacs-directory))
+(load (expand-file-name "gears/email/mu4e.el" user-emacs-directory))
 (load (expand-file-name "gears/programming/emacs-lisp.el" user-emacs-directory))
 (load (expand-file-name "gears/programming/go.el" user-emacs-directory))
 (load (expand-file-name "gears/programming/org.el" user-emacs-directory))
