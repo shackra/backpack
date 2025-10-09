@@ -94,7 +94,9 @@
 
 ;;; add additional keywords to leaf block
 ;; :doctor defines binaries to check on the user's system
+;; :fonts check what if the fonts needed by a package are installed
 (plist-put leaf-keywords :doctor '`(,@leaf--body))
+(plist-put leaf-keywords :fonts '`(,@leaf--body))
 
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
