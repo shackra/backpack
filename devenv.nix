@@ -55,6 +55,9 @@ in
     (renameEmacs pkgs-28-1 "emacs-28-1")
     (renameEmacs pkgs-27-2 "emacs-27-2")
     (renameEmacs pkgs-27-1 "emacs-27-1")
+
+    # development files
+    pkgs.enchant.dev # for jinx
   ];
   enterTest = ''
     mkdir -p $DEVENV_ROOT/artifacts
