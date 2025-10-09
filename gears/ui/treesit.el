@@ -5,16 +5,14 @@
   :unless (gearp! :ui -treesit)
   :ensure (treesit-auto :ref "016bd286a1ba4628f833a626f8b9d497882ecdf3")
   :global-minor-mode global-treesit-auto-mode
+  :init
+  (defun backpack--treesit-install-language-grammar-around (orig-fun lang &optional out-dir)
+    "Ensure that all grammars are compiled and put on `backpack-tree-sitter-installation-directory`."
+    (apply orig-fun lang (list (or out-dir backpack-tree-sitter-installation-directory))))
+  :advice
+  (:around treesit-install-language-grammar backpack--treesit-install-language-grammar-around)
   :custom
-  (treesit-auto-install . 'always)
+  (treesit-auto-install . 'prompt)
   (treesit-auto-langs . '()) ;; start fresh
   :config
-  (when (gearp! :editing hyprland)
-    (add-to-list
-     'treesit-auto-recipe-list
-     (make-treesit-auto-recipe
-      :lang 'hyprlang
-      :ts-mode 'hyprlang-ts-mode
-      :url "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
-      :ext "/hypr/.*\\.conf\\'"))
-    (add-to-list 'treesit-auto-langs 'hyprlang)))
+  (add-to-list 'treesit-extra-load-path backpack-tree-sitter-installation-directory))

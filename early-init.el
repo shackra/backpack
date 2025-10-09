@@ -126,4 +126,12 @@
 		 (recentf-expand-file-name no-littering-var-directory))
     (add-to-list 'recentf-exclude
 		 (recentf-expand-file-name no-littering-etc-directory)))
-  (no-littering-theme-backups))
+
+  (no-littering-theme-backups)
+
+  (defvar backpack-tree-sitter-installation-directory
+    (no-littering-expand-var-file-name "tree-sitter")
+    "Directory for installing tree-sitter grammars")
+
+  (unless (file-exists-p backpack-tree-sitter-installation-directory)
+    (make-directory backpack-tree-sitter-installation-directory t)))
