@@ -1,4 +1,6 @@
 * Emacs Backpack 🎒
+[[https://img.shields.io/badge/compatible-29.1%20and%20up-grey?style=for-the-badge&logo=gnuemacs&logoColor=white&logoSize=auto&label=GNU%20Emacs&labelColor=%237F5AB6
+]]
 A self-documenting GNU Emacs starter kit inspired after [[https://codeberg.org/ashton314/emacs-bedrock][Bedrock]] and [[https://github.com/doomemacs/doomemacs][Doom]].
 
 ⚠ *This starter kit is bare bones and in rapid development, things may not work, be missing or break in following releases.*
