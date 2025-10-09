@@ -2,5 +2,6 @@
   (elpaca-wait)
   (save-default-bg-fg-colors)
   (unless (gearp! :ui -treesit)
-    (treesit-auto-install-all))
+    (let ((treesit-auto-install t))
+      (treesit-auto-install-all)))
   (kill-emacs 0))
