@@ -1,4 +1,4 @@
-* Emacs Backpack 🎒
+* Backpack Emacs 🎒
 
 #+html: <img alt="Only compatible with GNU Emacs 29.1 and up" src="https://img.shields.io/badge/compatible-29.1%20and%20up-grey?style=for-the-badge&logo=gnuemacs&logoColor=white&logoSize=auto&label=GNU%20Emacs&labelColor=%237F5AB6"/>
 
@@ -8,7 +8,7 @@ A self-documenting GNU Emacs starter kit inspired after [[https://codeberg.org/a
 
 This starter kit uses [[https://github.com/conao3/leaf.el][leaf.el]] as the DSL for the configuration and [[https://github.com/progfolio/elpaca][elpaca]] as package manager. There are macros and functions that help users defining what they want to use from the starter kit (much like in Doom; except I took some liberty to auto-turn on some features).
 ** Getting started
-*** Installing Emacs Backpack
+*** Installing Backpack Emacs
 Make a backup of your old Emacs configuration. Then, clone this repository either on your =$HOME= or in your =$XDG_CONFIG_HOME=:
 
 #+begin_src shell-script-mode
@@ -32,7 +32,7 @@ Now that you have the starter kit cloned with its corresponding sub-modules (rig
     default)
 #+end_src
 
-This will tell Emacs Backpack what stuff you want to use. There are /pouches/ (or categories, =:ui= for example) that store different /gear/ (or modules, =theme= is gear). Gear can have extra features you may want to turn on (or off), Emacs Backpack expresses the existence of such additional features as /flags/ (the /flag/ of =theme= is =modus-vivendi=, the theme we want to use in the example above).
+This will tell Backpack Emacs what stuff you want to use. There are /pouches/ (or categories, =:ui= for example) that store different /gear/ (or modules, =theme= is gear). Gear can have extra features you may want to turn on (or off), Backpack Emacs expresses the existence of such additional features as /flags/ (the /flag/ of =theme= is =modus-vivendi=, the theme we want to use in the example above).
 
 Some features are turned on by default if some Gear is activated. To turn them off, simply put a dash in front of the flag (=-treesit= in the go gear, for example). Putting a dash in front of a flag that is activated only when explicitly used by the user does nothing.
 
@@ -42,9 +42,9 @@ Please do the above. It helps speed up the initialization of Emacs and run funct
 *** Finding out what is available in your Backpack
 At the moment of writing, there is no magical function that will show you all pouches, gear and flags available in your backpack, you'll have to explore the =gear/= folder for that.
 
-Hopefully in the future Emacs Backpack will offer something like the =help= command which should show you all there is.
+Hopefully in the future Backpack Emacs will offer something like the =help= command which should show you all there is.
 
-** What Emacs Backpack currently offers
+** What Backpack Emacs currently offers
 In short:
 
 - =:ui theme=: a /gorillion/ thousand themes. Basically the ones from Doom themes and also those included with your Emacs installation. Use their names as the flag to activate it.
