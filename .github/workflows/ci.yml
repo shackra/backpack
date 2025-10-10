@@ -28,10 +28,3 @@ jobs:
 
       - name: Test
         run: devenv test
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-log-output-artifacts
-          path: artifacts/
