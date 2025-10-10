@@ -28,3 +28,13 @@ devenv.local.nix
 .pre-commit-config.yaml
 *~
 artifacts/
+
+# my git ignore global
+*~
+*.swp
+.ccls-cache
+compile_commands.json
+.tool-versions
+.DS_Store
+.venv
+.direnv
