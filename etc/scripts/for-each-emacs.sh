@@ -1,12 +1,14 @@
 IFS=' '
 
+set -eo pipefail
+
 if [ ! -n "${EMACS_VERSIONS_TO_TEST+x}" ]; then
     echo "EMACS_VERSIONS_TO_TEST is not defined"
     exit 1
 fi
 
 if [ ! -d "$1" ]; then
-  echo "cannot clone $1, does not exist."
+  echo "cannot copy $1, does not exist."
   exit 1
 fi
 

@@ -59,6 +59,7 @@ in
   ];
   enterTest = ''
     mkdir -p $DEVENV_ROOT/artifacts
-    for-each-emacs $DEVENV_ROOT
+    for-each-emacs $DEVENV_ROOT/.
+    exit $?
   '';
 }

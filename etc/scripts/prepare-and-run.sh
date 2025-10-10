@@ -1,5 +1,7 @@
+set -euo pipefail
+
 if [ ! -d "$2" ]; then
-  echo "cannot clone $2, does not exist."
+  echo "cannot copy $2, does not exist."
   exit 1
 fi
 
@@ -10,7 +12,7 @@ then
 fi
 
 TEST_HOME=$(mktemp -d)
-rsync -av --filter=':- .gitignore' --filter='- .git/' --filter='- .github/' $2 "$TEST_HOME/.emacs.d"
+rsync -a --filter=':- .gitignore' --filter='- .git/' --filter='- .github/' $2 "$TEST_HOME/.emacs.d"
 
 $1 --version | head -n 1
 
