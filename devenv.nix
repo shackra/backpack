@@ -44,6 +44,7 @@ in
 
   packages = [
     pkgs.git
+    pkgs.rsync
     prepareAndRunTest
     run-for-each-emacs
     (renameEmacs pkgs "emacs-rolling")

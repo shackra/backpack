@@ -10,10 +10,10 @@ then
 fi
 
 TEST_HOME=$(mktemp -d)
-git clone --recurse-submodules $2 $TEST_HOME/.emacs.d
+rsync -av --filter=':- .gitignore' --filter='- .git/' --filter='- .github/' $2 "$TEST_HOME/.emacs.d"
 
 $1 --version | head -n 1
 
-HOME=$TEST_HOME $1 -batch -l ert -l $TEST_HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
+$1 --init-directory $TEST_HOME/.emacs.d -batch -l ert -l $TEST_HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
 
 rm -rf $TEST_HOME
