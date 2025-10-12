@@ -32,8 +32,6 @@
       (elpaca-generate-autoloads "elpaca" repo)
       (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
 
-  (backpack-load-gear-files)
-
   (add-hook 'elpaca-post-queue-hook
 	    (lambda ()
 	      ;; (save-default-bg-fg-colors)
@@ -44,4 +42,5 @@
 		    (treesit-auto-install-all))))
 	      (kill-emacs 0)))
 
+  (backpack-load-gear-files)
   (elpaca-wait))
