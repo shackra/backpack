@@ -152,13 +152,14 @@ If anything is missing here, Backpack Emacs will work as normal.")
         (funcall fn args-left)))
     ;; COMPAT: ...but restore `file-name-handler-alist' later, because it is
     ;;   needed for handling encrypted or compressed files, among other things.
-    (add-hook 'emacs-startup-hook :depth 101
+    (add-hook 'emacs-startup-hook
 	      (defun backpack--reset-file-handler-alist-h ()
 		(set-default-toplevel-value
 		 'file-name-handler-alist
 		 ;; Merge instead of overwrite because there may have been changes to
 		 ;; `file-name-handler-alist' since startup we want to preserve.
-		 (delete-dups (append file-name-handler-alist old-value))))))
+		 (delete-dups (append file-name-handler-alist old-value))))
+	      100))
 
   (unless noninteractive
     ;; PERF: Resizing the Emacs frame (to accommodate fonts that are smaller or
@@ -433,15 +434,18 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 
   (unless (require 'elpaca-autoloads nil t)
     (when (file-exists-p (expand-file-name "elpaca-autoloads.el" repo))
-      (load (expand-file-name "elpaca-autoloads.el" repo)))))
+      (load (expand-file-name "elpaca-autoloads.el" repo))))
+  ;; TODO(shackra): append every package's build to load-path
+  )
 
 (defun backpack-start (&optional interactive?)
   "Start the Backpack session."
   (when (daemonp)
     (message "Starting in daemon mode...")
-    (add-hook 'kill-emacs-hook :depth 100
+    (add-hook 'kill-emacs-hook
 	      (lambda ()
-		(message "Killing Emacs. ¡Adiós!"))))
+		(message "Killing Emacs. ¡Adiós!"))
+	      100))
   (if interactive?
       (progn
 	;; TODO(shackra): incremental loading of packages
@@ -451,12 +455,12 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 
 	;; load user's private configuration
 	(let ((init-file (expand-file-name "init.el" backpack-user-dir)))
-	  (load init-file t))
-
-	(backpack-load-gear-files))
+	  (load init-file t)
+	  (backpack-load-gear-files)))
     (progn ;; CLI stuff I still don't have any use for, yet
       (with-file-modes 448
-	(mapc (apply-partially #'make-directory 'parents)
+	(mapc (lambda (dir)
+		(make-directory dir t))
 	      (list backpack-cache-dir
 		    backpack-nonessential-dir
 		    backpack-state-dir

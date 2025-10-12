@@ -22,7 +22,7 @@ fi
 
 if [ "$ACTION" = "ensure" ]; then
     echo "✅ Running Emacs in batch mode..."
-    emacs -nw --eval '(load (expand-file-name "ensure.el" backpack-emacs-dir))'
+    emacs --batch -l $INIT_DIR/early-init.el -l $INIT_DIR/ensure.el
     exit $?
 else
     echo "❌ Error: unknown action '$ACTION'" >&2
