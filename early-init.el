@@ -8,15 +8,13 @@
 
   (setq load-prefer-newer noninteractive)
 
-  (if (let ((load-suffixes '(".elc" ".el"))
-	    (backpack (expand-file-name "lisp/backpack" user-emacs-directory)))
-	(if (file-exists-p (concat backpack ".el"))
-	    ;; load backpack
-	    (load backpack nil nil nil t)
-	  (warn "no file lisp/backpack.el found"))
-	(setq user-init-file (expand-file-name "early-init" user-emacs-directory))
-	(setq load-prefer-newer t)
-	(setq gc-cons-threshold (* 16 1024 1024))
-	nil)
-      ;; (doom-initialize (not noninteractive))
-      (load user-init-file 'noerror nil nil 'must-suffix)))
+  (let ((load-suffixes '(".elc" ".el"))
+	(backpack (expand-file-name "lisp/backpack" user-emacs-directory)))
+    (when (file-exists-p (concat backpack ".el"))
+      ;; load backpack
+      (load backpack nil nil nil t))
+    (setq user-init-file (expand-file-name "early-init" user-emacs-directory))
+    (setq load-prefer-newer t)
+    (setq gc-cons-threshold (* 16 1024 1024))))
+
+(backpack-start (not noninteractive))

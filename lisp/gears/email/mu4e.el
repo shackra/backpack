@@ -1,4 +1,4 @@
-(require 'backpack-pouch)
+(require 'xdg)
 
 (leaf mu4e-query
   :when (gearp! :email mu4e)

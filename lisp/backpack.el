@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (eval-and-compile
   (when (version< emacs-version "29.1")
     (error "Backpack is only compatible with Emacs version 29.1 and up")))
@@ -24,7 +26,24 @@
 (put 'when-let 'byte-obsolete-info nil)
 
 ;; backpack standard library
+(add-to-list 'load-path (expand-file-name "base-packages/leaf.el" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "base-packages/leaf-keywords.el" user-emacs-directory))
 (add-to-list 'load-path (file-name-directory load-file-name))
+(require 'leaf)
+(require 'leaf-keywords)
+(require 'backpack-pouch)
+(require 'backpack-email-utils)
+
+(leaf-keywords-init)
+
+;;; add additional keywords to leaf block
+;; :doctor defines binaries to check on the user's system
+;; :fonts check what if the fonts needed by a package are installed
+(plist-put leaf-keywords :doctor '`(,@leaf--body))
+(plist-put leaf-keywords :fonts '`(,@leaf--body))
+
+;; alias :ensure to :elpaca
+(setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
 
 (defconst backpack-system
   (pcase system-type
@@ -95,8 +114,13 @@ If anything is missing here, Backpack Emacs will work as normal.")
   (expand-file-name "state" backpack-cache-dir)
   "Location for files that carry state for some functionalities or packages.")
 
+(defvar backpack-tree-sitter-installation-dir
+  (expand-file-name "tree-sitter" backpack-nonessential-dir)
+  "Location for treesit to install compiled grammar.")
+
 ;;
 ;;; Startup optimizations
+;;; copied straight from Doom Emacs 👀
 
 (unless (daemonp)
   ;; PERF: `file-name-handler-alist' is consulted on each call to `require',
@@ -129,12 +153,12 @@ If anything is missing here, Backpack Emacs will work as normal.")
     ;; COMPAT: ...but restore `file-name-handler-alist' later, because it is
     ;;   needed for handling encrypted or compressed files, among other things.
     (add-hook 'emacs-startup-hook :depth 101
-      (defun backpack--reset-file-handler-alist-h ()
-        (set-default-toplevel-value
-         'file-name-handler-alist
-         ;; Merge instead of overwrite because there may have been changes to
-         ;; `file-name-handler-alist' since startup we want to preserve.
-         (delete-dups (append file-name-handler-alist old-value))))))
+	      (defun backpack--reset-file-handler-alist-h ()
+		(set-default-toplevel-value
+		 'file-name-handler-alist
+		 ;; Merge instead of overwrite because there may have been changes to
+		 ;; `file-name-handler-alist' since startup we want to preserve.
+		 (delete-dups (append file-name-handler-alist old-value))))))
 
   (unless noninteractive
     ;; PERF: Resizing the Emacs frame (to accommodate fonts that are smaller or
@@ -174,7 +198,7 @@ If anything is missing here, Backpack Emacs will work as normal.")
         (advice-remove #'tty-run-terminal-initialization #'tty-run-terminal-initialization@defer)
         (add-hook 'window-setup-hook
                   (apply-partially #'tty-run-terminal-initialization
-                                (selected-frame) nil t))))
+                                   (selected-frame) nil t))))
 
     ;; These optimizations are brittle, difficult to debug, and obscure other
     ;; issues, so bow out when debug mode is on.
@@ -230,7 +254,7 @@ If anything is missing here, Backpack Emacs will work as normal.")
 
         (add-hook 'tool-bar-mode-hook (defun --tool-bar-setup ()
 					(tool-bar-setup)
-					(remove-hook 'tool-bar-mode-hook --tool-bar-setup)))
+					(remove-hook 'tool-bar-mode-hook '--tool-bar-setup)))
         (unless (default-toplevel-value 'mode-line-format)
           (setq-default mode-line-format (get 'mode-line-format 'initial-value)))))
 
@@ -396,6 +420,91 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 
 ;;
 ;;; Initializers
+
+(defvar elpaca-installer-version 0.11)
+(defvar elpaca-directory (expand-file-name "elpaca/" backpack-nonessential-dir))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+
+(let ((repo (expand-file-name "elpaca/" elpaca-repos-directory))
+      (build (expand-file-name "elpaca/" elpaca-builds-directory)))
+
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+
+  (unless (require 'elpaca-autoloads nil t)
+    (when (file-exists-p (expand-file-name "elpaca-autoloads.el" repo))
+      (load (expand-file-name "elpaca-autoloads.el" repo)))))
+
+(defun backpack-start (&optional interactive?)
+  "Start the Backpack session."
+  (when (daemonp)
+    (message "Starting in daemon mode...")
+    (add-hook 'kill-emacs-hook :depth 100
+	      (lambda ()
+		(message "Killing Emacs. ¡Adiós!"))))
+  (if interactive?
+      (progn
+	;; TODO(shackra): incremental loading of packages
+
+	;; last hook to run in Emacs' startup process.
+	(advice-add #'command-line-1 :after #'backpack-finalize)
+
+	;; load user's private configuration
+	(let ((init-file (expand-file-name "init.el" backpack-user-dir)))
+	  (load init-file t))
+
+	(backpack-load-gear-files))
+    (progn ;; CLI stuff I still don't have any use for, yet
+      (with-file-modes 448
+	(mapc (apply-partially #'make-directory 'parents)
+	      (list backpack-cache-dir
+		    backpack-nonessential-dir
+		    backpack-state-dir
+		    backpack-data-dir
+		    backpack-tree-sitter-installation-dir)))))
+
+  ;; load site files
+  (let ((site-loader
+	 (lambda ()
+	   (unless site-run-file
+	     (when-let* ((site-file (get 'site-run-file 'initial-value)))
+	       (let ((inhibit-startup-screen inhibit-startup-screen))
+		 (setq site-run-file site-file)
+		 (load site-run-file t)))))))
+
+    (if interactive?
+	(define-advice startup--load-user-init-file (:before (&rest _) load-site-files 100)
+	  (funcall site-loader))
+      (funcall site-loader)))
+  t)
+
+(defun backpack-finalize (&rest _)
+  "After the startup process finalizes."
+  (setq backpack-init-time (float-time (time-subtract (current-time) before-init-time)))
+
+  ;; TODO: run hooks?
+
+  (when (eq (default-value 'gc-cons-threshold) most-positive-fixnum)
+    (setq-default gc-cons-threshold (* 16 1024 1024)))
+  t)
+
+(defun backpack-load-gear-files ()
+  "Load all gears available."
+  (load (expand-file-name "gears/config/default" backpack-core-dir))
+  (load (expand-file-name "gears/ui/treesit" backpack-core-dir))
+  (load (expand-file-name "gears/ui/theme" backpack-core-dir))
+  (load (expand-file-name "gears/completion/vertico" backpack-core-dir))
+  (load (expand-file-name "gears/completion/orderless" backpack-core-dir))
+  (load (expand-file-name "gears/completion/marginalia" backpack-core-dir))
+  (load (expand-file-name "gears/completion/nerd-icons-completion" backpack-core-dir))
+  (load (expand-file-name "gears/tools/magit" backpack-core-dir))
+  (load (expand-file-name "gears/tools/whitespaces" backpack-core-dir))
+  (load (expand-file-name "gears/checkers/spellchecking" backpack-core-dir))
+  (load (expand-file-name "gears/email/mu4e" backpack-core-dir))
+  (load (expand-file-name "gears/editing/emacs-lisp" backpack-core-dir))
+  (load (expand-file-name "gears/editing/go" backpack-core-dir))
+  (load (expand-file-name "gears/editing/org" backpack-core-dir))
+  (load (expand-file-name "gears/editing/hyprland" backpack-core-dir)))
 
 ;; TODO(shackra): implement this
 
