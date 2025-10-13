@@ -32,6 +32,8 @@
       (elpaca-generate-autoloads "elpaca" repo)
       (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
 
+  (elpaca `(,@elpaca-order))
+
   (add-hook 'elpaca-post-queue-hook
 	    (lambda ()
 	      ;; (save-default-bg-fg-colors)
