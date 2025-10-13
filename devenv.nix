@@ -58,7 +58,6 @@ in
     pkgs.enchant.dev # for jinx
   ];
   enterTest = ''
-    mkdir -p $DEVENV_ROOT/artifacts
     for-each-emacs $DEVENV_ROOT/.
     exit $?
   '';

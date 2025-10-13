@@ -16,6 +16,6 @@ rsync -a --filter=':- .gitignore' --filter='- .git/' --filter='- .github/' $2 "$
 
 $1 --version | head -n 1
 
-$1 --init-directory $TEST_HOME/.emacs.d -batch -l ert -l $TEST_HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
+$1 --init-directory $TEST_HOME/.emacs.d -batch -l $TEST_HOME/.emacs.d/early-init.el -l ert -l $TEST_HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
 
 rm -rf $TEST_HOME
