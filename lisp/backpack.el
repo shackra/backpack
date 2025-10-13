@@ -434,9 +434,10 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 
   (unless (require 'elpaca-autoloads nil t)
     (when (file-exists-p (expand-file-name "elpaca-autoloads.el" repo))
-      (load (expand-file-name "elpaca-autoloads.el" repo))))
-  ;; TODO(shackra): append every package's build to load-path
-  )
+      (load (expand-file-name "elpaca-autoloads.el" repo)))))
+
+(defvar backpack-after-init-hook '(elpaca-process-queues)
+  "Abnormal hook for functions to be run after Backpack was initialize.")
 
 (defun backpack-start (&optional interactive?)
   "Start the Backpack session."
@@ -487,6 +488,7 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   (setq backpack-init-time (float-time (time-subtract (current-time) before-init-time)))
 
   ;; TODO: run hooks?
+  (run-hooks 'backpack-after-init-hook)
 
   (when (eq (default-value 'gc-cons-threshold) most-positive-fixnum)
     (setq-default gc-cons-threshold (* 16 1024 1024)))
