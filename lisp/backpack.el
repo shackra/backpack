@@ -510,7 +510,8 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   (load (expand-file-name "gears/editing/emacs-lisp" backpack-core-dir))
   (load (expand-file-name "gears/editing/go" backpack-core-dir))
   (load (expand-file-name "gears/editing/org" backpack-core-dir))
-  (load (expand-file-name "gears/editing/hyprland" backpack-core-dir)))
+  (load (expand-file-name "gears/editing/hyprland" backpack-core-dir))
+  (load (expand-file-name "gears/editing/nix" backpack-core-dir)))
 
 ;; TODO(shackra): implement this
 
