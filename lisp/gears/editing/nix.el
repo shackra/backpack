@@ -26,13 +26,13 @@
   (add-to-list 'major-mode-remap-alist '(nix-mode . nix-ts-mode))
   (setq nix-ts-mode-hook nix-mode-hook))
 
-  (leaf ob-nix
-    :doc "a simple org-babel language extension to evaluate nix expressions using `nix-instantiate`"
-    :after org
-    :ensure (ob-nix :ref "76d71b37fb031f25bd52ff9c98b29292ebe0424e")
-    :when (and (gearp! :editing org) (gearp! :editing nix))
-    :doctor
-    ("nix-instantiate" . "instantiate store derivations from Nix expressions")
-    :config
-    (org-babel-do-load-languages
-     'org-babel-load-languages (append org-babel-load-languages '((nix . t)))))
+(leaf ob-nix
+  :doc "a simple org-babel language extension to evaluate nix expressions using `nix-instantiate`"
+  :after org
+  :ensure (ob-nix :ref "76d71b37fb031f25bd52ff9c98b29292ebe0424e")
+  :when (and (gearp! :editing org) (gearp! :editing nix))
+  :doctor
+  ("nix-instantiate" . "instantiate store derivations from Nix expressions")
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages (append org-babel-load-languages '((nix . t)))))
