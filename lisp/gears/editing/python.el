@@ -30,3 +30,13 @@
     (add-to-list 'treesit-auto-langs 'python)
     (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
     (setq python-ts-mode-hook python-mode-hook)))
+
+(leaf ob-python
+  :doc "Python source blocks in org-mode"
+  :when (and (gearp! :editing python) (gearp! :editing org))
+  :after org
+  :custom
+  (org-babel-python-command . "python3")
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages (append org-babel-load-languages '((python . t)))))
