@@ -1,5 +1,5 @@
 (leaf nix-mode
-  :doc "An Emacs major mode for editing Nix expressions."
+  :doc "an Emacs major mode for editing Nix expressions"
   :ensure (nix-mode :ref "719feb7868fb567ecfe5578f6119892c771ac5e5")
   :when (gearp! :editing nix)
   :config
