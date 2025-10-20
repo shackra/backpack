@@ -303,6 +303,9 @@ If anything is missing here, Backpack Emacs will work as normal.")
 ;; config (e.g. ~/.doom.d/).
 (setq custom-file (file-name-concat backpack-user-dir "custom.el"))
 
+;; backup all files here
+(setq backup-directory-alist `(("." . ,backpack-nonessential-dir)))
+
 (define-advice en/disable-command (:around (fn &rest args) write-to-data-dir)
   "Save safe-local-variables to `custom-file' instead of `user-init-file'.
 
