@@ -2,11 +2,19 @@
   :doc "major mode for the Python Programming Language"
   :ensure (python-mode :ref "5aaf8b386aa694429d997c6fd49772b0b359e514")
   :when (gearp! :editing python)
+  :hook
+  (python-mode-hook . electric-pair-local-mode)
+  (python-mode-hook .
+		    (lambda ()
+		      (toggle-truncate-lines 1)
+		      (unless (gearp! :editing python -display-line-numbers)
+			(display-line-numbers-mode +1))))
   :config
   (leaf eglot
     :doc "Language Server Protocol support for python"
     :when (gearp! :editing python lsp)
-    :hook (python-mode-hook . eglot-ensure)
+    :hook
+    (python-mode-hook . eglot-ensure)
     :config
     (add-to-list 'eglot-server-programs
 		 `(python-mode . ,(eglot-alternatives

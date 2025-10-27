@@ -1,11 +1,16 @@
-(require 'backpack-pouch)
-
 (leaf hyprlang-ts-mode
   :doc "a major mode designed to provide enhanced editing support for Hyprland configuration files by leveraging Tree-Sitter"
   :when (gearp! :editing hyprland)
   :ensure (hyprlang-ts-mode :ref "4a2a257a237a4c15d1132b2ba3fdf040d7b44ef8")
   :custom (hyprlang-ts-mode-indent-offset . 2)
   :mode "/hypr/.*\\.conf\\'"
+  :hook
+  (hyprlang-ts-mode-hook . electric-pair-local-mode)
+  (hyprlang-ts-mode-hook .
+			 (lambda ()
+			   (toggle-truncate-lines +1)
+			   (unless (gearp! :editing hyprland -display-line-numbers)
+			     (display-line-numbers-mode +1))))
   :init
   (unless (gearp! :ui -treesit)
     (add-to-list 'treesit-auto-langs 'hyprlang)

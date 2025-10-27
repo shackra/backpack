@@ -1,9 +1,14 @@
-(require 'backpack-pouch)
-
 (leaf go-mode
   :doc "Support for Go programming language in Emacs"
   :when (gearp! :editing go)
   :ensure (go-mode :ref "0ed3c5227e7f622589f1411b4939c3ee34711ebd")
+  :hook
+  (go-mode-hook . electric-pair-local-mode)
+  (go-mode-hook .
+		(lambda ()
+		  (toggle-truncate-lines +1)
+		  (unless (gearp! :editing go -display-line-numbers)
+		    (display-line-numbers-mode +1))))
   :config
   (leaf eglot
     :doc "Language Server Protocol support for go-mode"

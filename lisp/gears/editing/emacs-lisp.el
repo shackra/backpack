@@ -1,8 +1,13 @@
-(require 'backpack-pouch)
-
 (leaf emacs-lisp
   :when (gearp! :editing emacs-lisp)
   :doc "Emacs lisp programming language"
+  :hook
+  ((emacs-lisp-mode-hook lisp-mode-hook) .
+   (lambda ()
+     (toggle-truncate-lines +1)
+
+     (unless (gearp! :editing emacs-lisp -display-line-numbers)
+       (display-line-numbers-mode +1))))
   :config
   (leaf lispy
     :ensure (lispy :host github :repo "enzuru/lispy" :ref "c2acc4bfc1add60c8679c1191fa1b10144f748eb")

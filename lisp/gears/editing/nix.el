@@ -2,6 +2,13 @@
   :doc "an Emacs major mode for editing Nix expressions"
   :ensure (nix-mode :ref "719feb7868fb567ecfe5578f6119892c771ac5e5")
   :when (gearp! :editing nix)
+  :hook
+  (nix-mode-hook . electric-pair-local-mode)
+  (nix-mode-hook . (lambda ()
+		     (toggle-truncate-lines +1)
+
+		     (unless (gearp! :editing nix -display-line-numbers)
+		       (display-line-numbers-mode +1))))
   :config
   (leaf eglot
     :doc "Language Server Protocol support for nix-mode"
@@ -11,7 +18,8 @@
     ("nil"  . "an incremental analysis assistant for writing in Nix")
     ("nixfmt" . "format Nix source code, used with your LSP server of choice")
     ("alejandra" . "the Uncompromising Nix Code Formatter, used with your LSP server of choice")
-    :hook (nix-mode-hook . eglot-ensure)
+    :hook
+    (nix-mode-hook . eglot-ensure)
     :config
     (add-to-list 'eglot-server-programs
 		 `(nix-mode . ,(eglot-alternatives '(("nixd")
