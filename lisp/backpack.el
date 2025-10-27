@@ -514,6 +514,7 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   (load (expand-file-name "gears/tools/magit" backpack-core-dir))
   (load (expand-file-name "gears/tools/whitespaces" backpack-core-dir))
   (load (expand-file-name "gears/tools/envrc" backpack-core-dir))
+  (load (expand-file-name "gears/tools/eldoc" backpack-core-dir))
   (load (expand-file-name "gears/checkers/spellchecking" backpack-core-dir))
   (load (expand-file-name "gears/email/mu4e" backpack-core-dir))
   (load (expand-file-name "gears/editing/emacs-lisp" backpack-core-dir))
