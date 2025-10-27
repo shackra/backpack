@@ -460,6 +460,9 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 	;; load user's private configuration
 	(let ((init-file (expand-file-name "init.el" backpack-user-dir)))
 	  (load init-file t)
+	  ;; load custom file
+	  (load custom-file)
+	  ;; load all gears
 	  (backpack-load-gear-files)))
     (progn ;; CLI stuff I still don't have any use for, yet
       (with-file-modes 448
