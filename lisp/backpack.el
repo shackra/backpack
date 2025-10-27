@@ -505,6 +505,7 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   (load (expand-file-name "gears/config/default" backpack-core-dir))
   (load (expand-file-name "gears/ui/treesit" backpack-core-dir))
   (load (expand-file-name "gears/ui/theme" backpack-core-dir))
+  (load (expand-file-name "gears/completion/eglot" backpack-core-dir))
   (load (expand-file-name "gears/completion/vertico" backpack-core-dir))
   (load (expand-file-name "gears/completion/orderless" backpack-core-dir))
   (load (expand-file-name "gears/completion/marginalia" backpack-core-dir))
