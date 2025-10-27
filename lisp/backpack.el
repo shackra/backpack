@@ -509,6 +509,7 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   (load (expand-file-name "gears/completion/orderless" backpack-core-dir))
   (load (expand-file-name "gears/completion/marginalia" backpack-core-dir))
   (load (expand-file-name "gears/completion/nerd-icons-completion" backpack-core-dir))
+  (load (expand-file-name "gears/completion/corfu" backpack-core-dir))
   (load (expand-file-name "gears/tools/magit" backpack-core-dir))
   (load (expand-file-name "gears/tools/whitespaces" backpack-core-dir))
   (load (expand-file-name "gears/tools/envrc" backpack-core-dir))
