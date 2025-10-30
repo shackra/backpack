@@ -25,9 +25,6 @@
 				     ("pyrefly" "lsp")
 				     "jedi-language-server"
 				     ("ruff" "server")))))
-    (unless (gearp! :editing python -treesit)
-    (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
-    (setq python-ts-mode-hook python-mode-hook))
     :doctor
     ("pylsp" . "python implementation of the Language Server Protocol")
     ("pyls"  . "an implementation of the Language Server Protocol for Python")
@@ -46,3 +43,11 @@
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages (append org-babel-load-languages '((python . t)))))
+
+(leaf python-ts-mode
+  :doc "tree-sitter support for Python"
+  :after python
+  :unless (gearp! :editing python -treesit)
+  :config
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+  (setq python-ts-mode-hook python-mode-hook))
