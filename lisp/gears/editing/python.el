@@ -25,6 +25,9 @@
 				     ("pyrefly" "lsp")
 				     "jedi-language-server"
 				     ("ruff" "server")))))
+    (unless (gearp! :editing python -treesit)
+    (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+    (setq python-ts-mode-hook python-mode-hook))
     :doctor
     ("pylsp" . "python implementation of the Language Server Protocol")
     ("pyls"  . "an implementation of the Language Server Protocol for Python")
@@ -32,11 +35,7 @@
     ("pyright-langserver" . "a full-featured, standards-based static type checker for Python")
     ("pyrefly" . "a fast type checker and language server for Python with powerful IDE features")
     ("jedi-language-server" . "a language server for the latest version(s) of Jedi")
-    ("ruff" . "an extremely fast Python linter, code formatter (and LSP server), written in Rust"))
-
-  (unless (gearp! :editing python -treesit)
-    (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
-    (setq python-ts-mode-hook python-mode-hook)))
+    ("ruff" . "an extremely fast Python linter, code formatter (and LSP server), written in Rust")))
 
 (leaf ob-python
   :doc "Python source blocks in org-mode"
