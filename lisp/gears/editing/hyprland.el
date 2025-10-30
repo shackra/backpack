@@ -13,7 +13,6 @@
 			     (display-line-numbers-mode +1))))
   :init
   (unless (gearp! :ui -treesit)
-    (add-to-list 'treesit-auto-langs 'hyprlang)
     (add-to-list 'treesit-auto-recipe-list
 		 (make-treesit-auto-recipe
 		  :lang 'hyprlang

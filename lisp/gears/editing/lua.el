@@ -20,6 +20,5 @@
     (add-to-list 'eglot-server-programs '(lua-mode . ("lua-language-server"))))
 
   (unless (gearp! :editing lua -treesit)
-    (add-to-list 'treesit-auto-langs 'lua)
     (add-to-list 'major-mode-remap-alist '(lua-mode . lua-ts-mode))
     (setq lua-ts-mode-hook lua-mode-hook)))

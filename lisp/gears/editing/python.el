@@ -35,7 +35,6 @@
     ("ruff" . "an extremely fast Python linter, code formatter (and LSP server), written in Rust"))
 
   (unless (gearp! :editing python -treesit)
-    (add-to-list 'treesit-auto-langs 'python)
     (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
     (setq python-ts-mode-hook python-mode-hook)))
 

@@ -30,7 +30,6 @@
   :ensure (nix-ts-mode :ref "d769e53ccc0f40026fd11c7e23bf419c2caf4732")
   :when (and (gearp! :editing nix) (not (gearp! :editing nix -treesit)))
   :config
-  (add-to-list 'treesit-auto-langs 'nix)
   (add-to-list 'major-mode-remap-alist '(nix-mode . nix-ts-mode))
   (setq nix-ts-mode-hook nix-mode-hook))
 
