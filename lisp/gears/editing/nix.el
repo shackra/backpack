@@ -6,13 +6,12 @@
   (nix-mode-hook . electric-pair-local-mode)
   (nix-mode-hook . (lambda ()
 		     (toggle-truncate-lines +1)
-
 		     (unless (gearp! :editing nix -display-line-numbers)
-		       (display-line-numbers-mode +1))))
-  :config
-  (leaf eglot
+		       (display-line-numbers-mode +1)))))
+
+(leaf eglot
     :doc "Language Server Protocol support for nix-mode"
-    :when (gearp! :editing nix lsp)
+    :when (and (gearp! :editing nix lsp) (gearp! :editing nix))
     :doctor
     ("nixd" . "a feature-rich nix language server interoperating with C++ nix")
     ("nil"  . "an incremental analysis assistant for writing in Nix")
@@ -23,12 +22,12 @@
     :config
     (add-to-list 'eglot-server-programs
 		 `(nix-mode . ,(eglot-alternatives '(("nixd")
-						     ("nil" "--stdio")))))))
+						     ("nil" "--stdio"))))))
 
 (leaf nix-ts-mode
   :doc "tree-sitter major mode for nix"
   :ensure (nix-ts-mode :ref "d769e53ccc0f40026fd11c7e23bf419c2caf4732")
-  :when (and (gearp! :editing nix) (not (gearp! :editing nix -treesit)))
+  :unless (gearp! :editing nix -treesit)
   :config
   (add-to-list 'major-mode-remap-alist '(nix-mode . nix-ts-mode))
   (setq nix-ts-mode-hook nix-mode-hook))
