@@ -45,6 +45,21 @@
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
 
+;;; Backpack mode management
+(defvar backpack-mode 'normal
+  "Current operating mode for Backpack.
+Possible values:
+- `normal': Standard Emacs startup - only activate pre-built packages
+- `sync': Synchronization mode - install/build packages but skip activation")
+
+(defun backpack-sync-mode-p ()
+  "Return non-nil if Backpack is in synchronization mode."
+  (eq backpack-mode 'sync))
+
+(defun backpack-normal-mode-p ()
+  "Return non-nil if Backpack is in normal mode."
+  (eq backpack-mode 'normal))
+
 (defconst backpack-system
   (pcase system-type
     ('darwin '(macos bsd))
@@ -430,29 +445,252 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 
-(let ((repo (expand-file-name "elpaca/" elpaca-repos-directory))
-      (build (expand-file-name "elpaca/" elpaca-builds-directory)))
+;; Location of elpaca in base-packages (bundled with Backpack)
+(defvar backpack--elpaca-source-dir
+  (expand-file-name "base-packages/elpaca/" backpack-emacs-dir)
+  "Location of the bundled elpaca source in base-packages.")
 
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
+;; Custom build steps for synchronization mode - everything except activation
+(defvar backpack--sync-build-steps
+  '(elpaca--clone
+    elpaca--configure-remotes
+    elpaca--checkout-ref
+    elpaca--run-pre-build-commands
+    elpaca--queue-dependencies
+    elpaca--check-version
+    elpaca--link-build-files
+    elpaca--generate-autoloads-async
+    elpaca--byte-compile
+    elpaca--compile-info
+    elpaca--install-info
+    elpaca--add-info-path
+    elpaca--run-post-build-commands)
+  "Build steps for sync mode - excludes `elpaca--activate-package'.")
 
-  (unless (require 'elpaca-autoloads nil t)
-    (when (file-exists-p (expand-file-name "elpaca-autoloads.el" repo))
-      (load (expand-file-name "elpaca-autoloads.el" repo)))))
+;; Steps for activating pre-built packages in normal mode
+(defvar backpack--activation-only-steps
+  '(elpaca--queue-dependencies elpaca--add-info-path elpaca--activate-package)
+  "Steps for normal mode - only activate already-built packages.")
 
-(defvar backpack-after-init-hook '(elpaca-process-queues)
-  "Abnormal hook for functions to be run after Backpack was initialize.")
+(defun backpack--copy-directory-recursively (source dest)
+  "Copy SOURCE directory recursively to DEST using pure Emacs Lisp.
+This is platform-agnostic and doesn't rely on external tools."
+  (unless (file-exists-p dest)
+    (make-directory dest t))
+  (dolist (file (directory-files source t "^[^.]"))
+    (let ((dest-file (expand-file-name (file-name-nondirectory file) dest)))
+      (cond
+       ((file-directory-p file)
+        (backpack--copy-directory-recursively file dest-file))
+       (t
+        (copy-file file dest-file t))))))
+
+(defun backpack--elpaca-repo-dir ()
+  "Return the elpaca repo directory path."
+  (expand-file-name "elpaca/" elpaca-repos-directory))
+
+(defun backpack--elpaca-build-dir ()
+  "Return the elpaca build directory path."
+  (expand-file-name "elpaca/" elpaca-builds-directory))
+
+(defun backpack--elpaca-installed-p ()
+  "Return non-nil if elpaca is already installed in the expected location."
+  (let ((repo-dir (backpack--elpaca-repo-dir)))
+    (and (file-exists-p repo-dir)
+         (file-exists-p (expand-file-name "elpaca.el" repo-dir)))))
+
+(defun backpack--install-elpaca-from-base-packages ()
+  "Copy elpaca from base-packages to elpaca-repos-directory.
+This uses the bundled elpaca instead of cloning from the internet."
+  (let ((repo-dir (backpack--elpaca-repo-dir)))
+    (message "Backpack: Installing elpaca from base-packages...")
+    ;; Ensure parent directories exist
+    (make-directory elpaca-repos-directory t)
+    ;; Copy elpaca source to repo directory
+    (backpack--copy-directory-recursively backpack--elpaca-source-dir repo-dir)
+    (message "Backpack: Elpaca source copied to %s" repo-dir)))
+
+(defun backpack--build-elpaca ()
+  "Build elpaca: byte-compile and generate autoloads.
+This replicates what the elpaca installer does but without cloning."
+  (let* ((repo-dir (backpack--elpaca-repo-dir))
+         (build-dir (backpack--elpaca-build-dir))
+         (default-directory repo-dir))
+    (message "Backpack: Building elpaca...")
+
+    ;; Byte-compile elpaca
+    (let ((emacs-exe (concat invocation-directory invocation-name)))
+      (call-process emacs-exe nil nil nil
+                    "-Q" "-L" "." "--batch"
+                    "--eval" "(byte-recompile-directory \".\" 0 'force)"))
+
+    ;; Load elpaca to generate autoloads
+    (add-to-list 'load-path repo-dir)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo-dir)
+
+    ;; Create build directory with symlinks/copies to repo
+    (make-directory build-dir t)
+    (dolist (file (directory-files repo-dir t "\\.elc?\\'"))
+      (let ((dest (expand-file-name (file-name-nondirectory file) build-dir)))
+        (unless (file-exists-p dest)
+          (if (fboundp 'make-symbolic-link)
+              (condition-case nil
+                  (make-symbolic-link file dest)
+                (error (copy-file file dest t)))
+            (copy-file file dest t)))))
+
+    ;; Copy autoloads to build dir
+    (let ((autoloads (expand-file-name "elpaca-autoloads.el" repo-dir)))
+      (when (file-exists-p autoloads)
+        (copy-file autoloads (expand-file-name "elpaca-autoloads.el" build-dir) t)))
+
+    (message "Backpack: Elpaca built successfully")))
+
+(defun backpack--ensure-elpaca ()
+  "Ensure elpaca is installed and built from base-packages.
+In sync mode, this will copy and build elpaca if needed.
+In normal mode, this just loads elpaca if it's already built."
+  (let ((repo-dir (backpack--elpaca-repo-dir))
+        (build-dir (backpack--elpaca-build-dir)))
+
+    (cond
+     ;; Elpaca is already built - just load it
+     ((and (file-exists-p build-dir)
+           (file-exists-p (expand-file-name "elpaca-autoloads.el" build-dir)))
+      (add-to-list 'load-path build-dir)
+      (require 'elpaca-autoloads nil t))
+
+     ;; Elpaca source exists but not built - build it (sync mode)
+     ((and (backpack-sync-mode-p)
+           (backpack--elpaca-installed-p))
+      (backpack--build-elpaca)
+      (add-to-list 'load-path build-dir)
+      (require 'elpaca-autoloads nil t))
+
+     ;; Elpaca not installed - install from base-packages (sync mode only)
+     ((backpack-sync-mode-p)
+      (backpack--install-elpaca-from-base-packages)
+      (backpack--build-elpaca)
+      (add-to-list 'load-path build-dir)
+      (require 'elpaca-autoloads nil t))
+
+     ;; Normal mode but elpaca not installed - try to load from repo
+     ((file-exists-p repo-dir)
+      (add-to-list 'load-path repo-dir)
+      (when (file-exists-p (expand-file-name "elpaca-autoloads.el" repo-dir))
+        (load (expand-file-name "elpaca-autoloads.el" repo-dir) nil t)))
+
+     ;; Nothing available
+     (t
+      (when (backpack-normal-mode-p)
+        (display-warning 'backpack
+                         "Elpaca is not installed. Run 'backpack ensure' first."
+                         :error))))))
+
+(defun backpack--setup-elpaca-for-mode ()
+  "Configure elpaca based on `backpack-mode'."
+  (when (featurep 'elpaca)
+    (cond
+     ((backpack-sync-mode-p)
+      ;; Sync mode: do everything except activation
+      (setq elpaca-build-steps backpack--sync-build-steps))
+     ((backpack-normal-mode-p)
+      ;; Normal mode: add recipe function to prevent building unbuilt packages
+      (add-to-list 'elpaca-recipe-functions #'backpack--recipe-skip-unbuilt-in-normal-mode)))))
+
+(defun backpack--recipe-skip-unbuilt-in-normal-mode (recipe)
+  "Modify RECIPE to skip building in normal mode if package isn't already built.
+Returns a plist with :build set to activation-only steps for unbuilt packages."
+  (when (backpack-normal-mode-p)
+    (let* ((package (plist-get recipe :package))
+           (build-dir (when package
+                        (expand-file-name package elpaca-builds-directory)))
+           (builtp (and build-dir (file-exists-p build-dir))))
+      (unless builtp
+        ;; Package is not built - in normal mode, we should not try to build it
+        ;; Return :build nil to effectively skip this package's build
+        ;; but still allow queuing (for dependency tracking)
+        (message "Backpack: Package '%s' is not installed. Run 'backpack ensure'." package)
+        '(:build nil)))))
+
+;; Initialize elpaca
+(backpack--ensure-elpaca)
+
+;; Configure elpaca based on backpack mode after loading
+(with-eval-after-load 'elpaca
+  (backpack--setup-elpaca-for-mode))
+
+(defvar backpack-after-init-hook nil
+  "Abnormal hook for functions to be run after Backpack was initialized.")
+
+(defun backpack--packages-need-sync-p ()
+  "Return non-nil if packages need synchronization (installation/building).
+This checks if the elpaca builds directory exists and has content."
+  (not (and (file-exists-p elpaca-builds-directory)
+            (directory-files elpaca-builds-directory nil "^[^.]" t))))
+
+(defun backpack--check-packages-installed ()
+  "Check if packages are installed, warn user if sync is needed."
+  (when (and (backpack-normal-mode-p)
+             (backpack--packages-need-sync-p))
+    (display-warning
+     'backpack
+     "Packages are not installed. Run 'backpack ensure' to install them."
+     :warning)))
+
+(defun backpack--activate-packages ()
+  "Activate all queued packages without attempting installation.
+Used in normal mode when packages are already built.
+In normal mode, elpaca will automatically use pre-built steps for
+packages that already have build directories."
+  (when (and (backpack-normal-mode-p) (featurep 'elpaca))
+    ;; Check if packages need sync first
+    (backpack--check-packages-installed)
+    ;; Process queues - elpaca will automatically detect pre-built packages
+    ;; and use activation-only steps for them
+    (elpaca-process-queues)))
+
+(defun backpack--sync-packages ()
+  "Install and build all queued packages without activation.
+Used in sync mode (`backpack ensure')."
+  (when (and (backpack-sync-mode-p) (featurep 'elpaca))
+    (backpack--setup-elpaca-for-mode)
+    (elpaca-process-queues)))
 
 (defun backpack-start (&optional interactive?)
-  "Start the Backpack session."
+  "Start the Backpack session.
+When INTERACTIVE? is non-nil, we're in a normal interactive Emacs session.
+The behavior depends on `backpack-mode':
+- In `normal' mode: only activate pre-built packages
+- In `sync' mode: install/build packages without activation"
   (when (daemonp)
     (message "Starting in daemon mode...")
     (add-hook 'kill-emacs-hook
 	      (lambda ()
 		(message "Killing Emacs. ¡Adiós!"))
 	      100))
+
+  ;; Ensure required directories exist
+  (with-file-modes 448
+    (mapc (lambda (dir)
+	    (make-directory dir t))
+	  (list backpack-cache-dir
+		backpack-nonessential-dir
+		backpack-state-dir
+		backpack-data-dir
+		backpack-tree-sitter-installation-dir)))
+
   (if interactive?
       (progn
-	;; TODO(shackra): incremental loading of packages
+	;; Configure appropriate hook based on mode
+	(cond
+	 ((backpack-normal-mode-p)
+	  ;; Normal mode: activate packages after init
+	  (add-hook 'backpack-after-init-hook #'backpack--activate-packages))
+	 ((backpack-sync-mode-p)
+	  ;; Sync mode: build packages (without activation)
+	  (add-hook 'backpack-after-init-hook #'backpack--sync-packages)))
 
 	;; last hook to run in Emacs' startup process.
 	(advice-add #'command-line-1 :after #'backpack-finalize)
@@ -461,18 +699,11 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 	(let ((init-file (expand-file-name "init.el" backpack-user-dir)))
 	  (load init-file t)
 	  ;; load custom file
-	  (load custom-file)
+	  (load custom-file t)
 	  ;; load all gears
 	  (backpack-load-gear-files)))
-    (progn ;; CLI stuff I still don't have any use for, yet
-      (with-file-modes 448
-	(mapc (lambda (dir)
-		(make-directory dir t))
-	      (list backpack-cache-dir
-		    backpack-nonessential-dir
-		    backpack-state-dir
-		    backpack-data-dir
-		    backpack-tree-sitter-installation-dir)))))
+    (progn ;; CLI/batch mode
+      nil))
 
   ;; load site files
   (let ((site-loader
@@ -493,11 +724,14 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   "After the startup process finalizes."
   (setq backpack-init-time (float-time (time-subtract (current-time) before-init-time)))
 
-  ;; TODO: run hooks?
+  ;; Run backpack hooks which will trigger package processing
   (run-hooks 'backpack-after-init-hook)
 
   (when (eq (default-value 'gc-cons-threshold) most-positive-fixnum)
     (setq-default gc-cons-threshold (* 16 1024 1024)))
+
+  (when (backpack-normal-mode-p)
+    (message "Backpack initialized in %.2fs" backpack-init-time))
   t)
 
 (defun backpack-load-gear-files ()

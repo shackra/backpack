@@ -1,48 +1,55 @@
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-				:ref nil :depth 1 :inherit ignore
-				:files (:defaults "elpaca-test.el" (:exclude "extensions"))
-				:build (:not elpaca--activate-package)))
+;;; ensure.el --- Backpack synchronization mode -*- lexical-binding: t; -*-
+;;
+;; This file implements the `backpack ensure' command which:
+;; 1. Installs elpaca from base-packages (no internet required for elpaca itself)
+;; 2. Installs all missing packages needed by enabled gears
+;; 3. Builds and byte-compiles packages
+;; 4. Does NOT activate packages (that happens in normal mode)
+;;
+;; Usage: emacs --batch --eval "(setq user-emacs-directory \"/path/to/emacs-backpack/\")" -l ensure.el
 
-(progn
-  (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-	 (build (expand-file-name "elpaca/" elpaca-builds-directory))
-	 (order (cdr elpaca-order))
-	 (default-directory repo))
-    (unless (file-exists-p repo)
-      (make-directory repo t)
-      (condition-case-unless-debug err
-          (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                    ((zerop (apply #'call-process
-				   `("git" nil ,buffer t "clone"
-                                     ,@(when-let* ((depth (plist-get order :depth)))
-					 (list (format "--depth=%d" depth) "--no-single-branch"))
-                                     ,(plist-get order :repo) ,repo))))
-                    ((zerop (call-process "git" nil buffer t "checkout"
-                                          (or (plist-get order :ref) "--"))))
-                    (emacs (concat invocation-directory invocation-name))
-                    ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                          "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                    ((require 'elpaca))
-                    ((elpaca-generate-autoloads "elpaca" repo)))
-              (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-            (error "%s" (with-current-buffer buffer (buffer-string))))
-	((error) (warn "%s" err) (delete-directory repo 'recursive))))
-    (unless (require 'elpaca-autoloads nil t)
-      (require 'elpaca)
-      (elpaca-generate-autoloads "elpaca" repo)
-      (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
+;; Set backpack to sync mode BEFORE loading backpack.el
+;; This variable is checked by backpack.el during initialization
+(setq backpack-mode 'sync)
 
-  (elpaca `(,@elpaca-order))
+;; Set up load paths for base-packages before loading backpack.el
+;; This is needed because backpack.el requires leaf at load time
+(add-to-list 'load-path (expand-file-name "base-packages/leaf.el" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "base-packages/leaf-keywords.el" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-  (add-hook 'elpaca-post-queue-hook
-	    (lambda ()
-	      ;; (save-default-bg-fg-colors)
-	      (unless (gearp! :ui -treesit)
-		(when (fboundp 'treesit-auto-install-all)
-		  (message "compiling tree-sitter grammars")
-		  (let ((treesit-auto-install t))
-		    (treesit-auto-install-all))))
-	      (kill-emacs 0)))
+;; Load backpack.el which sets up all the infrastructure
+;; This will also install/build elpaca from base-packages if needed
+(let ((backpack-file (expand-file-name "lisp/backpack.el" user-emacs-directory)))
+  (load backpack-file nil nil nil t))
 
-  (backpack-load-gear-files)
-  (elpaca-wait))
+;; At this point, elpaca should be loaded from backpack--ensure-elpaca
+;; Configure elpaca build steps for sync mode (build everything except activation)
+(setq elpaca-build-steps backpack--sync-build-steps)
+
+;; Hook to run after ALL queues are processed
+(add-hook 'elpaca-after-init-hook
+          (lambda ()
+            ;; Install tree-sitter grammars if treesit is enabled
+            (unless (gearp! :ui -treesit)
+              (when (fboundp 'treesit-auto-install-all)
+                (message "Installing tree-sitter grammars...")
+                (let ((treesit-auto-install t))
+                  (treesit-auto-install-all))))
+            (message "")
+            (message "========================================")
+            (message "Backpack synchronization complete!")
+            (message "You can now start Emacs normally.")
+            (message "========================================")
+            (kill-emacs 0)))
+
+;; Load user configuration to get gear declarations
+(let ((init-file (expand-file-name "init.el" backpack-user-dir)))
+  (when (file-exists-p init-file)
+    (load init-file t)))
+
+;; Load all gears (which queues packages via :ensure)
+(backpack-load-gear-files)
+
+;; Wait for all packages to be installed/built
+(elpaca-wait)
