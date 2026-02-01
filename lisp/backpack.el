@@ -530,6 +530,7 @@ This replicates what the elpaca installer does but without cloning."
     (elpaca-generate-autoloads "elpaca" repo-dir)
 
     ;; Create build directory with symlinks/copies to repo
+    ;; Link all .el and .elc files including autoloads
     (make-directory build-dir t)
     (dolist (file (directory-files repo-dir t "\\.elc?\\'"))
       (let ((dest (expand-file-name (file-name-nondirectory file) build-dir)))
@@ -539,11 +540,6 @@ This replicates what the elpaca installer does but without cloning."
                   (make-symbolic-link file dest)
                 (error (copy-file file dest t)))
             (copy-file file dest t)))))
-
-    ;; Copy autoloads to build dir
-    (let ((autoloads (expand-file-name "elpaca-autoloads.el" repo-dir)))
-      (when (file-exists-p autoloads)
-        (copy-file autoloads (expand-file-name "elpaca-autoloads.el" build-dir) t)))
 
     (message "Backpack: Elpaca built successfully")))
 
