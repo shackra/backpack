@@ -85,22 +85,47 @@ This should be called during sync mode after all gears are loaded."
              (not (gearp! :ui -treesit)))
     (message "Backpack: Installing tree-sitter grammars for: %s"
              (mapconcat #'symbol-name backpack--treesit-langs ", "))
-    ;; Ensure treesit-auto is loaded
+
+    ;; In sync mode, treesit-auto is installed but not activated.
+    ;; We need to manually add its build directory to load-path and load it.
+    (let ((treesit-auto-build-dir (expand-file-name "treesit-auto" elpaca-builds-directory)))
+      (when (file-exists-p treesit-auto-build-dir)
+        (add-to-list 'load-path treesit-auto-build-dir)
+        ;; Load the autoloads first
+        (let ((autoloads (expand-file-name "treesit-auto-autoloads.el" treesit-auto-build-dir)))
+          (when (file-exists-p autoloads)
+            (load autoloads nil t)))))
+
+    ;; Now require treesit-auto
     (require 'treesit-auto nil t)
-    (when (fboundp 'treesit-auto-install-all)
+
+    (if (not (fboundp 'treesit-auto-recipe-alist))
+        (message "Backpack: treesit-auto not available, skipping grammar installation")
       ;; Set treesit-auto-langs to only the languages we need
       (setq treesit-auto-langs backpack--treesit-langs)
       ;; Set install location
       (setq treesit-extra-load-path (list backpack-tree-sitter-installation-dir))
+      ;; Make sure the installation directory exists
+      (make-directory backpack-tree-sitter-installation-dir t)
       ;; Install without prompting
-      (let ((treesit-auto-install t))
+      (let ((treesit-auto-install t)
+            (installed 0)
+            (failed 0))
         (dolist (lang backpack--treesit-langs)
           (condition-case err
-              (progn
-                (message "Backpack: Installing grammar for %s..." lang)
-                (treesit-install-language-grammar lang backpack-tree-sitter-installation-dir))
+              (let ((recipe (alist-get lang treesit-auto-recipe-alist)))
+                (if (not recipe)
+                    (progn
+                      (message "Backpack: No recipe found for %s, skipping" lang)
+                      (cl-incf failed))
+                  (message "Backpack: Installing grammar for %s..." lang)
+                  (treesit-install-language-grammar lang backpack-tree-sitter-installation-dir)
+                  (cl-incf installed)))
             (error
-             (message "Backpack: Failed to install grammar for %s: %s" lang err))))))))
+             (message "Backpack: Failed to install grammar for %s: %s" lang err)
+             (cl-incf failed))))
+        (message "Backpack: Tree-sitter grammars: %d installed, %d failed/skipped"
+                 installed failed)))))
 
 (defconst backpack-system
   (pcase system-type
