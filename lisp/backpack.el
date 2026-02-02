@@ -45,34 +45,8 @@
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
 
-;; In sync mode, we only want to queue packages, not run configurations.
-;; This advice filters leaf blocks to only process :ensure/:elpaca and conditional keywords
-(defvar backpack--leaf-sync-allowed-keywords
-  '(:ensure :elpaca :when :if :unless :doc :tag :disabled)
-  "Keywords that are allowed in leaf blocks during sync mode.
-All other keywords (like :config, :init, :hook, etc.) are stripped.")
-
-(defun backpack--leaf-sync-mode-advice (orig-fn name &rest args)
-  "Advice for `leaf' macro to only queue packages in sync mode.
-In sync mode, filters ARGS to only include keywords in `backpack--leaf-sync-allowed-keywords'.
-ORIG-FN is the original leaf function, NAME is the package name."
-  (if (and (boundp 'backpack-mode) (eq backpack-mode 'sync))
-      ;; In sync mode, only keep package installation keywords
-      (let* ((filtered-args
-              (cl-loop for (key val) on args by #'cddr
-                       when (memq key backpack--leaf-sync-allowed-keywords)
-                       append (list key val))))
-        (if (or (plist-get filtered-args :ensure)
-                (plist-get filtered-args :elpaca))
-            (apply orig-fn name filtered-args)
-          ;; If no :ensure/:elpaca, return nil (no package to install)
-          nil))
-    ;; Normal mode - call original
-    (apply orig-fn name args)))
-
-(advice-add 'leaf :around #'backpack--leaf-sync-mode-advice)
-
 ;;; Backpack mode management
+;; NOTE: This must be defined BEFORE the leaf advice below
 (defvar backpack-mode 'normal
   "Current operating mode for Backpack.
 Possible values:
@@ -86,6 +60,11 @@ Possible values:
 (defun backpack-normal-mode-p ()
   "Return non-nil if Backpack is in normal mode."
   (eq backpack-mode 'normal))
+
+;; NOTE: We previously tried to advise the `leaf` macro to filter keywords in sync mode,
+;; but `leaf` is a macro, not a function, so `:around` advice doesn't work properly.
+;; Instead, we rely on the elpaca advice (backpack--elpaca-skip-forms-in-sync-mode)
+;; to prevent configuration forms from running during sync mode.
 
 ;;; Tree-sitter language management
 (defvar backpack--treesit-langs nil
