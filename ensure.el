@@ -30,12 +30,11 @@
 ;; Hook to run after ALL queues are processed
 (add-hook 'elpaca-after-init-hook
           (lambda ()
-            ;; Install tree-sitter grammars if treesit is enabled
-            (unless (gearp! :ui -treesit)
-              (when (fboundp 'treesit-auto-install-all)
-                (message "Installing tree-sitter grammars...")
-                (let ((treesit-auto-install t))
-                  (treesit-auto-install-all))))
+            ;; Install tree-sitter grammars for languages declared by enabled gears
+            (when backpack--treesit-langs
+              (message "")
+              (message "Installing tree-sitter grammars...")
+              (backpack--install-treesit-grammars))
             (message "")
             (message "========================================")
             (message "Backpack synchronization complete!")

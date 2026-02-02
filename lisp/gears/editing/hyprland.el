@@ -1,3 +1,9 @@
+;; Declare tree-sitter languages needed by this gear
+;; Note: hyprlang requires a custom recipe since it's not in treesit-auto by default
+(when (and (gearp! :editing hyprland)
+           (not (gearp! :ui -treesit)))
+  (backpack-treesit-langs! hyprlang))
+
 (leaf hyprlang-ts-mode
   :doc "a major mode designed to provide enhanced editing support for Hyprland configuration files by leveraging Tree-Sitter"
   :when (gearp! :editing hyprland)
@@ -12,13 +18,15 @@
 			   (unless (gearp! :editing hyprland -display-line-numbers)
 			     (display-line-numbers-mode +1))))
   :init
+  ;; Add custom recipe for hyprlang since it's not in treesit-auto by default
   (unless (gearp! :ui -treesit)
-    (add-to-list 'treesit-auto-recipe-list
-		 (make-treesit-auto-recipe
-		  :lang 'hyprlang
-		  :ts-mode 'hyprlang-ts-mode
-		  :url "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
-		  :ext "/hypr/.*\\.conf\\'")))
+    (with-eval-after-load 'treesit-auto
+      (add-to-list 'treesit-auto-recipe-list
+		   (make-treesit-auto-recipe
+		    :lang 'hyprlang
+		    :ts-mode 'hyprlang-ts-mode
+		    :url "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
+		    :ext "/hypr/.*\\.conf\\'"))))
 
   (leaf eglot
     :doc "Language Server Protocol support"

@@ -1,3 +1,8 @@
+;; Declare tree-sitter languages needed by this gear
+(when (and (gearp! :editing python)
+           (not (gearp! :editing python -treesit)))
+  (backpack-treesit-langs! python))
+
 (leaf python-mode
   :doc "major mode for the Python Programming Language"
   :ensure (python-mode :ref "5aaf8b386aa694429d997c6fd49772b0b359e514")

@@ -1,3 +1,8 @@
+;; Declare tree-sitter languages needed by this gear
+(when (and (gearp! :editing json)
+           (not (gearp! :editing json -treesit)))
+  (backpack-treesit-langs! json))
+
 (leaf json
   :doc "major mode for editing JSON files"
   :when (gearp! :editing json)

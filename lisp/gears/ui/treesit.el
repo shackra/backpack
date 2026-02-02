@@ -8,7 +8,11 @@
 	     "Ensure that all grammars are compiled and put on `backpack-tree-sitter-installation-dir'."
 	     (apply orig-fun lang (list (or out-dir backpack-tree-sitter-installation-dir)))))
   :custom
-  (treesit-auto-install . 'prompt)
+  ;; In normal mode, don't auto-install - grammars should already be installed from sync
+  (treesit-auto-install . (if (backpack-normal-mode-p) nil 'prompt))
   :config
+  ;; Set treesit-auto-langs to only the languages declared by enabled gears
+  (when backpack--treesit-langs
+    (setq treesit-auto-langs backpack--treesit-langs))
   (add-to-list 'treesit-extra-load-path backpack-tree-sitter-installation-dir)
   :global-minor-mode global-treesit-auto-mode)

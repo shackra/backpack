@@ -60,6 +60,42 @@ Possible values:
   "Return non-nil if Backpack is in normal mode."
   (eq backpack-mode 'normal))
 
+;;; Tree-sitter language management
+(defvar backpack--treesit-langs nil
+  "List of tree-sitter language symbols that are needed by enabled gears.
+This is populated by `backpack-treesit-langs!' calls in gear files.")
+
+(defmacro backpack-treesit-langs! (&rest langs)
+  "Declare that the current gear needs tree-sitter support for LANGS.
+LANGS should be symbols like `go', `python', `json', etc.
+These will be added to `treesit-auto-langs' and installed during sync."
+  `(dolist (lang ',langs)
+     (cl-pushnew lang backpack--treesit-langs)))
+
+(defun backpack--install-treesit-grammars ()
+  "Install all tree-sitter grammars declared by enabled gears.
+This should be called during sync mode after all gears are loaded."
+  (when (and backpack--treesit-langs
+             (not (gearp! :ui -treesit)))
+    (message "Backpack: Installing tree-sitter grammars for: %s"
+             (mapconcat #'symbol-name backpack--treesit-langs ", "))
+    ;; Ensure treesit-auto is loaded
+    (require 'treesit-auto nil t)
+    (when (fboundp 'treesit-auto-install-all)
+      ;; Set treesit-auto-langs to only the languages we need
+      (setq treesit-auto-langs backpack--treesit-langs)
+      ;; Set install location
+      (setq treesit-extra-load-path (list backpack-tree-sitter-installation-dir))
+      ;; Install without prompting
+      (let ((treesit-auto-install t))
+        (dolist (lang backpack--treesit-langs)
+          (condition-case err
+              (progn
+                (message "Backpack: Installing grammar for %s..." lang)
+                (treesit-install-language-grammar lang backpack-tree-sitter-installation-dir))
+            (error
+             (message "Backpack: Failed to install grammar for %s: %s" lang err))))))))
+
 (defconst backpack-system
   (pcase system-type
     ('darwin '(macos bsd))
