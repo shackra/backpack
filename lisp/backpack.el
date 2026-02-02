@@ -42,6 +42,30 @@
 (plist-put leaf-keywords :doctor '`(,@leaf--body))
 (plist-put leaf-keywords :fonts '`(,@leaf--body))
 
+;; :enable-on-sync - when t, this package will be activated even in sync mode
+;; This is useful for packages like treesit-auto that need to be active
+;; during sync to install tree-sitter grammars
+(defvar backpack--enable-on-sync-packages nil
+  "List of package symbols that should be activated even in sync mode.")
+
+;; Custom handler for :enable-on-sync keyword
+;; This registers the package to be activated in sync mode
+(defun leaf-handler/:enable-on-sync (name value rest)
+  "Handle :enable-on-sync keyword for leaf.
+NAME is the leaf block name, VALUE is the keyword value, REST is remaining keywords."
+  (let ((body (leaf-process-keywords name rest)))
+    ;; When :enable-on-sync is t, register this package
+    `(,@(when (car value)
+          `((cl-pushnew ',name backpack--enable-on-sync-packages)))
+      ,@body)))
+
+;; Register the keyword handler
+(leaf-register-leaf-handler :enable-on-sync #'leaf-handler/:enable-on-sync)
+
+;; Add :enable-on-sync to the keyword list (before :config so it runs early)
+(setq leaf-keywords
+      (leaf-insert-before leaf-keywords :config :enable-on-sync '(list (leaf-get-value leaf--value))))
+
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
 
@@ -80,26 +104,15 @@ These will be added to `treesit-auto-langs' and installed during sync."
 
 (defun backpack--install-treesit-grammars ()
   "Install all tree-sitter grammars declared by enabled gears.
-This should be called during sync mode after all gears are loaded."
+This should be called during sync mode after all gears are loaded.
+Requires treesit-auto to be activated (via :enable-on-sync)."
   (when (and backpack--treesit-langs
              (not (gearp! :ui -treesit)))
     (message "Backpack: Installing tree-sitter grammars for: %s"
              (mapconcat #'symbol-name backpack--treesit-langs ", "))
 
-    ;; In sync mode, treesit-auto is installed but not activated.
-    ;; We need to manually add its build directory to load-path and load it.
-    (let ((treesit-auto-build-dir (expand-file-name "treesit-auto" elpaca-builds-directory)))
-      (when (file-exists-p treesit-auto-build-dir)
-        (add-to-list 'load-path treesit-auto-build-dir)
-        ;; Load the autoloads first
-        (let ((autoloads (expand-file-name "treesit-auto-autoloads.el" treesit-auto-build-dir)))
-          (when (file-exists-p autoloads)
-            (load autoloads nil t)))))
-
-    ;; Now require treesit-auto
-    (require 'treesit-auto nil t)
-
-    (if (not (fboundp 'treesit-auto-recipe-alist))
+    ;; treesit-auto should already be loaded via :enable-on-sync
+    (if (not (boundp 'treesit-auto-recipe-alist))
         (message "Backpack: treesit-auto not available, skipping grammar installation")
       ;; Set treesit-auto-langs to only the languages we need
       (setq treesit-auto-langs backpack--treesit-langs)
@@ -707,14 +720,19 @@ ORIG-FN is the original function, ORDER is the package order, BODY is the rest."
   (advice-add 'elpaca--expand-declaration :around #'backpack--elpaca-gc-advice)
 
   ;; In sync mode, prevent elpaca from running deferred config forms
-  ;; These forms (from :config blocks) shouldn't run during package installation
+  ;; EXCEPT for packages marked with :enable-on-sync
   (defun backpack--elpaca-skip-forms-in-sync-mode (orig-fn q)
     "Advice to skip running deferred forms in sync mode.
-ORIG-FN is `elpaca--finalize-queue', Q is the queue being finalized."
+ORIG-FN is `elpaca--finalize-queue', Q is the queue being finalized.
+Packages in `backpack--enable-on-sync-packages' will still have their forms run."
     (if (backpack-sync-mode-p)
-        ;; In sync mode, clear the forms before finalization so they don't run
+        ;; In sync mode, only keep forms for packages marked with :enable-on-sync
         (progn
-          (setf (elpaca-q<-forms q) nil)
+          (setf (elpaca-q<-forms q)
+                (cl-remove-if-not
+                 (lambda (entry)
+                   (memq (car entry) backpack--enable-on-sync-packages))
+                 (elpaca-q<-forms q)))
           (funcall orig-fn q))
       ;; Normal mode - run as usual
       (funcall orig-fn q)))
