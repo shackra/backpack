@@ -27,21 +27,6 @@
 ;; Configure elpaca build steps for sync mode (build everything except activation)
 (setq elpaca-build-steps backpack--sync-build-steps)
 
-;; Hook to run after ALL queues are processed
-(add-hook 'elpaca-after-init-hook
-          (lambda ()
-            ;; Install tree-sitter grammars for languages declared by enabled gears
-            (when backpack--treesit-langs
-              (message "")
-              (message "Installing tree-sitter grammars...")
-              (backpack--install-treesit-grammars))
-            (message "")
-            (message "========================================")
-            (message "Backpack synchronization complete!")
-            (message "You can now start Emacs normally.")
-            (message "========================================")
-            (kill-emacs 0)))
-
 ;; Load user configuration to get gear declarations
 (let ((init-file (expand-file-name "init.el" backpack-user-dir)))
   (when (file-exists-p init-file)
@@ -52,3 +37,17 @@
 
 ;; Wait for all packages to be installed/built
 (elpaca-wait)
+
+;; After elpaca-wait completes, run our finalization
+;; (elpaca-after-init-hook doesn't run when using elpaca-wait in batch mode)
+(when backpack--treesit-langs
+  (message "")
+  (message "Installing tree-sitter grammars...")
+  (backpack--install-treesit-grammars))
+
+(message "")
+(message "========================================")
+(message "Backpack synchronization complete!")
+(message "You can now start Emacs normally.")
+(message "========================================")
+(kill-emacs 0)

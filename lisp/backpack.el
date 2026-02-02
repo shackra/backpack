@@ -45,6 +45,33 @@
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
 
+;; In sync mode, we only want to queue packages, not run configurations.
+;; This advice filters leaf blocks to only process :ensure/:elpaca and conditional keywords
+(defvar backpack--leaf-sync-allowed-keywords
+  '(:ensure :elpaca :when :if :unless :doc :tag :disabled)
+  "Keywords that are allowed in leaf blocks during sync mode.
+All other keywords (like :config, :init, :hook, etc.) are stripped.")
+
+(defun backpack--leaf-sync-mode-advice (orig-fn name &rest args)
+  "Advice for `leaf' macro to only queue packages in sync mode.
+In sync mode, filters ARGS to only include keywords in `backpack--leaf-sync-allowed-keywords'.
+ORIG-FN is the original leaf function, NAME is the package name."
+  (if (and (boundp 'backpack-mode) (eq backpack-mode 'sync))
+      ;; In sync mode, only keep package installation keywords
+      (let* ((filtered-args
+              (cl-loop for (key val) on args by #'cddr
+                       when (memq key backpack--leaf-sync-allowed-keywords)
+                       append (list key val))))
+        (if (or (plist-get filtered-args :ensure)
+                (plist-get filtered-args :elpaca))
+            (apply orig-fn name filtered-args)
+          ;; If no :ensure/:elpaca, return nil (no package to install)
+          nil))
+    ;; Normal mode - call original
+    (apply orig-fn name args)))
+
+(advice-add 'leaf :around #'backpack--leaf-sync-mode-advice)
+
 ;;; Backpack mode management
 (defvar backpack-mode 'normal
   "Current operating mode for Backpack.
@@ -673,7 +700,22 @@ ORIG-FN is the original function, ORDER is the package order, BODY is the rest."
         ;; Normal operation - call original
         (apply orig-fn order body))))
 
-  (advice-add 'elpaca--expand-declaration :around #'backpack--elpaca-gc-advice))
+  (advice-add 'elpaca--expand-declaration :around #'backpack--elpaca-gc-advice)
+
+  ;; In sync mode, prevent elpaca from running deferred config forms
+  ;; These forms (from :config blocks) shouldn't run during package installation
+  (defun backpack--elpaca-skip-forms-in-sync-mode (orig-fn q)
+    "Advice to skip running deferred forms in sync mode.
+ORIG-FN is `elpaca--finalize-queue', Q is the queue being finalized."
+    (if (backpack-sync-mode-p)
+        ;; In sync mode, clear the forms before finalization so they don't run
+        (progn
+          (setf (elpaca-q<-forms q) nil)
+          (funcall orig-fn q))
+      ;; Normal mode - run as usual
+      (funcall orig-fn q)))
+
+  (advice-add 'elpaca--finalize-queue :around #'backpack--elpaca-skip-forms-in-sync-mode))
 
 (defvar backpack-after-init-hook nil
   "Abnormal hook for functions to be run after Backpack was initialized.")
