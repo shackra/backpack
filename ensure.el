@@ -47,7 +47,8 @@
         (in-progress 0)
         (blocked 0)
         (total 0)
-        (current-packages nil))
+        (current-packages nil)
+        (failed-packages nil))
     (dolist (q elpaca--queues)
       (dolist (entry (elpaca-q<-elpacas q))
         (let* ((e (cdr entry))
@@ -56,7 +57,9 @@
           (cl-incf total)
           (cond
            ((eq status 'finished) (cl-incf finished))
-           ((eq status 'failed) (cl-incf failed))
+           ((eq status 'failed)
+            (cl-incf failed)
+            (push pkg-name failed-packages))
            ((memq status '(blocked queued)) (cl-incf blocked))
            (t
             (cl-incf in-progress)
@@ -66,7 +69,8 @@
           :in-progress in-progress
           :blocked blocked
           :total total
-          :current current-packages)))
+          :current current-packages
+          :failed-packages (nreverse failed-packages))))
 
 (defun backpack--format-progress (summary)
   "Format SUMMARY into a progress string."
@@ -95,6 +99,17 @@
       (setq backpack--last-progress-message msg)
       (message "Installing packages... %s" msg))))
 
+(defun backpack--queue-finished-p (q)
+  "Return non-nil if queue Q is finished (complete or all packages processed)."
+  (or (eq (elpaca-q<-status q) 'complete)
+      ;; Also consider finished if all packages are either finished or failed
+      (let ((all-done t))
+        (dolist (entry (elpaca-q<-elpacas q))
+          (let ((status (elpaca--status (cdr entry))))
+            (unless (memq status '(finished failed))
+              (setq all-done nil))))
+        all-done)))
+
 (defun backpack--wait-with-progress ()
   "Wait for elpaca to finish while showing progress."
   (message "")
@@ -104,28 +119,48 @@
                                (elpaca-q<-elpacas q) q))))
     (setq elpaca--waiting t)
     (elpaca-process-queues)
-    (let ((last-print-time 0))
+    (let ((last-print-time 0)
+          (stall-count 0)
+          (last-summary nil))
       (condition-case nil
-          (while (not (eq (elpaca-q<-status q) 'complete))
+          (while (not (backpack--queue-finished-p q))
             (discard-input)
             ;; Print progress every 0.5 seconds
-            (let ((now (float-time)))
+            (let* ((now (float-time))
+                   (summary (backpack--get-package-status-summary)))
               (when (> (- now last-print-time) 0.5)
                 (setq last-print-time now)
-                (backpack--print-progress)))
+                (backpack--print-progress)
+                ;; Check for stall (no progress for too long)
+                (if (equal summary last-summary)
+                    (cl-incf stall-count)
+                  (setq stall-count 0)
+                  (setq last-summary summary))
+                ;; If stalled for 60 iterations (~30 seconds) and we have failures, break
+                (when (and (> stall-count 60)
+                           (> (plist-get summary :failed) 0)
+                           (= (plist-get summary :in-progress) 0))
+                  (message "Installation stalled with failures, continuing...")
+                  (cl-return))))
             (sit-for elpaca-wait-interval))
         (quit (cl-loop for (_ . e) in (elpaca-q<-elpacas q) do
                        (or (eq (elpaca--status e) 'finished) (elpaca--fail e "User quit"))))))
     (elpaca-split-queue)
     (setq elpaca--waiting nil))
   ;; Final progress
-  (let ((summary (backpack--get-package-status-summary)))
-    (message "Installing packages... [%d/%d] Done!%s"
+  (let* ((summary (backpack--get-package-status-summary))
+         (failed-pkgs (plist-get summary :failed-packages)))
+    (message "")
+    (message "Installing packages... [%d/%d] Done!"
              (plist-get summary :finished)
-             (plist-get summary :total)
-             (if (> (plist-get summary :failed) 0)
-                 (format " (%d failed)" (plist-get summary :failed))
-               ""))))
+             (plist-get summary :total))
+    (when failed-pkgs
+      (message "")
+      (message "WARNING: %d package(s) failed to install:" (length failed-pkgs))
+      (dolist (pkg failed-pkgs)
+        (message "  - %s" pkg))
+      (message "")
+      (message "You may need to run 'backpack ensure' again or check the package recipes."))))
 
 ;; Wait for all packages to be installed/built with progress reporting
 (backpack--wait-with-progress)
