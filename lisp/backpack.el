@@ -42,29 +42,50 @@
 (plist-put leaf-keywords :doctor '`(,@leaf--body))
 (plist-put leaf-keywords :fonts '`(,@leaf--body))
 
-;; :enable-on-sync - when t, this package will be activated even in sync mode
+;; Packages that should be activated even in sync mode
 ;; This is useful for packages like treesit-auto that need to be active
 ;; during sync to install tree-sitter grammars
 (defvar backpack--enable-on-sync-packages nil
   "List of package symbols that should be activated even in sync mode.")
 
-;; Custom handler for :enable-on-sync keyword
-;; This registers the package to be activated in sync mode
-(defun leaf-handler/:enable-on-sync (name value rest)
-  "Handle :enable-on-sync keyword for leaf.
-NAME is the leaf block name, VALUE is the keyword value, REST is remaining keywords."
-  (let ((body (leaf-process-keywords name rest)))
-    ;; When :enable-on-sync is t, register this package
-    `(,@(when (car value)
-          `((cl-pushnew ',name backpack--enable-on-sync-packages)))
-      ,@body)))
+(defmacro backpack-enable-on-sync! (&rest packages)
+  "Mark PACKAGES to be activated even in sync mode.
+Call this macro BEFORE the leaf declaration for packages that need
+to be active during sync (e.g., for installing tree-sitter grammars).
 
-;; Register the keyword handler
-(leaf-register-leaf-handler :enable-on-sync #'leaf-handler/:enable-on-sync)
+Example:
+  (backpack-enable-on-sync! treesit-auto)
+  (leaf treesit-auto
+    :ensure t
+    :config ...)"
+  `(dolist (pkg ',packages)
+     (cl-pushnew pkg backpack--enable-on-sync-packages)))
 
-;; Add :enable-on-sync to the keyword list (before :config so it runs early)
-(setq leaf-keywords
-      (leaf-insert-before leaf-keywords :config :enable-on-sync '(list (leaf-get-value leaf--value))))
+(defun backpack--activate-package (package-name)
+  "Manually activate PACKAGE-NAME by loading its autoloads.
+This is used in sync mode for packages marked with `backpack-enable-on-sync!'."
+  (let* ((build-dir (expand-file-name (symbol-name package-name) elpaca-builds-directory))
+         (autoloads-file (expand-file-name
+                          (format "%s-autoloads.el" package-name)
+                          build-dir)))
+    (if (not (file-exists-p build-dir))
+        (message "Backpack: WARNING - build dir for %s does not exist" package-name)
+      (add-to-list 'load-path build-dir)
+      (if (not (file-exists-p autoloads-file))
+          (message "Backpack: WARNING - autoloads for %s not found" package-name)
+        (load autoloads-file nil t)
+        ;; Also require the package to ensure it's fully loaded
+        (condition-case err
+            (require package-name)
+          (error
+           (message "Backpack: Failed to require %s: %S" package-name err)))))))
+
+(defun backpack--activate-enable-on-sync-packages ()
+  "Activate all packages marked with `backpack-enable-on-sync!'.
+This should be called after packages are built but before their config runs."
+  (dolist (pkg backpack--enable-on-sync-packages)
+    (message "Backpack: Activating package for sync: %s" pkg)
+    (backpack--activate-package pkg)))
 
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
@@ -105,14 +126,14 @@ These will be added to `treesit-auto-langs' and installed during sync."
 (defun backpack--install-treesit-grammars ()
   "Install all tree-sitter grammars declared by enabled gears.
 This should be called during sync mode after all gears are loaded.
-Requires treesit-auto to be activated (via :enable-on-sync)."
+Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
   (when (and backpack--treesit-langs
              (not (gearp! :ui -treesit)))
     (message "Backpack: Installing tree-sitter grammars for: %s"
              (mapconcat #'symbol-name backpack--treesit-langs ", "))
 
-    ;; treesit-auto should already be loaded via :enable-on-sync
-    (if (not (boundp 'treesit-auto-recipe-alist))
+    ;; treesit-auto should already be loaded via backpack-enable-on-sync!
+    (if (not (boundp 'treesit-auto-recipe-list))
         (message "Backpack: treesit-auto not available, skipping grammar installation")
       ;; Set treesit-auto-langs to only the languages we need
       (setq treesit-auto-langs backpack--treesit-langs)
@@ -120,14 +141,15 @@ Requires treesit-auto to be activated (via :enable-on-sync)."
       (setq treesit-extra-load-path (list backpack-tree-sitter-installation-dir))
       ;; Make sure the installation directory exists
       (make-directory backpack-tree-sitter-installation-dir t)
-      ;; Install without prompting
-      (let ((treesit-auto-install t)
+      ;; Build the source alist from treesit-auto recipes
+      (let ((treesit-language-source-alist (treesit-auto--build-treesit-source-alist))
+            (treesit-auto-install t)  ; Install without prompting
             (installed 0)
             (failed 0))
         (dolist (lang backpack--treesit-langs)
           (condition-case err
-              (let ((recipe (alist-get lang treesit-auto-recipe-alist)))
-                (if (not recipe)
+              (let ((source (alist-get lang treesit-language-source-alist)))
+                (if (not source)
                     (progn
                       (message "Backpack: No recipe found for %s, skipping" lang)
                       (cl-incf failed))
@@ -720,20 +742,30 @@ ORIG-FN is the original function, ORDER is the package order, BODY is the rest."
   (advice-add 'elpaca--expand-declaration :around #'backpack--elpaca-gc-advice)
 
   ;; In sync mode, prevent elpaca from running deferred config forms
-  ;; EXCEPT for packages marked with :enable-on-sync
+  ;; EXCEPT for packages marked with backpack-enable-on-sync!
+  
   (defun backpack--elpaca-skip-forms-in-sync-mode (orig-fn q)
     "Advice to skip running deferred forms in sync mode.
 ORIG-FN is `elpaca--finalize-queue', Q is the queue being finalized.
 Packages in `backpack--enable-on-sync-packages' will still have their forms run."
     (if (backpack-sync-mode-p)
-        ;; In sync mode, only keep forms for packages marked with :enable-on-sync
-        (progn
-          (setf (elpaca-q<-forms q)
-                (cl-remove-if-not
-                 (lambda (entry)
-                   (memq (car entry) backpack--enable-on-sync-packages))
-                 (elpaca-q<-forms q)))
-          (funcall orig-fn q))
+        ;; In sync mode, only keep forms for packages marked with backpack-enable-on-sync!
+        (condition-case err
+            (let ((filtered nil)
+                  (original-forms (elpaca-q<-forms q)))
+              ;; Filter forms - keep only those for enable-on-sync packages
+              (dolist (entry original-forms)
+                (when (memq (car entry) backpack--enable-on-sync-packages)
+                  (push entry filtered)))
+              ;; Directly modify the struct using setcar on the forms cons cell
+              ;; The elpaca-q struct is a tagged list: (elpaca-q ID STATUS TIME ELPACAS PROCESSED TYPE AUTOLOADS FORMS ...)
+              ;; Forms is at position 7 (0-indexed)
+              (let ((forms-cell (nthcdr 7 q)))
+                (setcar forms-cell (nreverse filtered)))
+              (funcall orig-fn q))
+          (error
+           (message "Backpack: Error in forms filtering: %S" err)
+           (funcall orig-fn q)))
       ;; Normal mode - run as usual
       (funcall orig-fn q)))
 

@@ -164,6 +164,13 @@
 ;; Wait for all packages to be installed/built with progress reporting
 (backpack--wait-with-progress)
 
+;; After packages are built, activate packages marked with enable-on-sync
+;; This must happen before their config forms run and before treesit grammars are installed
+(when backpack--enable-on-sync-packages
+  (message "")
+  (message "Activating packages needed for sync...")
+  (backpack--activate-enable-on-sync-packages))
+
 ;; After elpaca-wait completes, run our finalization
 ;; (elpaca-after-init-hook doesn't run when using elpaca-wait in batch mode)
 (when backpack--treesit-langs
