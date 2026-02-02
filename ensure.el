@@ -112,7 +112,6 @@
 
 (defun backpack--wait-with-progress ()
   "Wait for elpaca to finish while showing progress."
-  (message "")
   (message "Installing packages...")
   (when-let* ((q (cl-loop for q in elpaca--queues thereis
                           (and (eq (elpaca-q<-status q) 'incomplete)
