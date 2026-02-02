@@ -1,3 +1,8 @@
+;; Declare tree-sitter languages needed by this gear
+(when (and (gearp! :editing go)
+           (not (gearp! :editing go -treesit)))
+  (backpack-treesit-langs! go gomod))
+
 (leaf go-mode
   :doc "Support for Go programming language in Emacs"
   :when (gearp! :editing go)

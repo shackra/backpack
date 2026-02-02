@@ -1,3 +1,8 @@
+;; Declare tree-sitter languages needed by this gear
+(when (and (gearp! :editing lua)
+           (not (gearp! :editing lua -treesit)))
+  (backpack-treesit-langs! lua))
+
 (leaf lua-mode
   :doc "A major-mode for editing Lua scripts"
   :ensure (lua-mode :ref "2f6b8d7a6317e42c953c5119b0119ddb337e0a5f")

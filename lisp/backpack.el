@@ -42,8 +42,125 @@
 (plist-put leaf-keywords :doctor '`(,@leaf--body))
 (plist-put leaf-keywords :fonts '`(,@leaf--body))
 
+;; Packages that should be activated even in sync mode
+;; This is useful for packages like treesit-auto that need to be active
+;; during sync to install tree-sitter grammars
+(defvar backpack--enable-on-sync-packages nil
+  "List of package symbols that should be activated even in sync mode.")
+
+(defmacro backpack-enable-on-sync! (&rest packages)
+  "Mark PACKAGES to be activated even in sync mode.
+Call this macro BEFORE the leaf declaration for packages that need
+to be active during sync (e.g., for installing tree-sitter grammars).
+
+Example:
+  (backpack-enable-on-sync! treesit-auto)
+  (leaf treesit-auto
+    :ensure t
+    :config ...)"
+  `(dolist (pkg ',packages)
+     (cl-pushnew pkg backpack--enable-on-sync-packages)))
+
+(defun backpack--activate-package (package-name)
+  "Manually activate PACKAGE-NAME by loading its autoloads.
+This is used in sync mode for packages marked with `backpack-enable-on-sync!'."
+  (let* ((build-dir (expand-file-name (symbol-name package-name) elpaca-builds-directory))
+         (autoloads-file (expand-file-name
+                          (format "%s-autoloads.el" package-name)
+                          build-dir)))
+    (if (not (file-exists-p build-dir))
+        (message "Backpack: WARNING - build dir for %s does not exist" package-name)
+      (add-to-list 'load-path build-dir)
+      (if (not (file-exists-p autoloads-file))
+          (message "Backpack: WARNING - autoloads for %s not found" package-name)
+        (load autoloads-file nil t)
+        ;; Also require the package to ensure it's fully loaded
+        (condition-case err
+            (require package-name)
+          (error
+           (message "Backpack: Failed to require %s: %S" package-name err)))))))
+
+(defun backpack--activate-enable-on-sync-packages ()
+  "Activate all packages marked with `backpack-enable-on-sync!'.
+This should be called after packages are built but before their config runs."
+  (dolist (pkg backpack--enable-on-sync-packages)
+    (message "Backpack: Activating package for sync: %s" pkg)
+    (backpack--activate-package pkg)))
+
 ;; alias :ensure to :elpaca
 (setq leaf-alias-keyword-alist '((:ensure . :elpaca)))
+
+;;; Backpack mode management
+;; NOTE: This must be defined BEFORE the leaf advice below
+(defvar backpack-mode 'normal
+  "Current operating mode for Backpack.
+Possible values:
+- `normal': Standard Emacs startup - only activate pre-built packages
+- `sync': Synchronization mode - install/build packages but skip activation")
+
+(defun backpack-sync-mode-p ()
+  "Return non-nil if Backpack is in synchronization mode."
+  (eq backpack-mode 'sync))
+
+(defun backpack-normal-mode-p ()
+  "Return non-nil if Backpack is in normal mode."
+  (eq backpack-mode 'normal))
+
+;; NOTE: We previously tried to advise the `leaf` macro to filter keywords in sync mode,
+;; but `leaf` is a macro, not a function, so `:around` advice doesn't work properly.
+;; Instead, we rely on the elpaca advice (backpack--elpaca-skip-forms-in-sync-mode)
+;; to prevent configuration forms from running during sync mode.
+
+;;; Tree-sitter language management
+(defvar backpack--treesit-langs nil
+  "List of tree-sitter language symbols that are needed by enabled gears.
+This is populated by `backpack-treesit-langs!' calls in gear files.")
+
+(defmacro backpack-treesit-langs! (&rest langs)
+  "Declare that the current gear needs tree-sitter support for LANGS.
+LANGS should be symbols like `go', `python', `json', etc.
+These will be added to `treesit-auto-langs' and installed during sync."
+  `(dolist (lang ',langs)
+     (cl-pushnew lang backpack--treesit-langs)))
+
+(defun backpack--install-treesit-grammars ()
+  "Install all tree-sitter grammars declared by enabled gears.
+This should be called during sync mode after all gears are loaded.
+Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
+  (when (and backpack--treesit-langs
+             (not (gearp! :ui -treesit)))
+    (message "Backpack: Installing tree-sitter grammars for: %s"
+             (mapconcat #'symbol-name backpack--treesit-langs ", "))
+
+    ;; treesit-auto should already be loaded via backpack-enable-on-sync!
+    (if (not (boundp 'treesit-auto-recipe-list))
+        (message "Backpack: treesit-auto not available, skipping grammar installation")
+      ;; Set treesit-auto-langs to only the languages we need
+      (setq treesit-auto-langs backpack--treesit-langs)
+      ;; Set install location
+      (setq treesit-extra-load-path (list backpack-tree-sitter-installation-dir))
+      ;; Make sure the installation directory exists
+      (make-directory backpack-tree-sitter-installation-dir t)
+      ;; Build the source alist from treesit-auto recipes
+      (let ((treesit-language-source-alist (treesit-auto--build-treesit-source-alist))
+            (treesit-auto-install t)  ; Install without prompting
+            (installed 0)
+            (failed 0))
+        (dolist (lang backpack--treesit-langs)
+          (condition-case err
+              (let ((source (alist-get lang treesit-language-source-alist)))
+                (if (not source)
+                    (progn
+                      (message "Backpack: No recipe found for %s, skipping" lang)
+                      (cl-incf failed))
+                  (message "Backpack: Installing grammar for %s..." lang)
+                  (treesit-install-language-grammar lang backpack-tree-sitter-installation-dir)
+                  (cl-incf installed)))
+            (error
+             (message "Backpack: Failed to install grammar for %s: %s" lang err)
+             (cl-incf failed))))
+        (message "Backpack: Tree-sitter grammars: %d installed, %d failed/skipped"
+                 installed failed)))))
 
 (defconst backpack-system
   (pcase system-type
@@ -430,29 +547,300 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 
-(let ((repo (expand-file-name "elpaca/" elpaca-repos-directory))
-      (build (expand-file-name "elpaca/" elpaca-builds-directory)))
+;; Location of elpaca in base-packages (bundled with Backpack)
+(defvar backpack--elpaca-source-dir
+  (expand-file-name "base-packages/elpaca/" backpack-emacs-dir)
+  "Location of the bundled elpaca source in base-packages.")
 
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
+;; Custom build steps for synchronization mode - everything except activation
+(defvar backpack--sync-build-steps
+  '(elpaca--clone
+    elpaca--configure-remotes
+    elpaca--checkout-ref
+    elpaca--run-pre-build-commands
+    elpaca--queue-dependencies
+    elpaca--check-version
+    elpaca--link-build-files
+    elpaca--generate-autoloads-async
+    elpaca--byte-compile
+    elpaca--compile-info
+    elpaca--install-info
+    elpaca--add-info-path
+    elpaca--run-post-build-commands)
+  "Build steps for sync mode - excludes `elpaca--activate-package'.")
 
-  (unless (require 'elpaca-autoloads nil t)
-    (when (file-exists-p (expand-file-name "elpaca-autoloads.el" repo))
-      (load (expand-file-name "elpaca-autoloads.el" repo)))))
+;; Steps for activating pre-built packages in normal mode
+(defvar backpack--activation-only-steps
+  '(elpaca--queue-dependencies elpaca--add-info-path elpaca--activate-package)
+  "Steps for normal mode - only activate already-built packages.")
 
-(defvar backpack-after-init-hook '(elpaca-process-queues)
-  "Abnormal hook for functions to be run after Backpack was initialize.")
+(defun backpack--copy-directory-recursively (source dest)
+  "Copy SOURCE directory recursively to DEST using pure Emacs Lisp.
+This is platform-agnostic and doesn't rely on external tools."
+  (unless (file-exists-p dest)
+    (make-directory dest t))
+  (dolist (file (directory-files source t "^[^.]"))
+    (let ((dest-file (expand-file-name (file-name-nondirectory file) dest)))
+      (cond
+       ((file-directory-p file)
+        (backpack--copy-directory-recursively file dest-file))
+       (t
+        (copy-file file dest-file t))))))
+
+(defun backpack--elpaca-repo-dir ()
+  "Return the elpaca repo directory path."
+  (expand-file-name "elpaca/" elpaca-repos-directory))
+
+(defun backpack--elpaca-build-dir ()
+  "Return the elpaca build directory path."
+  (expand-file-name "elpaca/" elpaca-builds-directory))
+
+(defun backpack--elpaca-installed-p ()
+  "Return non-nil if elpaca is already installed in the expected location."
+  (let ((repo-dir (backpack--elpaca-repo-dir)))
+    (and (file-exists-p repo-dir)
+         (file-exists-p (expand-file-name "elpaca.el" repo-dir)))))
+
+(defun backpack--install-elpaca-from-base-packages ()
+  "Copy elpaca from base-packages to elpaca-repos-directory.
+This uses the bundled elpaca instead of cloning from the internet."
+  (let ((repo-dir (backpack--elpaca-repo-dir)))
+    (message "Backpack: Installing elpaca from base-packages...")
+    ;; Ensure parent directories exist
+    (make-directory elpaca-repos-directory t)
+    ;; Copy elpaca source to repo directory
+    (backpack--copy-directory-recursively backpack--elpaca-source-dir repo-dir)
+    (message "Backpack: Elpaca source copied to %s" repo-dir)))
+
+(defun backpack--build-elpaca ()
+  "Build elpaca: byte-compile and generate autoloads.
+This replicates what the elpaca installer does but without cloning."
+  (let* ((repo-dir (backpack--elpaca-repo-dir))
+         (build-dir (backpack--elpaca-build-dir))
+         (default-directory repo-dir))
+    (message "Backpack: Building elpaca...")
+
+    ;; Byte-compile elpaca
+    (let ((emacs-exe (concat invocation-directory invocation-name)))
+      (call-process emacs-exe nil nil nil
+                    "-Q" "-L" "." "--batch"
+                    "--eval" "(byte-recompile-directory \".\" 0 'force)"))
+
+    ;; Load elpaca to generate autoloads
+    (add-to-list 'load-path repo-dir)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo-dir)
+
+    ;; Create build directory with symlinks/copies to repo
+    ;; Link all .el and .elc files including autoloads
+    (make-directory build-dir t)
+    (dolist (file (directory-files repo-dir t "\\.elc?\\'"))
+      (let ((dest (expand-file-name (file-name-nondirectory file) build-dir)))
+        (unless (file-exists-p dest)
+          (if (fboundp 'make-symbolic-link)
+              (condition-case nil
+                  (make-symbolic-link file dest)
+                (error (copy-file file dest t)))
+            (copy-file file dest t)))))
+
+    (message "Backpack: Elpaca built successfully")))
+
+(defun backpack--ensure-elpaca ()
+  "Ensure elpaca is installed and built from base-packages.
+In sync mode, this will copy and build elpaca if needed.
+In normal mode, this just loads elpaca if it's already built."
+  (let ((repo-dir (backpack--elpaca-repo-dir))
+        (build-dir (backpack--elpaca-build-dir)))
+
+    (cond
+     ;; Elpaca is already built - just load it
+     ((and (file-exists-p build-dir)
+           (file-exists-p (expand-file-name "elpaca-autoloads.el" build-dir)))
+      (add-to-list 'load-path build-dir)
+      (require 'elpaca-autoloads nil t))
+
+     ;; Elpaca source exists but not built - build it (sync mode)
+     ((and (backpack-sync-mode-p)
+           (backpack--elpaca-installed-p))
+      (backpack--build-elpaca)
+      (add-to-list 'load-path build-dir)
+      (require 'elpaca-autoloads nil t))
+
+     ;; Elpaca not installed - install from base-packages (sync mode only)
+     ((backpack-sync-mode-p)
+      (backpack--install-elpaca-from-base-packages)
+      (backpack--build-elpaca)
+      (add-to-list 'load-path build-dir)
+      (require 'elpaca-autoloads nil t))
+
+     ;; Normal mode but elpaca not installed - try to load from repo
+     ((file-exists-p repo-dir)
+      (add-to-list 'load-path repo-dir)
+      (when (file-exists-p (expand-file-name "elpaca-autoloads.el" repo-dir))
+        (load (expand-file-name "elpaca-autoloads.el" repo-dir) nil t)))
+
+     ;; Nothing available
+     (t
+      (when (backpack-normal-mode-p)
+        (display-warning 'backpack
+                         "Elpaca is not installed. Run 'backpack ensure' first."
+                         :error))))))
+
+(defun backpack--setup-elpaca-for-mode ()
+  "Configure elpaca based on `backpack-mode'."
+  (when (featurep 'elpaca)
+    (cond
+     ((backpack-sync-mode-p)
+      ;; Sync mode: do everything except activation
+      (setq elpaca-build-steps backpack--sync-build-steps))
+     ((backpack-normal-mode-p)
+      ;; Normal mode: add recipe function to prevent building unbuilt packages
+      (add-to-list 'elpaca-recipe-functions #'backpack--recipe-skip-unbuilt-in-normal-mode)))))
+
+(defun backpack--recipe-skip-unbuilt-in-normal-mode (recipe)
+  "Modify RECIPE to skip building in normal mode if package isn't already built.
+Returns a plist with :build set to activation-only steps for unbuilt packages."
+  (when (backpack-normal-mode-p)
+    (let* ((package (plist-get recipe :package))
+           (build-dir (when package
+                        (expand-file-name package elpaca-builds-directory)))
+           (builtp (and build-dir (file-exists-p build-dir))))
+      (unless builtp
+        ;; Package is not built - in normal mode, we should not try to build it
+        ;; Return :build nil to effectively skip this package's build
+        ;; but still allow queuing (for dependency tracking)
+        (message "Backpack: Package '%s' is not installed. Run 'backpack ensure'." package)
+        '(:build nil)))))
+
+;; Initialize elpaca
+(backpack--ensure-elpaca)
+
+;; Configure elpaca based on backpack mode after loading
+(with-eval-after-load 'elpaca
+  (backpack--setup-elpaca-for-mode)
+
+  ;; Advise elpaca to collect package names during gc mode
+  (defun backpack--elpaca-gc-advice (orig-fn order &rest body)
+    "Advice for `elpaca' macro to collect package names during gc mode.
+In gc mode, just collect the package name without actually queuing.
+ORIG-FN is the original function, ORDER is the package order, BODY is the rest."
+    (let* ((order-val (if (and (consp order) (eq (car order) 'quote))
+                          (cadr order)
+                        order))
+           (pkg-name (cond
+                      ((symbolp order-val) order-val)
+                      ((consp order-val) (car order-val))
+                      (t nil))))
+      (if (backpack-gc-mode-p)
+          ;; In gc mode, just collect the package name
+          (when pkg-name
+            (backpack--gc-collect-package pkg-name)
+            nil)
+        ;; Normal operation - call original
+        (apply orig-fn order body))))
+
+  (advice-add 'elpaca--expand-declaration :around #'backpack--elpaca-gc-advice)
+
+  ;; In sync mode, prevent elpaca from running deferred config forms
+  ;; EXCEPT for packages marked with backpack-enable-on-sync!
+  
+  (defun backpack--elpaca-skip-forms-in-sync-mode (orig-fn q)
+    "Advice to skip running deferred forms in sync mode.
+ORIG-FN is `elpaca--finalize-queue', Q is the queue being finalized.
+Packages in `backpack--enable-on-sync-packages' will still have their forms run."
+    (if (backpack-sync-mode-p)
+        ;; In sync mode, only keep forms for packages marked with backpack-enable-on-sync!
+        (condition-case err
+            (let ((filtered nil)
+                  (original-forms (elpaca-q<-forms q)))
+              ;; Filter forms - keep only those for enable-on-sync packages
+              (dolist (entry original-forms)
+                (when (memq (car entry) backpack--enable-on-sync-packages)
+                  (push entry filtered)))
+              ;; Directly modify the struct using setcar on the forms cons cell
+              ;; The elpaca-q struct is a tagged list: (elpaca-q ID STATUS TIME ELPACAS PROCESSED TYPE AUTOLOADS FORMS ...)
+              ;; Forms is at position 7 (0-indexed)
+              (let ((forms-cell (nthcdr 7 q)))
+                (setcar forms-cell (nreverse filtered)))
+              (funcall orig-fn q))
+          (error
+           (message "Backpack: Error in forms filtering: %S" err)
+           (funcall orig-fn q)))
+      ;; Normal mode - run as usual
+      (funcall orig-fn q)))
+
+  (advice-add 'elpaca--finalize-queue :around #'backpack--elpaca-skip-forms-in-sync-mode))
+
+(defvar backpack-after-init-hook nil
+  "Abnormal hook for functions to be run after Backpack was initialized.")
+
+(defun backpack--packages-need-sync-p ()
+  "Return non-nil if packages need synchronization (installation/building).
+This checks if the elpaca builds directory exists and has content."
+  (not (and (file-exists-p elpaca-builds-directory)
+            (directory-files elpaca-builds-directory nil "^[^.]" t))))
+
+(defun backpack--check-packages-installed ()
+  "Check if packages are installed, warn user if sync is needed."
+  (when (and (backpack-normal-mode-p)
+             (backpack--packages-need-sync-p))
+    (display-warning
+     'backpack
+     "Packages are not installed. Run 'backpack ensure' to install them."
+     :warning)))
+
+(defun backpack--activate-packages ()
+  "Activate all queued packages without attempting installation.
+Used in normal mode when packages are already built.
+In normal mode, elpaca will automatically use pre-built steps for
+packages that already have build directories."
+  (when (and (backpack-normal-mode-p) (featurep 'elpaca))
+    ;; Check if packages need sync first
+    (backpack--check-packages-installed)
+    ;; Process queues - elpaca will automatically detect pre-built packages
+    ;; and use activation-only steps for them
+    (elpaca-process-queues)))
+
+(defun backpack--sync-packages ()
+  "Install and build all queued packages without activation.
+Used in sync mode (`backpack ensure')."
+  (when (and (backpack-sync-mode-p) (featurep 'elpaca))
+    (backpack--setup-elpaca-for-mode)
+    (elpaca-process-queues)))
 
 (defun backpack-start (&optional interactive?)
-  "Start the Backpack session."
+  "Start the Backpack session.
+When INTERACTIVE? is non-nil, we're in a normal interactive Emacs session.
+The behavior depends on `backpack-mode':
+- In `normal' mode: only activate pre-built packages
+- In `sync' mode: install/build packages without activation"
   (when (daemonp)
     (message "Starting in daemon mode...")
     (add-hook 'kill-emacs-hook
 	      (lambda ()
 		(message "Killing Emacs. ¡Adiós!"))
 	      100))
+
+  ;; Ensure required directories exist
+  (with-file-modes 448
+    (mapc (lambda (dir)
+	    (make-directory dir t))
+	  (list backpack-cache-dir
+		backpack-nonessential-dir
+		backpack-state-dir
+		backpack-data-dir
+		backpack-tree-sitter-installation-dir)))
+
   (if interactive?
       (progn
-	;; TODO(shackra): incremental loading of packages
+	;; Configure appropriate hook based on mode
+	(cond
+	 ((backpack-normal-mode-p)
+	  ;; Normal mode: activate packages after init
+	  (add-hook 'backpack-after-init-hook #'backpack--activate-packages))
+	 ((backpack-sync-mode-p)
+	  ;; Sync mode: build packages (without activation)
+	  (add-hook 'backpack-after-init-hook #'backpack--sync-packages)))
 
 	;; last hook to run in Emacs' startup process.
 	(advice-add #'command-line-1 :after #'backpack-finalize)
@@ -461,18 +849,11 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
 	(let ((init-file (expand-file-name "init.el" backpack-user-dir)))
 	  (load init-file t)
 	  ;; load custom file
-	  (load custom-file)
+	  (load custom-file t)
 	  ;; load all gears
 	  (backpack-load-gear-files)))
-    (progn ;; CLI stuff I still don't have any use for, yet
-      (with-file-modes 448
-	(mapc (lambda (dir)
-		(make-directory dir t))
-	      (list backpack-cache-dir
-		    backpack-nonessential-dir
-		    backpack-state-dir
-		    backpack-data-dir
-		    backpack-tree-sitter-installation-dir)))))
+    (progn ;; CLI/batch mode
+      nil))
 
   ;; load site files
   (let ((site-loader
@@ -493,11 +874,14 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   "After the startup process finalizes."
   (setq backpack-init-time (float-time (time-subtract (current-time) before-init-time)))
 
-  ;; TODO: run hooks?
+  ;; Run backpack hooks which will trigger package processing
   (run-hooks 'backpack-after-init-hook)
 
   (when (eq (default-value 'gc-cons-threshold) most-positive-fixnum)
     (setq-default gc-cons-threshold (* 16 1024 1024)))
+
+  (when (backpack-normal-mode-p)
+    (message "Backpack initialized in %.2fs" backpack-init-time))
   t)
 
 (defun backpack-load-gear-files ()
@@ -526,6 +910,187 @@ to `doom-profile-cache-dir' instead, so it can be safely cleaned up as part of
   (load (expand-file-name "gears/editing/lua" backpack-core-dir))
   (load (expand-file-name "gears/editing/json" backpack-core-dir)))
 
-;; TODO(shackra): implement this
+;;; Garbage Collection (orphaned packages cleanup)
+
+(defvar backpack--gc-mode nil
+  "When non-nil, we're in garbage collection mode.
+In this mode, we collect package names without actually installing them.")
+
+(defvar backpack--queued-packages nil
+  "List of package names that would be queued based on current configuration.
+This is populated during gc mode.")
+
+(defun backpack-gc-mode-p ()
+  "Return non-nil if Backpack is in garbage collection mode."
+  (eq backpack--gc-mode t))
+
+(defun backpack--gc-collect-package (package-name)
+  "Add PACKAGE-NAME to the list of queued packages during gc collection."
+  (when (and package-name (symbolp package-name))
+    (cl-pushnew package-name backpack--queued-packages)))
+
+(defun backpack--get-installed-packages ()
+  "Return a list of package names that are currently installed (have build dirs)."
+  (when (file-exists-p elpaca-builds-directory)
+    (mapcar #'intern
+            (cl-remove-if
+             (lambda (name) (member name '("." "..")))
+             (directory-files elpaca-builds-directory nil "^[^.]")))))
+
+(defun backpack--get-repo-packages ()
+  "Return a list of package names that have repos cloned."
+  (when (file-exists-p elpaca-repos-directory)
+    (mapcar #'intern
+            (cl-remove-if
+             (lambda (name) (member name '("." "..")))
+             (directory-files elpaca-repos-directory nil "^[^.]")))))
+
+(defun backpack--get-package-dependencies (package-name)
+  "Get the dependencies of PACKAGE-NAME by reading its main elisp file.
+Returns a list of dependency package names (symbols)."
+  (let* ((build-dir (expand-file-name (symbol-name package-name) elpaca-builds-directory))
+         (repo-dir (expand-file-name (symbol-name package-name) elpaca-repos-directory))
+         (pkg-name-str (symbol-name package-name))
+         ;; Try to find the main file or -pkg.el file
+         (main-file (or (let ((f (expand-file-name (concat pkg-name-str ".el") build-dir)))
+                          (and (file-exists-p f) f))
+                        (let ((f (expand-file-name (concat pkg-name-str ".el") repo-dir)))
+                          (and (file-exists-p f) f))
+                        (let ((f (expand-file-name (concat pkg-name-str "-pkg.el") build-dir)))
+                          (and (file-exists-p f) f))
+                        (let ((f (expand-file-name (concat pkg-name-str "-pkg.el") repo-dir)))
+                          (and (file-exists-p f) f)))))
+    (when main-file
+      (with-temp-buffer
+        (insert-file-contents main-file)
+        (goto-char (point-min))
+        (condition-case nil
+            (if (string-suffix-p "-pkg.el" main-file)
+                ;; Parse -pkg.el format: (define-package ... DEPS ...)
+                (let ((form (read (current-buffer))))
+                  (when (eq (car form) 'define-package)
+                    (mapcar #'car (nth 4 form))))
+              ;; Parse Package-Requires header
+              (when (re-search-forward "^;+[ \t]*Package-Requires[ \t]*:[ \t]*" nil t)
+                (let ((deps-str (buffer-substring-no-properties (point) (line-end-position))))
+                  ;; Handle multi-line Package-Requires
+                  (forward-line 1)
+                  (while (looking-at "^;+[ \t]+\\([^;].*\\)")
+                    (setq deps-str (concat deps-str " " (match-string 1)))
+                    (forward-line 1))
+                  (condition-case nil
+                      (mapcar #'car (read deps-str))
+                    (error nil)))))
+          (error nil))))))
+
+(defun backpack--collect-all-dependencies (packages)
+  "Collect all transitive dependencies for PACKAGES.
+Returns a list of all packages including dependencies."
+  (let ((all-packages (copy-sequence packages))
+        (to-process (copy-sequence packages))
+        (processed nil))
+    (while to-process
+      (let* ((pkg (pop to-process))
+             (deps (backpack--get-package-dependencies pkg)))
+        (push pkg processed)
+        (dolist (dep deps)
+          (unless (or (eq dep 'emacs)  ; Skip emacs itself
+                      (memq dep all-packages)
+                      (memq dep processed))
+            (push dep all-packages)
+            (push dep to-process)))))
+    all-packages))
+
+(defun backpack--find-orphaned-packages ()
+  "Find packages that are installed but not needed by current configuration.
+Returns a list of orphaned package names."
+  (let* ((installed (backpack--get-installed-packages))
+         ;; Expand queued packages to include all their dependencies
+         (needed-with-deps (backpack--collect-all-dependencies backpack--queued-packages)))
+    (cl-set-difference installed needed-with-deps)))
+
+(defun backpack--delete-package (package-name)
+  "Delete PACKAGE-NAME's build and repo directories."
+  (let ((build-dir (expand-file-name (symbol-name package-name) elpaca-builds-directory))
+        (repo-dir (expand-file-name (symbol-name package-name) elpaca-repos-directory)))
+    (when (file-exists-p build-dir)
+      (message "Backpack GC: Deleting build directory for %s..." package-name)
+      (delete-directory build-dir t))
+    (when (file-exists-p repo-dir)
+      (message "Backpack GC: Deleting repo directory for %s..." package-name)
+      (delete-directory repo-dir t))))
+
+(defun backpack--gc-delete-orphaned-packages (orphaned-packages)
+  "Delete all ORPHANED-PACKAGES from disk."
+  (dolist (pkg orphaned-packages)
+    (backpack--delete-package pkg)))
+
+(defun backpack--calculate-directory-size (directory)
+  "Calculate the total size of DIRECTORY in bytes."
+  (let ((total 0))
+    (when (file-exists-p directory)
+      (dolist (file (directory-files-recursively directory ".*" t))
+        (unless (file-directory-p file)
+          (setq total (+ total (or (file-attribute-size (file-attributes file)) 0))))))
+    total))
+
+(defun backpack--format-size (bytes)
+  "Format BYTES as a human-readable string."
+  (cond
+   ((>= bytes (* 1024 1024 1024))
+    (format "%.2f GB" (/ bytes (* 1024.0 1024.0 1024.0))))
+   ((>= bytes (* 1024 1024))
+    (format "%.2f MB" (/ bytes (* 1024.0 1024.0))))
+   ((>= bytes 1024)
+    (format "%.2f KB" (/ bytes 1024.0)))
+   (t (format "%d bytes" bytes))))
+
+(defun backpack-gc (&optional dry-run)
+  "Remove orphaned packages that are no longer needed.
+If DRY-RUN is non-nil, only report what would be deleted without deleting."
+  (setq backpack--queued-packages nil)
+  (setq backpack--gc-mode t)
+
+  ;; Load user configuration to get gear declarations
+  (let ((init-file (expand-file-name "init.el" backpack-user-dir)))
+    (when (file-exists-p init-file)
+      (load init-file t)))
+
+  ;; Load all gears to collect package names
+  ;; The elpaca/leaf macros will call backpack--gc-collect-package in gc mode
+  (backpack-load-gear-files)
+
+  (setq backpack--gc-mode nil)
+
+  ;; Always keep elpaca itself
+  (cl-pushnew 'elpaca backpack--queued-packages)
+
+  (let ((orphaned (backpack--find-orphaned-packages)))
+    (if (null orphaned)
+        (message "Backpack GC: No orphaned packages found. Nothing to clean up.")
+      (let ((total-size 0))
+        ;; Calculate size of orphaned packages
+        (dolist (pkg orphaned)
+          (let ((build-dir (expand-file-name (symbol-name pkg) elpaca-builds-directory))
+                (repo-dir (expand-file-name (symbol-name pkg) elpaca-repos-directory)))
+            (setq total-size (+ total-size
+                                (backpack--calculate-directory-size build-dir)
+                                (backpack--calculate-directory-size repo-dir)))))
+
+        (message "")
+        (message "Backpack GC: Found %d orphaned package(s):" (length orphaned))
+        (dolist (pkg orphaned)
+          (message "  - %s" pkg))
+        (message "")
+        (message "Total space to be freed: %s" (backpack--format-size total-size))
+        (message "")
+
+        (if dry-run
+            (message "Backpack GC: Dry run - no packages were deleted.")
+          (backpack--gc-delete-orphaned-packages orphaned)
+          (message "")
+          (message "Backpack GC: Deleted %d orphaned package(s), freed %s."
+                   (length orphaned)
+                   (backpack--format-size total-size)))))))
 
 (provide 'backpack)

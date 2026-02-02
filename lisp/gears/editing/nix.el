@@ -1,3 +1,8 @@
+;; Declare tree-sitter languages needed by this gear
+(when (and (gearp! :editing nix)
+           (not (gearp! :editing nix -treesit)))
+  (backpack-treesit-langs! nix))
+
 (leaf nix-mode
   :doc "an Emacs major mode for editing Nix expressions"
   :ensure (nix-mode :ref "719feb7868fb567ecfe5578f6119892c771ac5e5")
