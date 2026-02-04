@@ -16,4 +16,4 @@
     :doc "work with Git forges from Magit"
     :ensure (forge :ref "34e7b77602b2018f64bd7e38314a0a2cb4a32227")
     :config
-    (setq forge-database-file (expand-file-name ".cache/emacs/forge-database.sqlite" user-emacs-directory))))
+    (setq forge-database-file (expand-file-name "forge-database.sqlite" backpack-cache-dir))))
