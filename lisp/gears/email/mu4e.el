@@ -116,10 +116,10 @@
   (mu4e-headers-date-format		.	"%b %-d, %Y") ; e.g., "mar 3 2024"
   (mu4e-headers-time-format		.	"%b %-d, %H:%M") ; e.g., "mar 3, 17:47"
   ;; Gmail style headers
-  (mu4e-headers-fields			.	'((:human-date  . 12)
-						  (:flags	. 7)
-						  (:from	. 30)
-						  (:subject	. 92)))
+  (mu4e-headers-fields			.	'((:human-date  . 14)
+						  (:flags	. 8)
+						  (:from	. 31)
+						  (:subject	. 88)))
   :config
   (setf (alist-get 'trash mu4e-marks)
 	'(:char ("d" . "▼")
