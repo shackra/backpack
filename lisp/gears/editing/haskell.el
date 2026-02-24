@@ -28,17 +28,19 @@
     ("haskell-language-server-wrapper" . "an integration point for ghcide and haskell-ide-engine, providing a single unified interface for editors")
     :hook (haskell-mode-hook . eglot-ensure)
     :config
-    (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp"))))
-
-  (unless (gearp! :editing haskell -treesit)
-    (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode))
-    (setq haskell-ts-mode-hook haskell-mode-hook)))
+    (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))))
 
 (leaf haskell-ts-mode
   :doc "tree-sitter support for Haskell"
   :ensure (haskell-ts-mode :ref "bf143ee8382f09e0a68d775d80445065f32929c3")
   :unless (gearp! :editing haskell -treesit)
   :after haskell-mode)
+
+(when (gearp! :editing haskell)
+  (unless (gearp! :editing haskell -treesit)
+    (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode))
+    (with-eval-after-load 'haskell-mode
+      (setq haskell-ts-mode-hook haskell-mode-hook))))
 
 (leaf ob-haskell
   :doc "Haskell source blocks in org-mode"
