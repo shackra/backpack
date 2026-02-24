@@ -1,7 +1,9 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing json)
            (not (gearp! :editing json -treesit)))
-  (backpack-treesit-langs! json))
+  (backpack-treesit-langs! json)
+
+  (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode)))
 
 (leaf json
   :doc "major mode for editing JSON files"
@@ -24,5 +26,4 @@
   :doc "treesit support for editing JSON files"
   :when (and (gearp! :editing json) (not (gearp! :editing json -treesit)))
   :config
-  (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
   (setq json-ts-mode-hook js-json-mode-hook))
