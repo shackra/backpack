@@ -1,7 +1,13 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing haskell)
            (not (gearp! :editing haskell -treesit)))
-  (backpack-treesit-langs! haskell))
+  (backpack-treesit-langs! haskell)
+  (with-eval-after-load 'treesit-auto
+    (add-to-list 'treesit-auto-recipe-list
+		 (make-treesit-auto-recipe
+		  :lang 'haskell
+		  :ts-mode 'haskell-ts-mode
+		  :url "https://github.com/tree-sitter/tree-sitter-haskell"))))
 
 (leaf haskell-mode
   :doc "A Haskell editing mode for Emacs"
