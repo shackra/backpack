@@ -905,6 +905,7 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/editing/go" backpack-core-dir))
   (load (expand-file-name "gears/editing/org" backpack-core-dir))
   (load (expand-file-name "gears/editing/hyprland" backpack-core-dir))
+  (load (expand-file-name "gears/editing/haskell" backpack-core-dir))
   (load (expand-file-name "gears/editing/nix" backpack-core-dir))
   (load (expand-file-name "gears/editing/python" backpack-core-dir))
   (load (expand-file-name "gears/editing/lua" backpack-core-dir))
