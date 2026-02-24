@@ -1,7 +1,9 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing nix)
            (not (gearp! :editing nix -treesit)))
-  (backpack-treesit-langs! nix))
+  (backpack-treesit-langs! nix)
+
+  (add-to-list 'major-mode-remap-alist '(nix-mode . nix-ts-mode)))
 
 (leaf nix-mode
   :doc "an Emacs major mode for editing Nix expressions"
@@ -34,7 +36,6 @@
   :ensure (nix-ts-mode :ref "d769e53ccc0f40026fd11c7e23bf419c2caf4732")
   :unless (gearp! :editing nix -treesit)
   :config
-  (add-to-list 'major-mode-remap-alist '(nix-mode . nix-ts-mode))
   (setq nix-ts-mode-hook nix-mode-hook))
 
 (leaf ob-nix
