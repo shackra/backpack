@@ -1,14 +1,16 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing json)
            (not (gearp! :editing json -treesit)))
-  (backpack-treesit-langs! json))
+  (backpack-treesit-langs! json)
+
+  (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode)))
 
 (leaf json
   :doc "major mode for editing JSON files"
   :when (gearp! :editing json)
   :hook
-  (js-json-mode-hook . electric-pair-local-mode)
-  (js-json-mode-hook .
+  ((js-json-mode-hook json-ts-mode-hook) . electric-pair-local-mode)
+  ((js-json-mode-hook json-ts-mode-hook) .
 		  (lambda ()
 		    (toggle-truncate-lines 1)
 		    (unless (gearp! :editing json -display-line-numbers)
@@ -18,11 +20,9 @@
     :when (gearp! :editing json lsp)
     :doc "Language Server Protocol support for JSON"
     :hook
-    (js-json-mode-hook . eglot-ensure)))
+    ((js-json-mode-hook json-ts-mode-hook) . eglot-ensure)))
 
 (leaf json-ts-mode
   :doc "treesit support for editing JSON files"
-  :when (and (gearp! :editing json) (not (gearp! :editing json -treesit)))
-  :config
-  (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
-  (setq json-ts-mode-hook js-json-mode-hook))
+  :unless (gearp! :editing json -treesit)
+  :after json)
