@@ -1,7 +1,9 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing go)
            (not (gearp! :editing go -treesit)))
-  (backpack-treesit-langs! go gomod))
+  (backpack-treesit-langs! go gomod)
+
+  (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode)))
 
 (leaf go-mode
   :doc "Support for Go programming language in Emacs"
@@ -35,5 +37,4 @@
     :doctor ("gorename" . "command that performs precise type-safe renaming of identifiers in Go source code"))
 
   (unless (gearp! :editing go -treesit)
-    (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
     (setq go-ts-mode-hook go-mode-hook)))
