@@ -33,8 +33,10 @@
     (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp"))))
 
   (unless (gearp! :editing haskell -treesit)
-    (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode))
     (setq haskell-ts-mode-hook haskell-mode-hook)))
+
+(when (and (gearp! :editing haskell) (not (gearp! :editing haskell -treesit)))
+  (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode)))
 
 (leaf haskell-ts-mode
   :doc "tree-sitter support for Haskell"
