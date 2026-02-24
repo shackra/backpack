@@ -2,12 +2,15 @@
 (when (and (gearp! :editing haskell)
            (not (gearp! :editing haskell -treesit)))
   (backpack-treesit-langs! haskell)
+
   (with-eval-after-load 'treesit-auto
     (add-to-list 'treesit-auto-recipe-list
 		 (make-treesit-auto-recipe
 		  :lang 'haskell
 		  :ts-mode 'haskell-ts-mode
-		  :url "https://github.com/tree-sitter/tree-sitter-haskell"))))
+		  :url "https://github.com/tree-sitter/tree-sitter-haskell")))
+
+  (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode)))
 
 (leaf haskell-mode
   :doc "A Haskell editing mode for Emacs"
