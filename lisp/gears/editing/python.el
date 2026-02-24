@@ -10,8 +10,8 @@
   :ensure (python-mode :ref "5aaf8b386aa694429d997c6fd49772b0b359e514")
   :when (gearp! :editing python)
   :hook
-  ((python-mode-hook python-ts-mode-map) . electric-pair-local-mode)
-  ((python-mode-hook python-ts-mode-map) .
+  ((python-mode-hook python-ts-mode-hook) . electric-pair-local-mode)
+  ((python-mode-hook python-ts-mode-hook) .
    (lambda ()
      (toggle-truncate-lines 1)
      (unless (gearp! :editing python -display-line-numbers)
@@ -21,7 +21,7 @@
     :doc "Language Server Protocol support for python"
     :when (gearp! :editing python lsp)
     :hook
-    ((python-mode-hook python-ts-mode-map) . eglot-ensure)
+    ((python-mode-hook python-ts-mode-hook) . eglot-ensure)
     :config
     (add-to-list 'eglot-server-programs
 		 `(python-mode . ,(eglot-alternatives
