@@ -17,29 +17,24 @@
   :ensure (haskell-mode :ref "2dd755a5fa11577a9388af88f385d2a8e18f7a8d")
   :when (gearp! :editing haskell)
   :hook
-  (haskell-mode-hook . electric-pair-local-mode)
-  (haskell-mode-hook . haskell-indentation-mode)
-  (haskell-mode-hook . interactive-haskell-mode)
-  (haskell-mode-hook .
-		     (lambda ()
-		       (toggle-truncate-lines +1)
-		       (unless (gearp! :editing haskell -display-line-numbers)
-			 (display-line-numbers-mode +1))))
+  ((haskell-mode-hook haskell-ts-mode-hook) . electric-pair-local-mode)
+  ((haskell-mode-hook haskell-ts-mode-hook) . haskell-indentation-mode)
+  ((haskell-mode-hook haskell-ts-mode-hook) . interactive-haskell-mode)
+  ((haskell-mode-hook haskell-ts-mode-hook) .
+   (lambda ()
+     (toggle-truncate-lines +1)
+     (unless (gearp! :editing haskell -display-line-numbers)
+       (display-line-numbers-mode +1))))
   :config
   (leaf eglot
     :doc "Language Server Protocol support for haskell-mode"
     :when (gearp! :editing haskell lsp)
     :doctor
     ("haskell-language-server-wrapper" . "an integration point for ghcide and haskell-ide-engine, providing a single unified interface for editors")
-    :hook (haskell-mode-hook . eglot-ensure)
+    :hook ((haskell-mode-hook haskell-ts-mode-hook) . eglot-ensure)
     :config
-    (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp"))))
-
-  (unless (gearp! :editing haskell -treesit)
-    (setq haskell-ts-mode-hook haskell-mode-hook)))
-
-(when (and (gearp! :editing haskell) (not (gearp! :editing haskell -treesit)))
-  (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode)))
+    (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
+    (add-to-list 'eglot-server-programs '(haskell-ts-mode . ("haskell-language-server-wrapper" "--lsp")))))
 
 (leaf haskell-ts-mode
   :doc "tree-sitter support for Haskell"
