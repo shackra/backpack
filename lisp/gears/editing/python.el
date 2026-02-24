@@ -1,7 +1,9 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing python)
            (not (gearp! :editing python -treesit)))
-  (backpack-treesit-langs! python))
+  (backpack-treesit-langs! python)
+
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 (leaf python-mode
   :doc "major mode for the Python Programming Language"
@@ -54,5 +56,4 @@
   :after python
   :unless (gearp! :editing python -treesit)
   :config
-  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
   (setq python-ts-mode-hook python-mode-hook))
