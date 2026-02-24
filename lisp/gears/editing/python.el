@@ -10,18 +10,18 @@
   :ensure (python-mode :ref "5aaf8b386aa694429d997c6fd49772b0b359e514")
   :when (gearp! :editing python)
   :hook
-  (python-mode-hook . electric-pair-local-mode)
-  (python-mode-hook .
-		    (lambda ()
-		      (toggle-truncate-lines 1)
-		      (unless (gearp! :editing python -display-line-numbers)
-			(display-line-numbers-mode +1))))
+  ((python-mode-hook python-ts-mode-map) . electric-pair-local-mode)
+  ((python-mode-hook python-ts-mode-map) .
+   (lambda ()
+     (toggle-truncate-lines 1)
+     (unless (gearp! :editing python -display-line-numbers)
+       (display-line-numbers-mode +1))))
   :config
   (leaf eglot
     :doc "Language Server Protocol support for python"
     :when (gearp! :editing python lsp)
     :hook
-    (python-mode-hook . eglot-ensure)
+    ((python-mode-hook python-ts-mode-map) . eglot-ensure)
     :config
     (add-to-list 'eglot-server-programs
 		 `(python-mode . ,(eglot-alternatives
@@ -32,6 +32,16 @@
 				     ("pyrefly" "lsp")
 				     "jedi-language-server"
 				     ("ruff" "server")))))
+
+    (add-to-list 'eglot-server-programs
+		 `(python-ts-mode . ,(eglot-alternatives
+				      '("pylsp"
+					"pyls"
+					("basedpyright-langserver" "--stdio")
+					("pyright-langserver" "--stdio")
+					("pyrefly" "lsp")
+					"jedi-language-server"
+					("ruff" "server")))))
     :doctor
     ("pylsp" . "python implementation of the Language Server Protocol")
     ("pyls"  . "an implementation of the Language Server Protocol for Python")
@@ -43,7 +53,7 @@
 
 (leaf ob-python
   :doc "Python source blocks in org-mode"
-  :when (and (gearp! :editing python) (gearp! :editing org))
+  :when (gearp! :editing python)
   :after org
   :custom
   (org-babel-python-command . "python3")
@@ -55,5 +65,4 @@
   :doc "tree-sitter support for Python"
   :after python
   :unless (gearp! :editing python -treesit)
-  :config
-  (setq python-ts-mode-hook python-mode-hook))
+  :after python)
