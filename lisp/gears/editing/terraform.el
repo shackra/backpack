@@ -7,6 +7,7 @@
     (add-to-list 'treesit-auto-recipe-list
 		 (make-treesit-auto-recipe
 		  :lang 'terraform
+		  :ts-mode 'terraform-ts-mode
 		  :url "https://github.com/tree-sitter-grammars/tree-sitter-hcl"
 		  :source-dir "dialects/terraform/src")))
 
@@ -38,8 +39,3 @@
   :doc "Look up Terraform documentation from Emacs"
   :when (gearp! :editing terraform doc)
   :ensure (terraform-doc :ref "31f1c47453ad14181883f78258a72c02b95d9783"))
-
-(leaf terraform-ts-mode
-  :doc "treesit support for editing Terraform files"
-  :unless (gearp! :editing terraform -treesit)
-  :after terraform-mode)
