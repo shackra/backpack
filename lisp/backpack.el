@@ -177,7 +177,7 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
 
 (when (and backpack--system-gnu-p
 	   (getenv-internal "WSLENV"))
-  (add-to-list backpack-system 'wsl 'append))
+  (add-to-list 'backpack-system 'wsl 'append))
 
 (push :system features)
 (put :system 'subfeatures backpack-system)
