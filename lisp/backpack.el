@@ -908,7 +908,8 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/editing/nix" backpack-core-dir))
   (load (expand-file-name "gears/editing/python" backpack-core-dir))
   (load (expand-file-name "gears/editing/lua" backpack-core-dir))
-  (load (expand-file-name "gears/editing/json" backpack-core-dir)))
+  (load (expand-file-name "gears/editing/json" backpack-core-dir))
+  (load (expand-file-name "gears/editing/terraform" backpack-core-dir)))
 
 ;;; Garbage Collection (orphaned packages cleanup)
 
