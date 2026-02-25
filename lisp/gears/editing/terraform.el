@@ -1,6 +1,8 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing terraform)
-           (not (gearp! :editing terraform -treesit)))
+	   (not (gearp! :editing terraform -treesit))
+	   ;; NOTE(shackra): disabled until I can figure out the reason for this error: Ignoring unknown mode ‘terraform-mode’ (remapped to `terraform-ts-mode')
+	   nil)
   (backpack-treesit-langs! terraform)
 
   (with-eval-after-load 'treesit-auto
