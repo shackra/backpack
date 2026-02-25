@@ -1,19 +1,19 @@
 (require 'backpack-pouch)
 
 (leaf transient
-  :doc "Installs transient 0.10.1. needed for Magit 4.4.2"
+  :doc "Installs transient 0.12, needed for Magit 4.5"
   :when (gearp! :tools magit)
-  :ensure (transient :ref "053d56e4de2dd78bf32f7af7ed5f289a91cdb6ac"))
+  :ensure (transient :ref "1f7039ef8d548d6fe858084fcbeae7588eba4190"))
 
 (leaf magit
   :when (gearp! :tools magit)
   :doc "an interface to the version control system Git"
   :bind ("C-x g" . magit-status)
-  :ensure (magit :ref "b828afbb4b45641998fb6483a08effb1efb214e1")
+  :ensure (magit :ref "c800f79c2061621fde847f6a53129eca0e8da728"))
+
+(leaf forge
+  :when (gearp! :tools magit forge)
+  :doc "work with Git forges from Magit"
+  :ensure (forge :ref "315e8e9a2b45d050ca7fc717595cc698e175b140")
   :config
-  (leaf forge
-    :when (gearp! :tools magit forge)
-    :doc "work with Git forges from Magit"
-    :ensure (forge :ref "34e7b77602b2018f64bd7e38314a0a2cb4a32227")
-    :config
-    (setq forge-database-file (expand-file-name "forge-database.sqlite" backpack-cache-dir))))
+  (setq forge-database-file (expand-file-name "forge-database.sqlite" backpack-cache-dir)))
