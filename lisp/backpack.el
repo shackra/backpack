@@ -968,6 +968,7 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/editing/python" backpack-core-dir))
   (load (expand-file-name "gears/editing/rst" backpack-core-dir))
   (load (expand-file-name "gears/editing/rust" backpack-core-dir))
+  (load (expand-file-name "gears/editing/terraform" backpack-core-dir))
   (load (expand-file-name "gears/editing/toml" backpack-core-dir)))
 
 ;;; Garbage Collection (orphaned packages cleanup)
