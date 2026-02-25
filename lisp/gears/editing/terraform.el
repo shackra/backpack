@@ -1,7 +1,14 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing terraform)
            (not (gearp! :editing terraform -treesit)))
-  (backpack-treesit-langs! hcl)
+  (backpack-treesit-langs! terraform)
+
+  (with-eval-after-load 'treesit-auto
+    (add-to-list 'treesit-auto-recipe-list
+		 (make-treesit-auto-recipe
+		  :lang 'terraform
+		  :url "https://github.com/tree-sitter-grammars/tree-sitter-hcl"
+		  :source-dir "dialects/terraform/src")))
 
   (add-to-list 'major-mode-remap-alist '(terraform-mode . terraform-ts-mode)))
 
