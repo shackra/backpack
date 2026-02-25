@@ -32,12 +32,12 @@
     :hook ((terraform-mode-hook terraform-ts-mode-hook) . eglot-ensure)
     :config
     (add-to-list 'eglot-server-programs '(terraform-mode . ("terraform-ls" "serve")))
-    (add-to-list 'eglot-server-programs '(terraform-ts-mode . ("terraform-ls" "serve"))))
+    (add-to-list 'eglot-server-programs '(terraform-ts-mode . ("terraform-ls" "serve")))))
 
-  (leaf terraform-doc
-    :doc "Look up Terraform documentation from Emacs"
-    :when (gearp! :editing terraform doc)
-    :ensure (terraform-doc :ref "31f1c47453ad14181883f78258a72c02b95d9783")))
+(leaf terraform-doc
+  :doc "Look up Terraform documentation from Emacs"
+  :when (gearp! :editing terraform doc)
+  :ensure (terraform-doc :ref "31f1c47453ad14181883f78258a72c02b95d9783"))
 
 (leaf terraform-ts-mode
   :doc "treesit support for editing Terraform files"
