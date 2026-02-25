@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (cl-defmacro backpack/mu4e-easy-context
     (&key
      c-name maildir mail smtp
