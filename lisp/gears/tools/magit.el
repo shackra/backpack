@@ -9,7 +9,15 @@
   :when (gearp! :tools magit)
   :doc "an interface to the version control system Git"
   :bind ("C-x g" . magit-status)
-  :ensure (magit :ref "c800f79c2061621fde847f6a53129eca0e8da728"))
+  :ensure (magit :ref "c800f79c2061621fde847f6a53129eca0e8da728")
+  :custom
+  ;; Show magit-status in the entire frame; other magit buffers use
+  ;; the traditional split behaviour.  The pre-display-buffer-hook
+  ;; already contains `magit-save-window-configuration' by default,
+  ;; so the previous layout is recorded automatically.
+  (magit-display-buffer-function . #'magit-display-buffer-fullframe-status-v1)
+  ;; Restore the saved window configuration when quitting magit (default).
+  (magit-bury-buffer-function . #'magit-restore-window-configuration))
 
 (leaf forge
   :when (gearp! :tools magit forge)

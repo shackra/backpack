@@ -74,5 +74,11 @@
   (unless (gearp! :config default -pixel-scroll)
     (pixel-scroll-precision-mode))
 
+  (leaf dired
+    :tag "builtin"
+    :custom
+    (dired-listing-switches . "-alh --group-directories-first")
+    (dired-kill-when-opening-new-dired-buffer . t))
+
   (when (display-graphic-p)
     (context-menu-mode)))

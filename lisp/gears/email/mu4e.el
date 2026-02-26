@@ -36,6 +36,20 @@
    ("M"		.	mu4e-headers-mark-all)
    ("N"		.	mu4e-headers-mark-all-unread-read))
   :preface
+  (defvar backpack/mu4e--window-configuration nil
+    "Window configuration saved before entering mu4e.")
+
+  (defun backpack/mu4e-save-window-configuration (&rest _)
+    "Save the current window configuration before mu4e takes over."
+    (setq backpack/mu4e--window-configuration
+          (current-window-configuration)))
+
+  (defun backpack/mu4e-restore-window-configuration ()
+    "Restore the window configuration that was active before mu4e."
+    (when backpack/mu4e--window-configuration
+      (set-window-configuration backpack/mu4e--window-configuration)
+      (setq backpack/mu4e--window-configuration nil)))
+
   (defun backpack/mu4e-compose-goodies ()
     "Settings for mu4e compose mode."
     (set-fill-column 72)
@@ -58,7 +72,9 @@
 	(format-time-string mu4e-headers-date-format date))))
   :hook
   (mu4e-compose-mode-hook . backpack/mu4e-compose-goodies)
+  (mu4e-quit-hook . backpack/mu4e-restore-window-configuration)
   :advice
+  (:before mu4e backpack/mu4e-save-window-configuration)
   (:override mu4e~headers-human-date backpack/mu4e~headers-human-date)
   :custom
   (gnus-article-date-headers		.	'(combined-local-lapsed))
