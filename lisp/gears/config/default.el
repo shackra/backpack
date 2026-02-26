@@ -39,6 +39,8 @@
 
   (leaf savehist
     :tag "builtin"
+    :custom
+    (savehist-file . `,(expand-file-name "history" backpack-nonessential-dir))
     :global-minor-mode savehist-mode)
 
   (leaf saveplace
