@@ -1,7 +1,7 @@
 (leaf auctex
   :doc "an extensible package for writing and formatting TeX files"
   :when (gearp! :editing latex)
-  :ensure (auctex :ref "f0c4b1dcc9e5987dce43b1e43f530351157ff577")
+  :ensure (auctex :ref "9779fa472e50891666e23dde541e01c3cfc852ec")
   :mode ("\\.tex\\'" . LaTeX-mode)
   :hook
   (LaTeX-mode-hook . visual-line-mode)
