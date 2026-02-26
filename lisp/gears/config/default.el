@@ -80,5 +80,16 @@
     (dired-listing-switches . "-alh --group-directories-first")
     (dired-kill-when-opening-new-dired-buffer . t))
 
+  ;; Under WSL, killed/copied text does not reach the Windows clipboard.
+  ;; Pipe it through clip.exe so yanked text is available system-wide.
+  ;; We write directly to the process stdin to avoid any shell quoting issues.
+  (when backpack--system-wsl-p
+    (setq interprogram-cut-function
+          (lambda (text)
+            (let ((process-connection-type nil))  ; use a pipe, not a pty
+              (let ((proc (start-process "clip" nil "clip.exe")))
+                (process-send-string proc text)
+                (process-send-eof proc))))))
+
   (when (display-graphic-p)
     (context-menu-mode)))

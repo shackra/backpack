@@ -179,6 +179,9 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
 	   (getenv-internal "WSLENV"))
   (add-to-list 'backpack-system 'wsl 'append))
 
+(defconst backpack--system-wsl-p (memq 'wsl backpack-system)
+  "Non-nil when Emacs is running inside Windows Subsystem for Linux.")
+
 (push :system features)
 (put :system 'subfeatures backpack-system)
 
