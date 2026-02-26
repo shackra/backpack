@@ -686,13 +686,64 @@ In normal mode, this just loads elpaca if it's already built."
                          "Elpaca is not installed. Run 'backpack ensure' first."
                          :error))))))
 
+(defun backpack--ref-needs-update-p (repo-dir requested-ref)
+  "Return non-nil if REPO-DIR's HEAD doesn't match REQUESTED-REF.
+REQUESTED-REF can be a commit hash, tag, or branch name."
+  (when (and repo-dir requested-ref (file-exists-p repo-dir))
+    (let ((default-directory repo-dir))
+      (condition-case nil
+          (let ((current-rev (string-trim
+                              (shell-command-to-string "git rev-parse HEAD"))))
+            ;; Check if requested-ref is a full commit hash that matches current
+            (not (or (string-prefix-p requested-ref current-rev)
+                     (string-prefix-p current-rev requested-ref)
+                     ;; Also try resolving the ref to see if it matches
+                     (string= current-rev
+                              (string-trim
+                               (shell-command-to-string
+                                (format "git rev-parse %s 2>/dev/null || echo ''"
+                                        (shell-quote-argument requested-ref))))))))
+        (error t)))))  ; If there's an error, assume update is needed
+
+(defun backpack--recipe-force-rebuild-on-ref-change (recipe)
+  "Modify RECIPE to force rebuild if the ref has changed.
+In sync mode, checks if the requested :ref differs from the currently
+checked out commit. If so, returns build steps that include fetch,
+checkout, and rebuild operations."
+  (when (backpack-sync-mode-p)
+    (let* ((package (plist-get recipe :package))
+           (requested-ref (plist-get recipe :ref))
+           (repo-dir (when package
+                       (expand-file-name package elpaca-repos-directory))))
+      (when (and requested-ref
+                 (backpack--ref-needs-update-p repo-dir requested-ref))
+        (message "Backpack: Ref changed for '%s', will fetch and rebuild" package)
+        ;; Return build steps that fetch, checkout new ref, and rebuild
+        ;; This overrides the default "pre-built" steps that skip checkout-ref
+        `(:build (elpaca--fetch
+                  elpaca--checkout-ref
+                  elpaca--run-pre-build-commands
+                  elpaca--queue-dependencies
+                  elpaca--check-version
+                  elpaca--link-build-files
+                  elpaca--generate-autoloads-async
+                  elpaca--byte-compile
+                  elpaca--compile-info
+                  elpaca--install-info
+                  elpaca--add-info-path
+                  elpaca--run-post-build-commands))))))
+
 (defun backpack--setup-elpaca-for-mode ()
   "Configure elpaca based on `backpack-mode'."
   (when (featurep 'elpaca)
     (cond
      ((backpack-sync-mode-p)
       ;; Sync mode: do everything except activation
-      (setq elpaca-build-steps backpack--sync-build-steps))
+      (setq elpaca-build-steps backpack--sync-build-steps)
+      ;; Add recipe function to detect ref changes and force rebuild
+      ;; This handles the case where a package is already built but
+      ;; the :ref in the recipe has been updated to a different commit
+      (add-to-list 'elpaca-recipe-functions #'backpack--recipe-force-rebuild-on-ref-change))
      ((backpack-normal-mode-p)
       ;; Normal mode: add recipe function to prevent building unbuilt packages
       (add-to-list 'elpaca-recipe-functions #'backpack--recipe-skip-unbuilt-in-normal-mode)))))
