@@ -688,21 +688,21 @@ In normal mode, this just loads elpaca if it's already built."
 
 (defun backpack--ref-needs-update-p (repo-dir requested-ref)
   "Return non-nil if REPO-DIR's HEAD doesn't match REQUESTED-REF.
-REQUESTED-REF can be a commit hash, tag, or branch name."
+REQUESTED-REF can be a commit hash, tag, or branch name.
+Uses `elpaca-process-call' for cross-platform git invocation."
   (when (and repo-dir requested-ref (file-exists-p repo-dir))
     (let ((default-directory repo-dir))
       (condition-case nil
           (let ((current-rev (string-trim
-                              (shell-command-to-string "git rev-parse HEAD"))))
+                              (cadr (elpaca-process-call "git" "rev-parse" "HEAD")))))
             ;; Check if requested-ref is a full commit hash that matches current
             (not (or (string-prefix-p requested-ref current-rev)
                      (string-prefix-p current-rev requested-ref)
-                     ;; Also try resolving the ref to see if it matches
-                     (string= current-rev
-                              (string-trim
-                               (shell-command-to-string
-                                (format "git rev-parse %s 2>/dev/null || echo ''"
-                                        (shell-quote-argument requested-ref))))))))
+                     ;; Also try resolving the ref in case it's a tag or branch
+                     (let ((resolved (elpaca-process-call "git" "rev-parse" requested-ref)))
+                       (and (eq (car resolved) 0)
+                            (string= current-rev
+                                     (string-trim (cadr resolved))))))))
         (error t)))))  ; If there's an error, assume update is needed
 
 (defun backpack--recipe-force-rebuild-on-ref-change (recipe)
