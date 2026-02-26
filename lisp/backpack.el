@@ -957,10 +957,13 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/editing/haskell" backpack-core-dir))
   (load (expand-file-name "gears/editing/hyprland" backpack-core-dir))
   (load (expand-file-name "gears/editing/json" backpack-core-dir))
+  (load (expand-file-name "gears/editing/latex" backpack-core-dir))
   (load (expand-file-name "gears/editing/lua" backpack-core-dir))
+  (load (expand-file-name "gears/editing/markdown" backpack-core-dir))
   (load (expand-file-name "gears/editing/nix" backpack-core-dir))
   (load (expand-file-name "gears/editing/org" backpack-core-dir))
   (load (expand-file-name "gears/editing/python" backpack-core-dir))
+  (load (expand-file-name "gears/editing/rst" backpack-core-dir))
   (load (expand-file-name "gears/editing/rust" backpack-core-dir))
   (load (expand-file-name "gears/editing/toml" backpack-core-dir)))
 
