@@ -41,6 +41,12 @@
     :tag "builtin"
     :global-minor-mode savehist-mode)
 
+  (leaf saveplace
+    :tag "builtin"
+    :custom
+    (save-place-file . `,(expand-file-name "places" backpack-nonessential-dir))
+    :global-minor-mode save-place-mode)
+
   (line-number-mode t)		     ; show current line in modeline
   (column-number-mode t)	     ; show current column in modeline
 
