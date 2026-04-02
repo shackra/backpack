@@ -33,6 +33,7 @@
 (require 'leaf-keywords)
 (require 'backpack-pouch)
 (require 'backpack-email-utils)
+(require 'backpack-inventory)
 
 (leaf-keywords-init)
 
