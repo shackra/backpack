@@ -747,16 +747,32 @@ Returns one of: :enabled, :disabled, :default-on."
 
 ;;; Flag description generation
 
+(defun backpack-inventory--flag-display-name (flag-plist)
+  "Return the display name for FLAG-PLIST.
+For opt-out flags (prefixed with -), return the positive feature name."
+  (let* ((name (symbol-name (plist-get flag-plist :name)))
+         (is-negative (string-prefix-p "-" name)))
+    (if is-negative (substring name 1) name)))
+
 (defun backpack-inventory--flag-description (flag-plist)
   "Generate a description for FLAG-PLIST.
-Uses the :doc if available, otherwise auto-generates from the flag name."
-  (or (plist-get flag-plist :doc)
-      (let* ((name (symbol-name (plist-get flag-plist :name)))
-             (is-negative (string-prefix-p "-" name))
-             (clean-name (if is-negative (substring name 1) name)))
-        (if is-negative
-            (format "disable %s (on by default)" clean-name)
-          (format "enable %s" clean-name)))))
+Uses the :doc if available, otherwise auto-generates from the flag name.
+For opt-out flags, the description explains how to disable the feature."
+  (let* ((name (symbol-name (plist-get flag-plist :name)))
+         (is-negative (string-prefix-p "-" name))
+         (clean-name (if is-negative (substring name 1) name)))
+    (cond
+     ;; Has an explicit :doc string -- use it as-is
+     ((plist-get flag-plist :doc)
+      (if is-negative
+          (format "%s (disable with -%s)" (plist-get flag-plist :doc) clean-name)
+        (plist-get flag-plist :doc)))
+     ;; Auto-generate for opt-out flags
+     (is-negative
+      (format "active by default (disable with -%s)" clean-name))
+     ;; Auto-generate for opt-in flags
+     (t
+      (format "enable %s" clean-name)))))
 
 ;;; Rendering helpers
 
@@ -968,13 +984,13 @@ POUCH-KEYWORD and GEAR-NAME are used for status checks."
       (if (backpack-inventory--theme-flags-p pouch-keyword name)
           (backpack-inventory--render-theme-flags flags pouch-keyword name)
         (dolist (flag flags)
-          (let* ((flag-name (plist-get flag :name))
+          (let* ((display-name (backpack-inventory--flag-display-name flag))
                  (flag-desc (backpack-inventory--flag-description flag))
                  (flag-status (backpack-inventory--flag-status
                                pouch-keyword name flag))
                  (status-str (backpack-inventory--status-string flag-status)))
             (insert "  " status-str " "
-                    (propertize (symbol-name flag-name)
+                    (propertize display-name
                                 'face 'font-lock-variable-name-face))
             (when flag-desc
               (insert "  "
