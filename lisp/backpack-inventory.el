@@ -152,10 +152,30 @@ next keyword."
 
 (defun backpack-inventory--extract-doctor-entries (props)
   "Extract :doctor entries from leaf PROPS.
-Returns a list of (BINARY . DESCRIPTION) pairs."
+Returns a list of plists with :binary, :description, and :level keys.
+
+Handles two formats:
+  Old: (\"binary\" . \"description\")         -- treated as optional
+  New: (\"binary\" . (\"description\" LEVEL))  -- LEVEL is `required',
+       `optional', or (conflicts \"other-binary\")"
   (let ((values (backpack-inventory--extract-leaf-keyword props :doctor)))
-    ;; :doctor entries are cons cells like (\"binary\" . \"description\")
-    (cl-remove-if-not #'consp values)))
+    (cl-loop for entry in values
+             when (consp entry)
+             collect (let ((binary (car entry))
+                           (rest (cdr entry)))
+                       (cond
+                        ;; Old format: ("binary" . "description")
+                        ((stringp rest)
+                         (list :binary binary :description rest :level 'optional))
+                        ;; New format: ("binary" . ("description" LEVEL))
+                        ((and (listp rest) (stringp (car rest)))
+                         (list :binary binary
+                               :description (car rest)
+                               :level (or (cadr rest) 'optional)))
+                        ;; Bare cons with no description -- skip
+                        (t nil)))
+             into result
+             finally return (cl-remove nil result))))
 
 (defun backpack-inventory--extract-font-entries (props)
   "Extract :fonts entries from leaf PROPS.
@@ -484,6 +504,14 @@ Returns a list of parsed entries (gear-info and flag-info plists)."
 
     results))
 
+(defun backpack-inventory--merge-doctors (list-a list-b)
+  "Merge two doctor lists, deduplicating by binary name.
+Each entry is a plist with :binary, :description, and :level keys."
+  (cl-remove-duplicates
+   (append list-a list-b)
+   :key (lambda (d) (plist-get d :binary))
+   :test #'string=))
+
 (defun backpack-inventory--better-doc-p (new-entry existing-gear)
   "Return non-nil if NEW-ENTRY has a better doc than EXISTING-GEAR.
 Prefer doc from a leaf whose leaf-name matches the gear name."
@@ -515,10 +543,9 @@ Returns a list of gear plists."
                            (not (plist-get existing :default-on)))
                   (plist-put existing :default-on t))
                 (plist-put existing :doctors
-                           (cl-remove-duplicates
-                            (append (plist-get existing :doctors)
-                                    (plist-get entry :doctors))
-                            :key #'car :test #'string=))
+                           (backpack-inventory--merge-doctors
+                            (plist-get existing :doctors)
+                            (plist-get entry :doctors)))
                 (plist-put existing :fonts
                            (cl-remove-duplicates
                             (append (plist-get existing :fonts)
@@ -566,10 +593,9 @@ Returns a list of gear plists."
                                              :fonts (plist-get entry :fonts))))))
             ;; Merge flag's doctors/fonts up to the gear level
             (plist-put gear :doctors
-                       (cl-remove-duplicates
-                        (append (plist-get gear :doctors)
-                                (plist-get entry :doctors))
-                        :key #'car :test #'string=))
+                       (backpack-inventory--merge-doctors
+                        (plist-get gear :doctors)
+                        (plist-get entry :doctors)))
             (plist-put gear :fonts
                        (cl-remove-duplicates
                         (append (plist-get gear :fonts)
@@ -633,10 +659,9 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                         (plist-get existing :flags))
                                 :key (lambda (f) (plist-get f :name))))
                     (plist-put gear :doctors
-                               (cl-remove-duplicates
-                                (append (plist-get gear :doctors)
-                                        (plist-get existing :doctors))
-                                :key #'car :test #'string=))
+                               (backpack-inventory--merge-doctors
+                                (plist-get gear :doctors)
+                                (plist-get existing :doctors)))
                     (plist-put gear :fonts
                                (cl-remove-duplicates
                                 (append (plist-get gear :fonts)
@@ -651,10 +676,9 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                         (plist-get gear :flags))
                                 :key (lambda (f) (plist-get f :name))))
                     (plist-put existing :doctors
-                               (cl-remove-duplicates
-                                (append (plist-get existing :doctors)
-                                        (plist-get gear :doctors))
-                                :key #'car :test #'string=))
+                               (backpack-inventory--merge-doctors
+                                (plist-get existing :doctors)
+                                (plist-get gear :doctors)))
                     (plist-put existing :fonts
                                (cl-remove-duplicates
                                 (append (plist-get existing :fonts)
@@ -669,10 +693,9 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                         (plist-get existing :flags))
                                 :key (lambda (f) (plist-get f :name))))
                     (plist-put gear :doctors
-                               (cl-remove-duplicates
-                                (append (plist-get gear :doctors)
-                                        (plist-get existing :doctors))
-                                :key #'car :test #'string=))
+                               (backpack-inventory--merge-doctors
+                                (plist-get gear :doctors)
+                                (plist-get existing :doctors)))
                     (plist-put gear :fonts
                                (cl-remove-duplicates
                                 (append (plist-get gear :fonts)
@@ -687,10 +710,9 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                         (plist-get gear :flags))
                                 :key (lambda (f) (plist-get f :name))))
                     (plist-put existing :doctors
-                               (cl-remove-duplicates
-                                (append (plist-get existing :doctors)
-                                        (plist-get gear :doctors))
-                                :key #'car :test #'string=))
+                               (backpack-inventory--merge-doctors
+                                (plist-get existing :doctors)
+                                (plist-get gear :doctors)))
                     (plist-put existing :fonts
                                (cl-remove-duplicates
                                 (append (plist-get existing :fonts)
@@ -942,6 +964,21 @@ POUCH-KEYWORD and GEAR-NAME are used for status checks."
               (setq col (+ col name-len))))
           (insert line "\n"))))))
 
+(defun backpack-inventory--insert-doctor-entry (doc-entry)
+  "Insert a single doctor DOC-ENTRY into the current buffer.
+DOC-ENTRY is a plist with :binary, :description, and :level."
+  (let ((binary (plist-get doc-entry :binary))
+        (desc (plist-get doc-entry :description))
+        (level (plist-get doc-entry :level)))
+    (insert "  " (propertize binary 'face 'font-lock-constant-face)
+            "  "
+            (propertize (concat "-- " desc) 'face 'font-lock-comment-face))
+    ;; Append conflict info if applicable
+    (when (and (listp level) (eq (car level) 'conflicts))
+      (insert (propertize (format " (conflicts with %s)" (cadr level))
+                          'face 'font-lock-warning-face)))
+    (insert "\n")))
+
 (defun backpack-inventory--render-gear-detail (pouch-keyword gear-plist)
   "Render the full detail view for GEAR-PLIST in POUCH-KEYWORD."
   (let* ((name (plist-get gear-plist :name))
@@ -1000,13 +1037,39 @@ POUCH-KEYWORD and GEAR-NAME are used for status checks."
 
     ;; External tools
     (when doctors
-      (insert "\n" (propertize "External tools:" 'face 'bold) "\n")
-      (dolist (doc-entry doctors)
-        (insert "  " (propertize (car doc-entry) 'face 'font-lock-constant-face)
-                "  "
-                (propertize (concat "-- " (cdr doc-entry))
-                            'face 'font-lock-comment-face)
-                "\n")))
+      (let* ((required (cl-remove-if-not
+                        (lambda (d) (eq (plist-get d :level) 'required))
+                        doctors))
+             (conflicts (cl-remove-if-not
+                         (lambda (d) (let ((lvl (plist-get d :level)))
+                                       (and (listp lvl) (eq (car lvl) 'conflicts))))
+                         doctors))
+             (optional (cl-remove-if
+                        (lambda (d) (let ((lvl (plist-get d :level)))
+                                      (or (eq lvl 'required)
+                                          (and (listp lvl) (eq (car lvl) 'conflicts)))))
+                        doctors))
+             ;; If all tools are the same level, use a generic header
+             (all-optional (and optional (not required) (not conflicts))))
+        (if all-optional
+            ;; Simple case: all optional, use generic header
+            (progn
+              (insert "\n" (propertize "External tools:" 'face 'bold) "\n")
+              (dolist (doc-entry optional)
+                (backpack-inventory--insert-doctor-entry doc-entry)))
+          ;; Grouped display
+          (when required
+            (insert "\n" (propertize "Required tools:" 'face 'bold) "\n")
+            (dolist (doc-entry required)
+              (backpack-inventory--insert-doctor-entry doc-entry)))
+          (when optional
+            (insert "\n" (propertize "Optional tools:" 'face 'bold) "\n")
+            (dolist (doc-entry optional)
+              (backpack-inventory--insert-doctor-entry doc-entry)))
+          (when conflicts
+            (insert "\n" (propertize "Conflicting tools:" 'face 'bold) "\n")
+            (dolist (doc-entry conflicts)
+              (backpack-inventory--insert-doctor-entry doc-entry))))))
 
     ;; Fonts
     (when fonts
