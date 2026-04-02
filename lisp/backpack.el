@@ -35,6 +35,8 @@
 (require 'backpack-email-utils)
 (require 'backpack-inventory)
 
+(define-key help-map (kbd "B") #'backpack-inventory)
+
 (leaf-keywords-init)
 
 ;;; add additional keywords to leaf block
