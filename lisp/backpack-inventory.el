@@ -6,6 +6,7 @@
 ;; Run M-x backpack-inventory to open the browser.
 
 (require 'cl-lib)
+(require 'wid-edit)
 (require 'backpack-pouch)
 
 ;;; Pouch descriptions
@@ -68,24 +69,6 @@
   "Face for the Go back button in the header."
   :group 'backpack)
 
-(defface backpack-inventory-value-face
-  '((((class color) (background light))
-     :background "#f0f0e8" :extend t)
-    (((class color) (background dark))
-     :background "#2a2a2e" :extend t)
-    (t nil))
-  "Face for variable value lines in the detail view.
-Provides a subtle tinted background to visually separate values."
-  :group 'backpack)
-
-(defface backpack-inventory-value-border-face
-  '((((class color) (background light))
-     :foreground "#7c6f64")
-    (((class color) (background dark))
-     :foreground "#928374")
-    (t :inherit shadow))
-  "Face for the left border character on variable value lines."
-  :group 'backpack)
 
 ;;; Icons
 
@@ -1379,7 +1362,8 @@ Uses `pp-to-string' for complex values, `format' for simple ones."
   "Render variable-setting entries VARIABLES into the current buffer.
 Groups variables by their :source keyword (e.g. :custom, :setq).
 Each variable name is shown on its own line, with the value on the
-next line(s) prefixed by a thick vertical bar and a tinted background."
+next line(s) rendered with the `widget-field' face (the same
+Customize-style textarea appearance)."
   (when variables
     ;; Group by source keyword, preserving order of first occurrence
     (let (groups group-order)
@@ -1406,20 +1390,15 @@ next line(s) prefixed by a thick vertical bar and a tinted background."
             (let* ((var-name (symbol-name (plist-get v :variable)))
                    (value (plist-get v :value))
                    (val-str (backpack-inventory--format-value value))
-                   (val-lines (split-string val-str "\n"))
-                   (border-str (propertize "\u2503 "
-                                           'face 'backpack-inventory-value-border-face)))
+                   (val-lines (split-string val-str "\n")))
               ;; Variable name
               (insert "    "
                       (propertize var-name 'face 'font-lock-variable-name-face)
                       "\n")
-              ;; Value line(s) with box-drawing border and tinted background
+              ;; Value line(s) with widget-field face (Customize-style textarea)
               (dolist (line val-lines)
-                (insert "    "
-                        border-str
-                        (propertize (concat line)
-                                    'face 'backpack-inventory-value-face)
-                        "\n")))))))))
+                (insert (propertize (concat "    " line "\n")
+                                    'face 'widget-field))))))))))
 
 ;;; Gear detail renderer
 
