@@ -99,6 +99,13 @@
   (when (display-graphic-p)
     (context-menu-mode))
 
+  ;; Show *Help* buffers in a right side window
+  (add-to-list 'display-buffer-alist
+               '("\\*Help\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (window-width . 0.4)))
+
   ;; which-key: display available keybindings in popup
   (unless (gearp! :config default -which-key)
     (leaf which-key
