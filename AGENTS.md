@@ -266,12 +266,52 @@ There are four patterns for controlling when a gear or sub-feature loads:
 
 Backpack extends leaf.el with two custom keywords:
 
-- **`:doctor`** -- Declares external binaries required by a feature. Takes cons
-  pairs of `("binary-name" . "description")`.
-- **`:fonts`** -- Declares fonts required by a feature. Same format as `:doctor`.
+- **`:doctor`** -- Declares external binaries used by a feature.
+- **`:fonts`** -- Declares fonts required by a feature. Takes cons pairs of
+  `("font-name" . "description")`.
 
 These keywords are metadata-only during normal load. They are parsed by
 `backpack-inventory.el` for the self-documenting help system.
+
+#### `:doctor` Format
+
+The `:doctor` keyword supports two formats. The old (simpler) format uses a cons
+pair and is treated as an optional dependency:
+
+```elisp
+;; Old format -- backward compatible, treated as optional
+:doctor ("gopls" . "the official LSP implementation")
+```
+
+The new format extends the cdr to a list, adding a requirement level:
+
+```elisp
+;; Required -- gear won't work properly without this binary
+:doctor ("gopls" . ("the official LSP implementation" required))
+
+;; Optional -- nice to have (same as old format semantically)
+:doctor ("impl" . ("generates method stubs" optional))
+
+;; Conflicts -- this binary conflicts with another; user should have
+;; one or the other, but not both
+:doctor ("nil" . ("an incremental analysis assistant" (conflicts "nixd")))
+```
+
+Requirement levels:
+
+| Level                      | Meaning                                           |
+|----------------------------|---------------------------------------------------|
+| `required`                 | The gear needs this binary to function correctly   |
+| `optional` (or omitted)    | Nice to have, not necessary for the gear to work   |
+| `(conflicts "other-name")` | Conflicts with another binary; user should pick one|
+
+Both formats can be mixed freely in the same `:doctor` declaration. Omitting
+the level entirely (old cons-pair format) is equivalent to `optional`.
+
+The inventory browser groups tools by level when a gear uses mixed levels:
+"Required tools:", "Optional tools:", and "Conflicting tools:" sections. When all
+tools share the same level (the common case), a single "External tools:" header
+is used instead.
 
 ### Package Pinning
 
