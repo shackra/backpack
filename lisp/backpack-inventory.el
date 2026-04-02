@@ -29,15 +29,13 @@
 ;;; Faces
 
 (defface backpack-inventory-pouch-face
-  '((t :inherit font-lock-keyword-face :weight bold :underline t))
-  "Face for pouch names in the listing.
-Underlined to indicate the item is interactive (RET or click)."
+  '((t :inherit font-lock-keyword-face :weight bold))
+  "Face for pouch names in the listing."
   :group 'backpack)
 
 (defface backpack-inventory-gear-face
-  '((t :inherit font-lock-function-name-face :underline t))
-  "Face for gear names in the listing.
-Underlined to indicate the item is interactive (RET or click)."
+  '((t :inherit font-lock-function-name-face))
+  "Face for gear names in the listing."
   :group 'backpack)
 
 (defface backpack-inventory-enabled-face
@@ -75,13 +73,17 @@ Underlined to indicate the item is interactive (RET or click)."
 (defun backpack-inventory--pouch-icon ()
   "Return an icon string for a pouch."
   (if (fboundp 'nerd-icons-octicon)
-      (concat (nerd-icons-octicon "nf-oct-package") " ")
+      (concat (nerd-icons-octicon "nf-oct-package"
+                                  :face 'backpack-inventory-pouch-face)
+              " ")
     ""))
 
 (defun backpack-inventory--gear-icon ()
   "Return an icon string for a gear."
   (if (fboundp 'nerd-icons-octicon)
-      (concat (nerd-icons-octicon "nf-oct-gear") " ")
+      (concat (nerd-icons-octicon "nf-oct-gear"
+                                  :face 'backpack-inventory-gear-face)
+              " ")
     ""))
 
 ;;; Header line

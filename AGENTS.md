@@ -366,8 +366,6 @@ The inventory uses a Doom Emacs-inspired visual style:
   with graceful fallback to plain text when `nerd-icons` is not installed.
 - **Custom faces** (`backpack-inventory-pouch-face`, `backpack-inventory-gear-face`,
   etc.) that inherit from standard `font-lock-*` faces so themes control colours.
-- **Interactive items are underlined** -- pouch names, gear names, and the back
-  button all have `:underline t` to signal they respond to `RET` or click.
 - **Cursor/mouse highlight** using `cursor-face` and `mouse-face` properties
   with `:inverse-video t` -- when point or mouse hovers over an interactive
   item, the text colour becomes the background creating a "selected pill" effect.
