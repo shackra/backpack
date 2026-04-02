@@ -68,6 +68,25 @@
   "Face for the Go back button in the header."
   :group 'backpack)
 
+(defface backpack-inventory-value-face
+  '((((class color) (background light))
+     :background "#f0f0e8" :extend t)
+    (((class color) (background dark))
+     :background "#2a2a2e" :extend t)
+    (t nil))
+  "Face for variable value lines in the detail view.
+Provides a subtle tinted background to visually separate values."
+  :group 'backpack)
+
+(defface backpack-inventory-value-border-face
+  '((((class color) (background light))
+     :foreground "#7c6f64")
+    (((class color) (background dark))
+     :foreground "#928374")
+    (t :inherit shadow))
+  "Face for the left border character on variable value lines."
+  :group 'backpack)
+
 ;;; Icons
 
 (defun backpack-inventory--pouch-icon ()
@@ -338,6 +357,93 @@ Handles all `:ensure' syntax variants:
              into result
              finally return (cl-remove nil result))))
 
+(defun backpack-inventory--extract-bind-entries (props)
+  "Extract :bind entries from leaf PROPS.
+Returns a list of plists with :key, :command, and :keymap keys.
+Handles three shapes:
+  (\"KEY\" . COMMAND)                  -- global binding
+  (:keymap-name (\"KEY\" . CMD) ...)   -- mode-specific bindings
+  ([remap OLD] . NEW)                -- remap binding"
+  (let ((values (backpack-inventory--extract-leaf-keyword props :bind))
+        result)
+    (dolist (entry values)
+      (cond
+       ;; (:keymap-name (KEY . CMD) ...) -- a list starting with a keyword symbol
+       ((and (listp entry)
+             (symbolp (car entry))
+             (keywordp (car entry)))
+        (let ((keymap (intern (substring (symbol-name (car entry)) 1))))
+          (dolist (binding (cdr entry))
+            (when (consp binding)
+              (let ((key (car binding))
+                    (cmd (cdr binding)))
+                (push (list :key (if (vectorp key)
+                                     (format "%s" key)
+                                   key)
+                            :command cmd
+                            :keymap keymap)
+                      result))))))
+       ;; ("KEY" . COMMAND) or ([remap ...] . COMMAND) -- global binding
+       ((consp entry)
+        (let ((key (car entry))
+              (cmd (cdr entry)))
+          (push (list :key (if (vectorp key)
+                               (format "%s" key)
+                             key)
+                      :command cmd
+                      :keymap nil)
+                result)))))
+    (nreverse result)))
+
+(defun backpack-inventory--extract-bind-keymap-entries (props)
+  "Extract :bind-keymap entries from leaf PROPS.
+Returns a list of plists with :key, :keymap, and :type keys.
+Shape is always (\"KEY\" . KEYMAP-SYMBOL)."
+  (let ((values (backpack-inventory--extract-leaf-keyword props :bind-keymap))
+        result)
+    (dolist (entry values)
+      (when (consp entry)
+        (push (list :key (car entry)
+                    :keymap (cdr entry)
+                    :type :keymap-prefix)
+              result)))
+    (nreverse result)))
+
+(defconst backpack-inventory--variable-keywords
+  '(:custom :setq :setq-default :setf :pre-setq :pre-setf :push :pre-push)
+  "Leaf keywords that set variables.")
+
+(defun backpack-inventory--extract-variable-entries (props)
+  "Extract variable-setting entries from leaf PROPS.
+Scans all keywords in `backpack-inventory--variable-keywords'.
+Returns a list of plists with :variable, :value, and :source keys."
+  (let (result)
+    (dolist (kw backpack-inventory--variable-keywords)
+      (let ((values (backpack-inventory--extract-leaf-keyword props kw)))
+        (dolist (entry values)
+          (when (consp entry)
+            (push (list :variable (car entry)
+                        :value (cdr entry)
+                        :source kw)
+                  result)))))
+    (nreverse result)))
+
+(defun backpack-inventory--merge-bindings (list-a list-b)
+  "Merge two binding lists, deduplicating by key + keymap.
+Each entry is a plist with :key, :command, and :keymap keys."
+  (cl-remove-duplicates
+   (append list-a list-b)
+   :key (lambda (b) (cons (plist-get b :key) (plist-get b :keymap)))
+   :test #'equal))
+
+(defun backpack-inventory--merge-variables (list-a list-b)
+  "Merge two variable lists, deduplicating by variable + source.
+Each entry is a plist with :variable, :value, and :source keys."
+  (cl-remove-duplicates
+   (append list-a list-b)
+   :key (lambda (v) (cons (plist-get v :variable) (plist-get v :source)))
+   :test #'equal))
+
 (defun backpack-inventory--analyze-gate (form)
   "Analyze a :when or :unless gate expression FORM.
 Returns a list of gearp-info entries: ((POUCH GEAR FLAG) ...)."
@@ -466,6 +572,9 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
            (doctors (backpack-inventory--extract-doctor-entries props))
            (fonts (backpack-inventory--extract-font-entries props))
            (packages (backpack-inventory--extract-package-entries props))
+           (bindings (append (backpack-inventory--extract-bind-entries props)
+                             (backpack-inventory--extract-bind-keymap-entries props)))
+           (variables (backpack-inventory--extract-variable-entries props))
            (when-val (car (backpack-inventory--extract-leaf-keyword props :when)))
            (unless-val (car (backpack-inventory--extract-leaf-keyword props :unless)))
            (gate-form (or when-val unless-val))
@@ -493,7 +602,9 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                             :default-on t
                             :doctors doctors
                             :fonts fonts
-                            :packages packages)
+                            :packages packages
+                            :bindings bindings
+                            :variables variables)
                       results)))
 
              ;; 2-arg gearp! in :when => opt-in gear
@@ -505,7 +616,9 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                           :default-on nil
                           :doctors doctors
                           :fonts fonts
-                          :packages packages)
+                          :packages packages
+                          :bindings bindings
+                          :variables variables)
                     results))
 
              ;; 3-arg gearp! => this is a flag on a gear
@@ -520,7 +633,9 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                             :default-on default-on
                             :doctors doctors
                             :fonts fonts
-                            :packages packages)
+                            :packages packages
+                            :bindings bindings
+                            :variables variables)
                       results)))))))
 
       ;; Recursively scan the entire leaf body for gearp! calls that
@@ -561,7 +676,9 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                             :default-on default-on
                             :doctors nil
                             :fonts nil
-                            :packages nil)
+                            :packages nil
+                            :bindings nil
+                            :variables nil)
                       results))))))
 
       ;; Recursively process nested leaf blocks in body sections
@@ -620,6 +737,9 @@ Returns a gear-info plist or nil."
                             (doctors (backpack-inventory--extract-doctor-entries props))
                             (fonts (backpack-inventory--extract-font-entries props))
                             (packages (backpack-inventory--extract-package-entries props))
+                            (binds (append (backpack-inventory--extract-bind-entries props)
+                                           (backpack-inventory--extract-bind-keymap-entries props)))
+                            (vars (backpack-inventory--extract-variable-entries props))
                             (unless-val (car (backpack-inventory--extract-leaf-keyword props :unless)))
                             ;; Check if this is a default-on gear (has :unless)
                             (default-on (and unless-val t)))
@@ -630,7 +750,9 @@ Returns a gear-info plist or nil."
                              :default-on default-on
                              :doctors doctors
                              :fonts fonts
-                             :packages packages)))))
+                             :packages packages
+                             :bindings binds
+                             :variables vars)))))
 
 (defun backpack-inventory--parse-file (filepath pouch-keyword)
   "Parse a gear FILEPATH belonging to POUCH-KEYWORD.
@@ -724,7 +846,15 @@ Returns a list of gear plists."
                 (plist-put existing :packages
                            (backpack-inventory--merge-packages
                             (plist-get existing :packages)
-                            (plist-get entry :packages))))
+                            (plist-get entry :packages)))
+                (plist-put existing :bindings
+                           (backpack-inventory--merge-bindings
+                            (plist-get existing :bindings)
+                            (plist-get entry :bindings)))
+                (plist-put existing :variables
+                           (backpack-inventory--merge-variables
+                            (plist-get existing :variables)
+                            (plist-get entry :variables))))
             ;; New gear
             (puthash name
                      (list :name name
@@ -734,6 +864,8 @@ Returns a list of gear plists."
                            :doctors (copy-sequence (plist-get entry :doctors))
                            :fonts (copy-sequence (plist-get entry :fonts))
                            :packages (copy-sequence (plist-get entry :packages))
+                           :bindings (copy-sequence (plist-get entry :bindings))
+                           :variables (copy-sequence (plist-get entry :variables))
                            :source-file source-file)
                      gears)))))
 
@@ -753,6 +885,8 @@ Returns a list of gear plists."
                              :doctors nil
                              :fonts nil
                              :packages nil
+                             :bindings nil
+                             :variables nil
                              :source-file source-file))
             (puthash gear-name gear gears))
 
@@ -767,8 +901,10 @@ Returns a list of gear plists."
                                              :default-on (plist-get entry :default-on)
                                              :doctors (plist-get entry :doctors)
                                              :fonts (plist-get entry :fonts)
-                                             :packages (plist-get entry :packages))))))
-            ;; Merge flag's doctors/fonts/packages up to the gear level
+                                             :packages (plist-get entry :packages)
+                                             :bindings (plist-get entry :bindings)
+                                             :variables (plist-get entry :variables))))))
+            ;; Merge flag's doctors/fonts/packages/bindings/variables up to the gear level
             (plist-put gear :doctors
                        (backpack-inventory--merge-doctors
                         (plist-get gear :doctors)
@@ -781,7 +917,15 @@ Returns a list of gear plists."
             (plist-put gear :packages
                        (backpack-inventory--merge-packages
                         (plist-get gear :packages)
-                        (plist-get entry :packages)))))))
+                        (plist-get entry :packages)))
+            (plist-put gear :bindings
+                       (backpack-inventory--merge-bindings
+                        (plist-get gear :bindings)
+                        (plist-get entry :bindings)))
+            (plist-put gear :variables
+                       (backpack-inventory--merge-variables
+                        (plist-get gear :variables)
+                        (plist-get entry :variables)))))))
 
     ;; Convert hash-table to alist
     (let (result)
@@ -833,88 +977,120 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                      (cond
                    ;; New file matches gear name but existing doesn't => replace
                    ;; but still merge data from existing into the new entry
-                   ((and new-matches (not existing-matches))
-                    (plist-put gear :flags
-                               (cl-remove-duplicates
-                                (append (plist-get gear :flags)
-                                        (plist-get existing :flags))
-                                :key (lambda (f) (plist-get f :name))))
-                    (plist-put gear :doctors
-                               (backpack-inventory--merge-doctors
-                                (plist-get gear :doctors)
-                                (plist-get existing :doctors)))
-                    (plist-put gear :fonts
-                               (cl-remove-duplicates
-                                (append (plist-get gear :fonts)
-                                        (plist-get existing :fonts))
-                                :key #'car :test #'string=))
-                    (plist-put gear :packages
-                               (backpack-inventory--merge-packages
-                                (plist-get gear :packages)
-                                (plist-get existing :packages)))
-                    (puthash name gear gear-table))
+                    ((and new-matches (not existing-matches))
+                     (plist-put gear :flags
+                                (cl-remove-duplicates
+                                 (append (plist-get gear :flags)
+                                         (plist-get existing :flags))
+                                 :key (lambda (f) (plist-get f :name))))
+                     (plist-put gear :doctors
+                                (backpack-inventory--merge-doctors
+                                 (plist-get gear :doctors)
+                                 (plist-get existing :doctors)))
+                     (plist-put gear :fonts
+                                (cl-remove-duplicates
+                                 (append (plist-get gear :fonts)
+                                         (plist-get existing :fonts))
+                                 :key #'car :test #'string=))
+                     (plist-put gear :packages
+                                (backpack-inventory--merge-packages
+                                 (plist-get gear :packages)
+                                 (plist-get existing :packages)))
+                     (plist-put gear :bindings
+                                (backpack-inventory--merge-bindings
+                                 (plist-get gear :bindings)
+                                 (plist-get existing :bindings)))
+                     (plist-put gear :variables
+                                (backpack-inventory--merge-variables
+                                 (plist-get gear :variables)
+                                 (plist-get existing :variables)))
+                     (puthash name gear gear-table))
                    ;; Existing matches, keep it but merge all data from new
-                   (existing-matches
-                    (plist-put existing :flags
-                               (cl-remove-duplicates
-                                (append (plist-get existing :flags)
-                                        (plist-get gear :flags))
-                                :key (lambda (f) (plist-get f :name))))
-                    (plist-put existing :doctors
-                               (backpack-inventory--merge-doctors
-                                (plist-get existing :doctors)
-                                (plist-get gear :doctors)))
-                    (plist-put existing :fonts
-                               (cl-remove-duplicates
-                                (append (plist-get existing :fonts)
-                                        (plist-get gear :fonts))
-                                :key #'car :test #'string=))
-                    (plist-put existing :packages
-                               (backpack-inventory--merge-packages
-                                (plist-get existing :packages)
-                                (plist-get gear :packages))))
+                    (existing-matches
+                     (plist-put existing :flags
+                                (cl-remove-duplicates
+                                 (append (plist-get existing :flags)
+                                         (plist-get gear :flags))
+                                 :key (lambda (f) (plist-get f :name))))
+                     (plist-put existing :doctors
+                                (backpack-inventory--merge-doctors
+                                 (plist-get existing :doctors)
+                                 (plist-get gear :doctors)))
+                     (plist-put existing :fonts
+                                (cl-remove-duplicates
+                                 (append (plist-get existing :fonts)
+                                         (plist-get gear :fonts))
+                                 :key #'car :test #'string=))
+                     (plist-put existing :packages
+                                (backpack-inventory--merge-packages
+                                 (plist-get existing :packages)
+                                 (plist-get gear :packages)))
+                     (plist-put existing :bindings
+                                (backpack-inventory--merge-bindings
+                                 (plist-get existing :bindings)
+                                 (plist-get gear :bindings)))
+                     (plist-put existing :variables
+                                (backpack-inventory--merge-variables
+                                 (plist-get existing :variables)
+                                 (plist-get gear :variables))))
                    ;; Neither matches -- prefer the one with more info
-                   ((and (plist-get gear :doc)
-                         (not (plist-get existing :doc)))
-                    (plist-put gear :flags
-                               (cl-remove-duplicates
-                                (append (plist-get gear :flags)
-                                        (plist-get existing :flags))
-                                :key (lambda (f) (plist-get f :name))))
-                    (plist-put gear :doctors
-                               (backpack-inventory--merge-doctors
-                                (plist-get gear :doctors)
-                                (plist-get existing :doctors)))
-                    (plist-put gear :fonts
-                               (cl-remove-duplicates
-                                (append (plist-get gear :fonts)
-                                        (plist-get existing :fonts))
-                                :key #'car :test #'string=))
-                    (plist-put gear :packages
-                               (backpack-inventory--merge-packages
-                                (plist-get gear :packages)
-                                (plist-get existing :packages)))
-                    (puthash name gear gear-table))
+                    ((and (plist-get gear :doc)
+                          (not (plist-get existing :doc)))
+                     (plist-put gear :flags
+                                (cl-remove-duplicates
+                                 (append (plist-get gear :flags)
+                                         (plist-get existing :flags))
+                                 :key (lambda (f) (plist-get f :name))))
+                     (plist-put gear :doctors
+                                (backpack-inventory--merge-doctors
+                                 (plist-get gear :doctors)
+                                 (plist-get existing :doctors)))
+                     (plist-put gear :fonts
+                                (cl-remove-duplicates
+                                 (append (plist-get gear :fonts)
+                                         (plist-get existing :fonts))
+                                 :key #'car :test #'string=))
+                     (plist-put gear :packages
+                                (backpack-inventory--merge-packages
+                                 (plist-get gear :packages)
+                                 (plist-get existing :packages)))
+                     (plist-put gear :bindings
+                                (backpack-inventory--merge-bindings
+                                 (plist-get gear :bindings)
+                                 (plist-get existing :bindings)))
+                     (plist-put gear :variables
+                                (backpack-inventory--merge-variables
+                                 (plist-get gear :variables)
+                                 (plist-get existing :variables)))
+                     (puthash name gear gear-table))
                    ;; Otherwise keep existing, merge all data
-                   (t
-                    (plist-put existing :flags
-                               (cl-remove-duplicates
-                                (append (plist-get existing :flags)
-                                        (plist-get gear :flags))
-                                :key (lambda (f) (plist-get f :name))))
-                    (plist-put existing :doctors
-                               (backpack-inventory--merge-doctors
-                                (plist-get existing :doctors)
-                                (plist-get gear :doctors)))
-                    (plist-put existing :fonts
-                               (cl-remove-duplicates
-                                (append (plist-get existing :fonts)
-                                        (plist-get gear :fonts))
-                                :key #'car :test #'string=))
-                    (plist-put existing :packages
-                               (backpack-inventory--merge-packages
-                                (plist-get existing :packages)
-                                (plist-get gear :packages)))))))))
+                    (t
+                     (plist-put existing :flags
+                                (cl-remove-duplicates
+                                 (append (plist-get existing :flags)
+                                         (plist-get gear :flags))
+                                 :key (lambda (f) (plist-get f :name))))
+                     (plist-put existing :doctors
+                                (backpack-inventory--merge-doctors
+                                 (plist-get existing :doctors)
+                                 (plist-get gear :doctors)))
+                     (plist-put existing :fonts
+                                (cl-remove-duplicates
+                                 (append (plist-get existing :fonts)
+                                         (plist-get gear :fonts))
+                                 :key #'car :test #'string=))
+                     (plist-put existing :packages
+                                (backpack-inventory--merge-packages
+                                 (plist-get existing :packages)
+                                 (plist-get gear :packages)))
+                     (plist-put existing :bindings
+                                (backpack-inventory--merge-bindings
+                                 (plist-get existing :bindings)
+                                 (plist-get gear :bindings)))
+                     (plist-put existing :variables
+                                (backpack-inventory--merge-variables
+                                 (plist-get existing :variables)
+                                 (plist-get gear :variables)))))))))
           ;; Collect and sort
           (let (deduped)
             (maphash (lambda (_k v) (push v deduped)) gear-table)
@@ -1097,6 +1273,154 @@ For opt-out flags, the description explains how to disable the feature."
                                          :pouch pouch-keyword
                                          :data gear))))))))))
 
+;;; Keybinding and variable renderers
+
+(defun backpack-inventory--render-bindings (bindings)
+  "Render keybinding entries BINDINGS into the current buffer.
+Groups bindings by keymap: global bindings first (keymap nil),
+then each named keymap as a sub-section.  Keymap-prefix entries
+\(from :bind-keymap) are rendered as a keymap heading with the
+prefix key shown on the right."
+  (when bindings
+    (let (global-bindings   ; (:key :command :keymap nil)
+          keymap-prefixes   ; (:key :keymap :type :keymap-prefix)
+          keymap-groups)    ; alist of (KEYMAP . BINDING-LIST)
+      ;; Classify bindings
+      (dolist (b bindings)
+        (cond
+         ((eq (plist-get b :type) :keymap-prefix)
+          (push b keymap-prefixes))
+         ((null (plist-get b :keymap))
+          (push b global-bindings))
+         (t
+          (let* ((km (plist-get b :keymap))
+                 (group (assq km keymap-groups)))
+            (if group
+                (push b (cdr group))
+              (push (cons km (list b)) keymap-groups))))))
+      (setq global-bindings (nreverse global-bindings))
+      (setq keymap-prefixes (nreverse keymap-prefixes))
+      (setq keymap-groups (nreverse keymap-groups))
+      ;; Reverse the binding lists within each group
+      (dolist (group keymap-groups)
+        (setcdr group (nreverse (cdr group))))
+
+      ;; Compute max key width for alignment
+      (let ((all-regular (append global-bindings
+                                 (cl-mapcan (lambda (g) (copy-sequence (cdr g)))
+                                            keymap-groups)))
+            (max-key-len 0))
+        (dolist (b all-regular)
+          (let ((klen (length (format "%s" (plist-get b :key)))))
+            (when (> klen max-key-len) (setq max-key-len klen))))
+        (setq max-key-len (max max-key-len 8))
+
+        ;; Section heading
+        (insert "\n  " (propertize "Keybindings:" 'face 'backpack-inventory-heading-face) "\n")
+
+        ;; Global bindings
+        (dolist (b global-bindings)
+          (let* ((key (format "%s" (plist-get b :key)))
+                 (cmd (plist-get b :command))
+                 (cmd-str (if cmd (format "%s" cmd) "nil"))
+                 (padding (make-string (max 1 (- max-key-len (length key) -1)) ?\s)))
+            (insert "    "
+                    (propertize key 'face 'font-lock-constant-face)
+                    padding
+                    (propertize cmd-str 'face 'font-lock-function-name-face)
+                    "\n")))
+
+        ;; Named keymap groups
+        (dolist (group keymap-groups)
+          (let ((km-name (symbol-name (car group)))
+                (group-bindings (cdr group)))
+            (insert "\n  " (propertize (concat km-name ":")
+                                       'face 'backpack-inventory-heading-face)
+                    "\n")
+            (dolist (b group-bindings)
+              (let* ((key (format "%s" (plist-get b :key)))
+                     (cmd (plist-get b :command))
+                     (cmd-str (if cmd (format "%s" cmd) "nil"))
+                     (padding (make-string (max 1 (- max-key-len (length key) -1)) ?\s)))
+                (insert "    "
+                        (propertize key 'face 'font-lock-constant-face)
+                        padding
+                        (propertize cmd-str 'face 'font-lock-function-name-face)
+                        "\n")))))
+
+        ;; Keymap prefixes (:bind-keymap)
+        (dolist (bp keymap-prefixes)
+          (let ((km-name (symbol-name (plist-get bp :keymap)))
+                (key (plist-get bp :key)))
+            (insert "\n  " (propertize (concat km-name ":")
+                                       'face 'backpack-inventory-heading-face)
+                    "  "
+                    (propertize key 'face 'font-lock-constant-face)
+                    "\n")))))))
+
+(defun backpack-inventory--format-value (value)
+  "Format VALUE as a readable string for display.
+Uses `pp-to-string' for complex values, `format' for simple ones."
+  (let ((str (condition-case nil
+                 (cond
+                  ((null value) "nil")
+                  ((eq value t) "t")
+                  ((or (symbolp value) (numberp value) (stringp value))
+                   (format "%S" value))
+                  (t (let ((pp (pp-to-string value)))
+                       ;; Remove trailing newline that pp-to-string adds
+                       (if (string-suffix-p "\n" pp)
+                           (substring pp 0 -1)
+                         pp))))
+               (error (format "%S" value)))))
+    str))
+
+(defun backpack-inventory--render-variables (variables)
+  "Render variable-setting entries VARIABLES into the current buffer.
+Groups variables by their :source keyword (e.g. :custom, :setq).
+Each variable name is shown on its own line, with the value on the
+next line(s) prefixed by a thick vertical bar and a tinted background."
+  (when variables
+    ;; Group by source keyword, preserving order of first occurrence
+    (let (groups group-order)
+      (dolist (v variables)
+        (let* ((src (plist-get v :source))
+               (group (assq src groups)))
+          (if group
+              (push v (cdr group))
+            (push (cons src (list v)) groups)
+            (push src group-order))))
+      (setq group-order (nreverse group-order))
+      ;; Reverse binding lists within each group
+      (dolist (group groups)
+        (setcdr group (nreverse (cdr group))))
+
+      (insert "\n  " (propertize "Variables:" 'face 'backpack-inventory-heading-face) "\n")
+
+      (dolist (src group-order)
+        (let ((group-vars (cdr (assq src groups))))
+          (insert "\n  " (propertize (symbol-name src)
+                                     'face 'backpack-inventory-heading-face)
+                  "\n")
+          (dolist (v group-vars)
+            (let* ((var-name (symbol-name (plist-get v :variable)))
+                   (value (plist-get v :value))
+                   (val-str (backpack-inventory--format-value value))
+                   (val-lines (split-string val-str "\n"))
+                   (border-str (propertize "\u2503 "
+                                           'face 'backpack-inventory-value-border-face)))
+              ;; Variable name
+              (insert "    "
+                      (propertize var-name 'face 'font-lock-variable-name-face)
+                      "\n")
+              ;; Value line(s) with box-drawing border and tinted background
+              (dolist (line val-lines)
+                (insert "    "
+                        border-str
+                        (propertize (concat line)
+                                    'face 'backpack-inventory-value-face)
+                        "\n")))))))))
+
 ;;; Gear detail renderer
 
 (defun backpack-inventory--theme-flags-p (pouch-keyword gear-name)
@@ -1177,6 +1501,8 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
          (doctors (plist-get gear-plist :doctors))
          (fonts (plist-get gear-plist :fonts))
          (packages (plist-get gear-plist :packages))
+         (bindings (plist-get gear-plist :bindings))
+         (variables (plist-get gear-plist :variables))
          (source-file (plist-get gear-plist :source-file))
          (status (backpack-inventory--gear-status pouch-keyword gear-plist))
          (inhibit-read-only t))
@@ -1221,6 +1547,12 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
             (when flag-desc
               (insert "  " flag-desc))
             (insert "\n")))))
+
+    ;; Keybindings
+    (backpack-inventory--render-bindings bindings)
+
+    ;; Variables
+    (backpack-inventory--render-variables variables)
 
     ;; External tools
     (when doctors
