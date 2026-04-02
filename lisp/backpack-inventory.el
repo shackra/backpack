@@ -61,7 +61,7 @@ Underlined to indicate the item is interactive (RET or click)."
   :group 'backpack)
 
 (defface backpack-inventory-heading-face
-  '((t :weight bold))
+  '((t :inherit font-lock-type-face :weight bold))
   "Face for section headings in the detail view."
   :group 'backpack)
 
@@ -1014,21 +1014,23 @@ For opt-out flags, the description explains how to disable the feature."
                (icon (backpack-inventory--pouch-icon))
                (highlight-face '(:inherit backpack-inventory-pouch-face :inverse-video t))
                (line-start (point)))
-          (insert "  " icon
-                  (propertize name-str 'face 'backpack-inventory-pouch-face))
-          (let ((highlight-end (point)))
-            (insert padding
-                    (propertize count-str 'face 'backpack-inventory-description-face))
-            (when desc
-              (insert "  " desc))
-            (insert "\n")
-            (put-text-property line-start highlight-end 'cursor-face highlight-face)
-            (put-text-property line-start highlight-end 'mouse-face highlight-face)
-            (put-text-property line-start highlight-end 'help-echo
-                               (format "Press RET to browse gears in %s" name-str))
-            (put-text-property line-start (point)
-                               'backpack-inventory-item
-                               (list :type :pouch :keyword pouch-kw))))))))
+          (insert "  ")
+          (let ((highlight-start (point)))
+            (insert icon
+                    (propertize name-str 'face 'backpack-inventory-pouch-face))
+            (let ((highlight-end (point)))
+              (insert padding
+                      (propertize count-str 'face 'backpack-inventory-description-face))
+              (when desc
+                (insert "  " desc))
+              (insert "\n")
+              (put-text-property highlight-start highlight-end 'cursor-face highlight-face)
+              (put-text-property highlight-start highlight-end 'mouse-face highlight-face)
+              (put-text-property highlight-start highlight-end 'help-echo
+                                 (format "Press RET to browse gears in %s" name-str))
+              (put-text-property line-start (point)
+                                 'backpack-inventory-item
+                                 (list :type :pouch :keyword pouch-kw)))))))))
 
 ;;; Gear listing renderer (per-pouch view)
 
@@ -1041,7 +1043,7 @@ For opt-out flags, the description explains how to disable the feature."
 
     (let ((desc (alist-get pouch-keyword backpack-inventory--pouch-descriptions)))
       (when desc
-        (insert "  " (propertize desc 'face 'backpack-inventory-description-face) "\n\n")))
+        (insert "  " desc "\n\n")))
 
     (if (null gears)
         (insert "  (no gears found)\n")
@@ -1059,22 +1061,24 @@ For opt-out flags, the description explains how to disable the feature."
                  (icon (backpack-inventory--gear-icon))
                  (highlight-face '(:inherit backpack-inventory-gear-face :inverse-video t))
                  (line-start (point)))
-            (insert "  " icon status-str " "
-                    (propertize name-str 'face 'backpack-inventory-gear-face))
-            (let ((highlight-end (point)))
-              (insert padding)
-              (when doc
-                (insert doc))
-              (insert "\n")
-              (put-text-property line-start highlight-end 'cursor-face highlight-face)
-              (put-text-property line-start highlight-end 'mouse-face highlight-face)
-              (put-text-property line-start highlight-end 'help-echo
-                                 (format "Press RET for details about %s" name-str))
-              (put-text-property line-start (point)
-                                 'backpack-inventory-item
-                                 (list :type :gear
-                                       :pouch pouch-keyword
-                                       :data gear)))))))))
+            (insert "  " status-str " ")
+            (let ((highlight-start (point)))
+              (insert icon
+                      (propertize name-str 'face 'backpack-inventory-gear-face))
+              (let ((highlight-end (point)))
+                (insert padding)
+                (when doc
+                  (insert doc))
+                (insert "\n")
+                (put-text-property highlight-start highlight-end 'cursor-face highlight-face)
+                (put-text-property highlight-start highlight-end 'mouse-face highlight-face)
+                (put-text-property highlight-start highlight-end 'help-echo
+                                   (format "Press RET for details about %s" name-str))
+                (put-text-property line-start (point)
+                                   'backpack-inventory-item
+                                   (list :type :gear
+                                         :pouch pouch-keyword
+                                         :data gear))))))))))
 
 ;;; Gear detail renderer
 
@@ -1141,8 +1145,7 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
         (desc (plist-get doc-entry :description))
         (level (plist-get doc-entry :level)))
     (insert "  " (propertize binary 'face 'font-lock-constant-face)
-            "  "
-            (propertize desc 'face 'backpack-inventory-description-face))
+            "  " desc)
     ;; Append conflict info if applicable
     (when (and (listp level) (eq (car level) 'conflicts))
       (insert (propertize (format " (conflicts with %s)" (cadr level))
@@ -1199,9 +1202,7 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
                                 'face 'font-lock-variable-name-face
                                 'help-echo (or flag-desc display-name)))
             (when flag-desc
-              (insert "  "
-                      (propertize flag-desc
-                                  'face 'backpack-inventory-description-face)))
+              (insert "  " flag-desc))
             (insert "\n")))))
 
     ;; External tools
@@ -1245,9 +1246,7 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
       (insert "\n  " (propertize "Required fonts:" 'face 'backpack-inventory-heading-face) "\n")
       (dolist (font-entry fonts)
         (insert "  " (propertize (car font-entry) 'face 'font-lock-constant-face)
-                "  "
-                (propertize (cdr font-entry) 'face 'backpack-inventory-description-face)
-                "\n")))
+                "  " (cdr font-entry) "\n")))
 
     ;; Example gear! snippet
     (insert "\n  " (propertize "Example:" 'face 'backpack-inventory-heading-face) "\n")
@@ -1290,8 +1289,7 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
                     padding
                     (propertize short-ref 'face 'font-lock-string-face))
             (when repo
-              (insert "  " (propertize (format "(github: %s)" repo)
-                                       'face 'backpack-inventory-description-face)))
+              (insert "  " (format "(github: %s)" repo)))
             (insert "\n")))))))
 
 ;;; Navigation
