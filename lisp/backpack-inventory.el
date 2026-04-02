@@ -183,6 +183,26 @@ Returns a list of (FONT-NAME . DESCRIPTION) pairs."
   (let ((values (backpack-inventory--extract-leaf-keyword props :fonts)))
     (cl-remove-if-not #'consp values)))
 
+(defun backpack-inventory--extract-package-entries (props)
+  "Extract :ensure entries from leaf PROPS.
+Returns a list of plists with :name, :ref, and :repo keys.
+
+Handles all `:ensure' syntax variants:
+  (PKG :ref \"HASH\")
+  (PKG :host github :repo \"OWNER/REPO\" :ref \"HASH\")
+  (PKG :ref \"HASH\" :host github :repo \"OWNER/REPO\")"
+  (let ((values (backpack-inventory--extract-leaf-keyword props :ensure)))
+    (cl-loop for entry in values
+             when (and (listp entry) (symbolp (car entry)))
+             collect (let* ((pkg-name (car entry))
+                            (rest (cdr entry))
+                            (ref (plist-get rest :ref))
+                            (repo (plist-get rest :repo)))
+                       (when ref
+                         (list :name pkg-name :ref ref :repo repo)))
+             into result
+             finally return (cl-remove nil result))))
+
 (defun backpack-inventory--analyze-gate (form)
   "Analyze a :when or :unless gate expression FORM.
 Returns a list of gearp-info entries: ((POUCH GEAR FLAG) ...)."
@@ -310,6 +330,7 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
            (doc (car (backpack-inventory--extract-leaf-keyword props :doc)))
            (doctors (backpack-inventory--extract-doctor-entries props))
            (fonts (backpack-inventory--extract-font-entries props))
+           (packages (backpack-inventory--extract-package-entries props))
            (when-val (car (backpack-inventory--extract-leaf-keyword props :when)))
            (unless-val (car (backpack-inventory--extract-leaf-keyword props :unless)))
            (gate-form (or when-val unless-val))
@@ -336,7 +357,8 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                             :doc doc
                             :default-on t
                             :doctors doctors
-                            :fonts fonts)
+                            :fonts fonts
+                            :packages packages)
                       results)))
 
              ;; 2-arg gearp! in :when => opt-in gear
@@ -347,7 +369,8 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                           :doc doc
                           :default-on nil
                           :doctors doctors
-                          :fonts fonts)
+                          :fonts fonts
+                          :packages packages)
                     results))
 
              ;; 3-arg gearp! => this is a flag on a gear
@@ -361,7 +384,8 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                             :doc doc
                             :default-on default-on
                             :doctors doctors
-                            :fonts fonts)
+                            :fonts fonts
+                            :packages packages)
                       results)))))))
 
       ;; Recursively scan the entire leaf body for gearp! calls that
@@ -401,7 +425,8 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                             :doc nil
                             :default-on default-on
                             :doctors nil
-                            :fonts nil)
+                            :fonts nil
+                            :packages nil)
                       results))))))
 
       ;; Recursively process nested leaf blocks in body sections
@@ -440,7 +465,8 @@ Uses context-aware collection that handles (not ...) context flipping."
                           :doc nil
                           :default-on default-on
                           :doctors nil
-                          :fonts nil)
+                          :fonts nil
+                          :packages nil)
                     results)))))
       results)))
 
@@ -454,20 +480,22 @@ Returns a gear-info plist or nil."
     ;; Find the first leaf block in the file
     (cl-loop for form in forms
              when (and (listp form) (eq (car form) 'leaf))
-             return (let* ((props (cddr form))
-                           (doc (car (backpack-inventory--extract-leaf-keyword props :doc)))
-                           (doctors (backpack-inventory--extract-doctor-entries props))
-                           (fonts (backpack-inventory--extract-font-entries props))
-                           (unless-val (car (backpack-inventory--extract-leaf-keyword props :unless)))
-                           ;; Check if this is a default-on gear (has :unless)
-                           (default-on (and unless-val t)))
-                      (list :type :gear
-                            :name (intern file-stem)
-                            :leaf-name (nth 1 form)
-                            :doc doc
-                            :default-on default-on
-                            :doctors doctors
-                            :fonts fonts)))))
+              return (let* ((props (cddr form))
+                            (doc (car (backpack-inventory--extract-leaf-keyword props :doc)))
+                            (doctors (backpack-inventory--extract-doctor-entries props))
+                            (fonts (backpack-inventory--extract-font-entries props))
+                            (packages (backpack-inventory--extract-package-entries props))
+                            (unless-val (car (backpack-inventory--extract-leaf-keyword props :unless)))
+                            ;; Check if this is a default-on gear (has :unless)
+                            (default-on (and unless-val t)))
+                       (list :type :gear
+                             :name (intern file-stem)
+                             :leaf-name (nth 1 form)
+                             :doc doc
+                             :default-on default-on
+                             :doctors doctors
+                             :fonts fonts
+                             :packages packages)))))
 
 (defun backpack-inventory--parse-file (filepath pouch-keyword)
   "Parse a gear FILEPATH belonging to POUCH-KEYWORD.
@@ -512,6 +540,13 @@ Each entry is a plist with :binary, :description, and :level keys."
    :key (lambda (d) (plist-get d :binary))
    :test #'string=))
 
+(defun backpack-inventory--merge-packages (list-a list-b)
+  "Merge two package lists, deduplicating by package name.
+Each entry is a plist with :name, :ref, and :repo keys."
+  (cl-remove-duplicates
+   (append list-a list-b)
+   :key (lambda (p) (plist-get p :name))))
+
 (defun backpack-inventory--better-doc-p (new-entry existing-gear)
   "Return non-nil if NEW-ENTRY has a better doc than EXISTING-GEAR.
 Prefer doc from a leaf whose leaf-name matches the gear name."
@@ -550,7 +585,11 @@ Returns a list of gear plists."
                            (cl-remove-duplicates
                             (append (plist-get existing :fonts)
                                     (plist-get entry :fonts))
-                            :key #'car :test #'string=)))
+                            :key #'car :test #'string=))
+                (plist-put existing :packages
+                           (backpack-inventory--merge-packages
+                            (plist-get existing :packages)
+                            (plist-get entry :packages))))
             ;; New gear
             (puthash name
                      (list :name name
@@ -559,6 +598,7 @@ Returns a list of gear plists."
                            :flags nil
                            :doctors (copy-sequence (plist-get entry :doctors))
                            :fonts (copy-sequence (plist-get entry :fonts))
+                           :packages (copy-sequence (plist-get entry :packages))
                            :source-file source-file)
                      gears)))))
 
@@ -577,6 +617,7 @@ Returns a list of gear plists."
                              :flags nil
                              :doctors nil
                              :fonts nil
+                             :packages nil
                              :source-file source-file))
             (puthash gear-name gear gears))
 
@@ -590,8 +631,9 @@ Returns a list of gear plists."
                                              :doc (plist-get entry :doc)
                                              :default-on (plist-get entry :default-on)
                                              :doctors (plist-get entry :doctors)
-                                             :fonts (plist-get entry :fonts))))))
-            ;; Merge flag's doctors/fonts up to the gear level
+                                             :fonts (plist-get entry :fonts)
+                                             :packages (plist-get entry :packages))))))
+            ;; Merge flag's doctors/fonts/packages up to the gear level
             (plist-put gear :doctors
                        (backpack-inventory--merge-doctors
                         (plist-get gear :doctors)
@@ -600,7 +642,11 @@ Returns a list of gear plists."
                        (cl-remove-duplicates
                         (append (plist-get gear :fonts)
                                 (plist-get entry :fonts))
-                        :key #'car :test #'string=))))))
+                        :key #'car :test #'string=))
+            (plist-put gear :packages
+                       (backpack-inventory--merge-packages
+                        (plist-get gear :packages)
+                        (plist-get entry :packages)))))))
 
     ;; Convert hash-table to alist
     (let (result)
@@ -667,8 +713,12 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                 (append (plist-get gear :fonts)
                                         (plist-get existing :fonts))
                                 :key #'car :test #'string=))
+                    (plist-put gear :packages
+                               (backpack-inventory--merge-packages
+                                (plist-get gear :packages)
+                                (plist-get existing :packages)))
                     (puthash name gear gear-table))
-                   ;; Existing matches, keep it but merge flags/doctors/fonts from new
+                   ;; Existing matches, keep it but merge all data from new
                    (existing-matches
                     (plist-put existing :flags
                                (cl-remove-duplicates
@@ -683,7 +733,11 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                (cl-remove-duplicates
                                 (append (plist-get existing :fonts)
                                         (plist-get gear :fonts))
-                                :key #'car :test #'string=)))
+                                :key #'car :test #'string=))
+                    (plist-put existing :packages
+                               (backpack-inventory--merge-packages
+                                (plist-get existing :packages)
+                                (plist-get gear :packages))))
                    ;; Neither matches -- prefer the one with more info
                    ((and (plist-get gear :doc)
                          (not (plist-get existing :doc)))
@@ -701,6 +755,10 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                 (append (plist-get gear :fonts)
                                         (plist-get existing :fonts))
                                 :key #'car :test #'string=))
+                    (plist-put gear :packages
+                               (backpack-inventory--merge-packages
+                                (plist-get gear :packages)
+                                (plist-get existing :packages)))
                     (puthash name gear gear-table))
                    ;; Otherwise keep existing, merge all data
                    (t
@@ -717,7 +775,11 @@ Returns an alist of (POUCH-KEYWORD . GEARS-LIST)."
                                (cl-remove-duplicates
                                 (append (plist-get existing :fonts)
                                         (plist-get gear :fonts))
-                                :key #'car :test #'string=))))))))
+                                :key #'car :test #'string=))
+                    (plist-put existing :packages
+                               (backpack-inventory--merge-packages
+                                (plist-get existing :packages)
+                                (plist-get gear :packages)))))))))
           ;; Collect and sort
           (let (deduped)
             (maphash (lambda (_k v) (push v deduped)) gear-table)
@@ -986,6 +1048,7 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
          (flags (plist-get gear-plist :flags))
          (doctors (plist-get gear-plist :doctors))
          (fonts (plist-get gear-plist :fonts))
+         (packages (plist-get gear-plist :packages))
          (source-file (plist-get gear-plist :source-file))
          (status (backpack-inventory--gear-status pouch-keyword gear-plist))
          (inhibit-read-only t))
@@ -1104,6 +1167,27 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
                    'face 'font-lock-doc-face))
         (insert (propertize (format "    %s)\n" (symbol-name name))
                             'face 'font-lock-doc-face))))
+
+    ;; Packages
+    (when packages
+      (insert "\n" (propertize "Packages:" 'face 'bold) "\n")
+      (let ((max-name-len
+             (cl-reduce #'max packages
+                        :key (lambda (p) (length (symbol-name (plist-get p :name))))
+                        :initial-value 0)))
+        (dolist (pkg packages)
+          (let* ((pkg-name (symbol-name (plist-get pkg :name)))
+                 (ref (plist-get pkg :ref))
+                 (repo (plist-get pkg :repo))
+                 (short-ref (substring ref 0 (min 7 (length ref))))
+                 (padding (make-string (- max-name-len (length pkg-name) -1) ?\s)))
+            (insert "  " (propertize pkg-name 'face 'font-lock-constant-face)
+                    padding
+                    (propertize short-ref 'face 'font-lock-string-face))
+            (when repo
+              (insert "  " (propertize (format "(github: %s)" repo)
+                                       'face 'font-lock-comment-face)))
+            (insert "\n")))))
 
     (insert "\n")
     (insert (propertize "[*]" 'face 'success) " = enabled  "
