@@ -26,6 +26,122 @@
   '(:config :ui :completion :tools :checkers :email :editing)
   "Preferred display order for pouches.")
 
+;;; Faces
+
+(defface backpack-inventory-pouch-face
+  '((t :inherit font-lock-keyword-face :weight bold :underline t))
+  "Face for pouch names in the listing.
+Underlined to indicate the item is interactive (RET or click)."
+  :group 'backpack)
+
+(defface backpack-inventory-gear-face
+  '((t :inherit font-lock-function-name-face :underline t))
+  "Face for gear names in the listing.
+Underlined to indicate the item is interactive (RET or click)."
+  :group 'backpack)
+
+(defface backpack-inventory-enabled-face
+  '((t :inherit success :weight bold))
+  "Face for enabled status indicators."
+  :group 'backpack)
+
+(defface backpack-inventory-disabled-face
+  '((t :inherit shadow))
+  "Face for disabled status indicators."
+  :group 'backpack)
+
+(defface backpack-inventory-default-on-face
+  '((t :inherit warning))
+  "Face for default-on status indicators."
+  :group 'backpack)
+
+(defface backpack-inventory-description-face
+  '((t :inherit font-lock-comment-face))
+  "Face for descriptions and secondary text."
+  :group 'backpack)
+
+(defface backpack-inventory-heading-face
+  '((t :weight bold))
+  "Face for section headings in the detail view."
+  :group 'backpack)
+
+(defface backpack-inventory-back-button-face
+  '((t :inherit link))
+  "Face for the Go back button in the header."
+  :group 'backpack)
+
+;;; Icons
+
+(defun backpack-inventory--pouch-icon ()
+  "Return an icon string for a pouch."
+  (if (fboundp 'nerd-icons-octicon)
+      (concat (nerd-icons-octicon "nf-oct-package") " ")
+    ""))
+
+(defun backpack-inventory--gear-icon ()
+  "Return an icon string for a gear."
+  (if (fboundp 'nerd-icons-octicon)
+      (concat (nerd-icons-octicon "nf-oct-gear") " ")
+    ""))
+
+;;; Header line
+
+(defvar backpack-inventory--header-back-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [header-line mouse-1]
+      (lambda () (interactive) (backpack-inventory-back)))
+    map)
+  "Keymap for the Go back button in the header line.")
+
+(defun backpack-inventory--build-header-line ()
+  "Build the header line string based on current view and history."
+  (let* ((has-history (and (boundp 'backpack-inventory--history)
+                           backpack-inventory--history))
+         (view (and (boundp 'backpack-inventory--current-view)
+                    backpack-inventory--current-view))
+         (view-type (car-safe view))
+         ;; Left side: back button + breadcrumb
+         (left
+          (concat
+           "  "
+           (if has-history
+               (concat
+                (propertize "<- Go back"
+                            'face 'backpack-inventory-back-button-face
+                            'mouse-face 'highlight
+                            'help-echo "Go back to previous view (l)"
+                            'keymap backpack-inventory--header-back-keymap)
+                (pcase view-type
+                  (:gears
+                   (concat "   "
+                           (propertize (symbol-name (cdr view))
+                                       'face '(:inherit header-line :weight bold))))
+                  (:gear-detail
+                   (let* ((data (cdr view))
+                          (pouch (plist-get data :pouch))
+                          (gear (plist-get (plist-get data :data) :name)))
+                     (concat "   "
+                             (propertize (format "%s / %s"
+                                                 (symbol-name pouch)
+                                                 (symbol-name gear))
+                                         'face '(:inherit header-line :weight bold)))))
+                  (_ "")))
+             (propertize "Backpack Inventory"
+                         'face '(:weight bold :inherit header-line)))))
+         ;; Right side: key hints
+         (right
+          (propertize
+           (pcase view-type
+             (:pouches     "RET: enter  q: quit  ")
+             (:gears       "RET: enter  l: back  q: quit  ")
+             (:gear-detail "l: back  q: quit  ")
+             (_            ""))
+           'face 'shadow))
+         (right-len (length right)))
+    (concat left
+            (propertize " " 'display `(space :align-to (- right-fringe ,right-len)))
+            right)))
+
 ;;; Buffer-local state
 
 (defvar-local backpack-inventory--history nil
@@ -59,7 +175,9 @@
 
 \\{backpack-inventory-mode-map}"
   (setq truncate-lines t)
-  (setq buffer-read-only t))
+  (setq buffer-read-only t)
+  (cursor-face-highlight-mode 1)
+  (setq header-line-format '(:eval (backpack-inventory--build-header-line))))
 
 ;;; Filesystem discovery
 
@@ -860,26 +978,15 @@ For opt-out flags, the description explains how to disable the feature."
 
 ;;; Rendering helpers
 
-(defun backpack-inventory--insert-header (text)
-  "Insert TEXT as a header with underline."
-  (insert (propertize text 'face 'info-title-2) "\n")
-  (insert (make-string (length text) ?=) "\n\n"))
-
-(defun backpack-inventory--insert-subheader (text)
-  "Insert TEXT as a sub-header with underline."
-  (insert (propertize text 'face 'info-title-3) "\n")
-  (insert (make-string (length text) ?-) "\n\n"))
-
 (defun backpack-inventory--status-string (status)
-  "Return a display string for STATUS keyword."
+  "Return a display string for STATUS keyword, with tooltip."
   (pcase status
-    (:enabled    (propertize "[*]" 'face 'success))
-    (:disabled   (propertize "[ ]" 'face 'shadow))
-    (:default-on (propertize "[D]" 'face 'warning))))
-
-(defun backpack-inventory--insert-nav-hint (text)
-  "Insert navigation hint TEXT in a subtle face."
-  (insert "\n" (propertize text 'face 'shadow) "\n"))
+    (:enabled    (propertize "[*]" 'face 'backpack-inventory-enabled-face
+                             'help-echo "Enabled: active in your configuration"))
+    (:disabled   (propertize "[ ]" 'face 'backpack-inventory-disabled-face
+                             'help-echo "Disabled: add to your gear! declaration to enable"))
+    (:default-on (propertize "[D]" 'face 'backpack-inventory-default-on-face
+                             'help-echo "On by default: active unless explicitly disabled"))))
 
 ;;; Pouch listing renderer (top-level view)
 
@@ -888,9 +995,7 @@ For opt-out flags, the description explains how to disable the feature."
   (let ((registry backpack-inventory--registry)
         (inhibit-read-only t))
     (erase-buffer)
-    (backpack-inventory--insert-header "Backpack Inventory")
-    (insert "Browse the pouches, gears and flags available in your backpack.\n\n")
-    (insert (propertize "Pouches:" 'face 'bold) "\n\n")
+    (insert "\n")
 
     (let ((max-name-len
            (cl-reduce #'max registry
@@ -904,20 +1009,25 @@ For opt-out flags, the description explains how to disable the feature."
                (desc (alist-get pouch-kw backpack-inventory--pouch-descriptions))
                (name-str (symbol-name pouch-kw))
                (padding (make-string (- max-name-len (length name-str) -2) ?\s))
-               (count-str (format "(%d %s)" gear-count
+               (count-str (format "%d %s" gear-count
                                   (if (= gear-count 1) "gear" "gears")))
+               (icon (backpack-inventory--pouch-icon))
+               (highlight-face '(:inherit backpack-inventory-pouch-face :inverse-video t))
                (line-start (point)))
-          (insert "  " (propertize name-str 'face 'font-lock-keyword-face)
-                  padding count-str)
+          (insert "  " icon
+                  (propertize name-str 'face 'backpack-inventory-pouch-face)
+                  padding
+                  (propertize count-str 'face 'backpack-inventory-description-face))
           (when desc
-            (insert "  " (propertize (concat "-- " desc) 'face 'font-lock-comment-face)))
+            (insert "  " (propertize desc 'face 'backpack-inventory-description-face)))
           (insert "\n")
+          (put-text-property line-start (point) 'cursor-face highlight-face)
+          (put-text-property line-start (point) 'mouse-face highlight-face)
+          (put-text-property line-start (point) 'help-echo
+                             (format "Press RET to browse gears in %s" name-str))
           (put-text-property line-start (point)
                              'backpack-inventory-item
-                             (list :type :pouch :keyword pouch-kw)))))
-
-    (backpack-inventory--insert-nav-hint
-     "Press RET on a pouch to see its gears.  Press q to quit.")))
+                             (list :type :pouch :keyword pouch-kw)))))))
 
 ;;; Gear listing renderer (per-pouch view)
 
@@ -926,13 +1036,11 @@ For opt-out flags, the description explains how to disable the feature."
   (let* ((gears (alist-get pouch-keyword backpack-inventory--registry))
          (inhibit-read-only t))
     (erase-buffer)
-    (backpack-inventory--insert-subheader (symbol-name pouch-keyword))
+    (insert "\n")
 
     (let ((desc (alist-get pouch-keyword backpack-inventory--pouch-descriptions)))
       (when desc
-        (insert desc "\n\n")))
-
-    (insert (propertize "Gears:" 'face 'bold) "\n\n")
+        (insert "  " (propertize desc 'face 'backpack-inventory-description-face) "\n\n")))
 
     (if (null gears)
         (insert "  (no gears found)\n")
@@ -947,26 +1055,24 @@ For opt-out flags, the description explains how to disable the feature."
                  (status-str (backpack-inventory--status-string status))
                  (name-str (symbol-name name))
                  (padding (make-string (- max-name-len (length name-str) -1) ?\s))
+                 (icon (backpack-inventory--gear-icon))
+                 (highlight-face '(:inherit backpack-inventory-gear-face :inverse-video t))
                  (line-start (point)))
-            (insert "  " status-str " "
-                    (propertize name-str 'face 'font-lock-function-name-face)
+            (insert "  " icon status-str " "
+                    (propertize name-str 'face 'backpack-inventory-gear-face)
                     padding)
             (when doc
-              (insert (propertize (concat "-- " doc) 'face 'font-lock-comment-face)))
+              (insert (propertize doc 'face 'backpack-inventory-description-face)))
             (insert "\n")
+            (put-text-property line-start (point) 'cursor-face highlight-face)
+            (put-text-property line-start (point) 'mouse-face highlight-face)
+            (put-text-property line-start (point) 'help-echo
+                               (format "Press RET for details about %s" name-str))
             (put-text-property line-start (point)
                                'backpack-inventory-item
                                (list :type :gear
                                      :pouch pouch-keyword
-                                     :data gear))))))
-
-    (insert "\n")
-    (insert (propertize "[*]" 'face 'success) " = enabled  "
-            (propertize "[ ]" 'face 'shadow)  " = disabled  "
-            (propertize "[D]" 'face 'warning) " = on by default\n")
-
-    (backpack-inventory--insert-nav-hint
-     "Press RET on a gear for details.  Press l or DEL to go back.")))
+                                     :data gear))))))))
 
 ;;; Gear detail renderer
 
@@ -988,30 +1094,30 @@ POUCH-KEYWORD and GEAR-NAME are used for status checks."
 
     (when builtin-flags
       (insert "\n  " (propertize (format "Builtin themes (%d):" (length builtin-flags))
-                                 'face 'bold)
+                                 'face 'backpack-inventory-heading-face)
               "\n")
       (let ((names (mapcar (lambda (f)
                              (let* ((status (backpack-inventory--flag-status
                                             pouch-keyword gear-name f))
                                     (name (symbol-name (plist-get f :name)))
                                     (face (if (eq status :enabled)
-                                              'success
-                                            'shadow)))
+                                              'backpack-inventory-enabled-face
+                                            'backpack-inventory-disabled-face)))
                                (propertize name 'face face)))
                            builtin-flags)))
         (insert "    " (string-join names ", ") "\n")))
 
     (when doom-flags
       (insert "\n  " (propertize (format "Doom themes (%d):" (length doom-flags))
-                                 'face 'bold)
+                                 'face 'backpack-inventory-heading-face)
               "\n")
       (let ((names (mapcar (lambda (f)
                              (let* ((status (backpack-inventory--flag-status
                                             pouch-keyword gear-name f))
                                     (name (symbol-name (plist-get f :name)))
                                     (face (if (eq status :enabled)
-                                              'success
-                                            'shadow)))
+                                              'backpack-inventory-enabled-face
+                                            'backpack-inventory-disabled-face)))
                                (propertize name 'face face)))
                            doom-flags)))
         ;; Wrap at ~70 chars
@@ -1034,7 +1140,7 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
         (level (plist-get doc-entry :level)))
     (insert "  " (propertize binary 'face 'font-lock-constant-face)
             "  "
-            (propertize (concat "-- " desc) 'face 'font-lock-comment-face))
+            (propertize desc 'face 'backpack-inventory-description-face))
     ;; Append conflict info if applicable
     (when (and (listp level) (eq (car level) 'conflicts))
       (insert (propertize (format " (conflicts with %s)" (cadr level))
@@ -1053,34 +1159,31 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
          (status (backpack-inventory--gear-status pouch-keyword gear-plist))
          (inhibit-read-only t))
     (erase-buffer)
-
-    ;; Breadcrumb
-    (backpack-inventory--insert-subheader
-     (format "%s / %s" (symbol-name pouch-keyword) (symbol-name name)))
+    (insert "\n")
 
     ;; Description
     (when doc
-      (insert doc "\n\n"))
+      (insert "  " doc "\n\n"))
 
     ;; Status
-    (insert (propertize "Status: " 'face 'bold)
+    (insert "  " (propertize "Status: " 'face 'backpack-inventory-heading-face)
             (pcase status
-              (:enabled    (propertize "enabled" 'face 'success))
-              (:disabled   (propertize "disabled" 'face 'shadow))
-              (:default-on (propertize "on by default" 'face 'warning)))
+              (:enabled    (propertize "enabled" 'face 'backpack-inventory-enabled-face))
+              (:disabled   (propertize "disabled" 'face 'backpack-inventory-disabled-face))
+              (:default-on (propertize "on by default" 'face 'backpack-inventory-default-on-face)))
             "\n")
 
     ;; Source file (relative path)
     (when source-file
       (let ((rel-path (file-relative-name source-file
                                           (expand-file-name ".." backpack-core-dir))))
-        (insert (propertize "Source: " 'face 'bold)
+        (insert "  " (propertize "Source: " 'face 'backpack-inventory-heading-face)
                 (propertize rel-path 'face 'font-lock-string-face)
                 "\n")))
 
     ;; Flags
     (when flags
-      (insert "\n" (propertize "Flags:" 'face 'bold) "\n")
+      (insert "\n  " (propertize "Flags:" 'face 'backpack-inventory-heading-face) "\n")
       (if (backpack-inventory--theme-flags-p pouch-keyword name)
           (backpack-inventory--render-theme-flags flags pouch-keyword name)
         (dolist (flag flags)
@@ -1089,13 +1192,14 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
                  (flag-status (backpack-inventory--flag-status
                                pouch-keyword name flag))
                  (status-str (backpack-inventory--status-string flag-status)))
-            (insert "  " status-str " "
+            (insert "    " status-str " "
                     (propertize display-name
-                                'face 'font-lock-variable-name-face))
+                                'face 'font-lock-variable-name-face
+                                'help-echo (or flag-desc display-name)))
             (when flag-desc
               (insert "  "
-                      (propertize (concat "-- " flag-desc)
-                                  'face 'font-lock-comment-face)))
+                      (propertize flag-desc
+                                  'face 'backpack-inventory-description-face)))
             (insert "\n")))))
 
     ;; External tools
@@ -1117,35 +1221,34 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
         (if all-optional
             ;; Simple case: all optional, use generic header
             (progn
-              (insert "\n" (propertize "External tools:" 'face 'bold) "\n")
+              (insert "\n  " (propertize "External tools:" 'face 'backpack-inventory-heading-face) "\n")
               (dolist (doc-entry optional)
                 (backpack-inventory--insert-doctor-entry doc-entry)))
           ;; Grouped display
           (when required
-            (insert "\n" (propertize "Required tools:" 'face 'bold) "\n")
+            (insert "\n  " (propertize "Required tools:" 'face 'backpack-inventory-heading-face) "\n")
             (dolist (doc-entry required)
               (backpack-inventory--insert-doctor-entry doc-entry)))
           (when optional
-            (insert "\n" (propertize "Optional tools:" 'face 'bold) "\n")
+            (insert "\n  " (propertize "Optional tools:" 'face 'backpack-inventory-heading-face) "\n")
             (dolist (doc-entry optional)
               (backpack-inventory--insert-doctor-entry doc-entry)))
           (when conflicts
-            (insert "\n" (propertize "Conflicting tools:" 'face 'bold) "\n")
+            (insert "\n  " (propertize "Conflicting tools:" 'face 'backpack-inventory-heading-face) "\n")
             (dolist (doc-entry conflicts)
               (backpack-inventory--insert-doctor-entry doc-entry))))))
 
     ;; Fonts
     (when fonts
-      (insert "\n" (propertize "Required fonts:" 'face 'bold) "\n")
+      (insert "\n  " (propertize "Required fonts:" 'face 'backpack-inventory-heading-face) "\n")
       (dolist (font-entry fonts)
         (insert "  " (propertize (car font-entry) 'face 'font-lock-constant-face)
                 "  "
-                (propertize (concat "-- " (cdr font-entry))
-                            'face 'font-lock-comment-face)
+                (propertize (cdr font-entry) 'face 'backpack-inventory-description-face)
                 "\n")))
 
     ;; Example gear! snippet
-    (insert "\n" (propertize "Example:" 'face 'bold) "\n")
+    (insert "\n  " (propertize "Example:" 'face 'backpack-inventory-heading-face) "\n")
     (let* ((opt-in-flags (cl-remove-if
                           (lambda (f)
                             (backpack-inventory--flag-default-on-p
@@ -1157,20 +1260,20 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
            (flag-names (if (backpack-inventory--theme-flags-p pouch-keyword name)
                            '("doom-one")
                          flag-names)))
-      (insert (propertize "  (gear!\n" 'face 'font-lock-doc-face))
-      (insert (propertize (format "    %s\n" (symbol-name pouch-keyword))
+      (insert (propertize "    (gear!\n" 'face 'font-lock-doc-face))
+      (insert (propertize (format "      %s\n" (symbol-name pouch-keyword))
                           'face 'font-lock-doc-face))
       (if flag-names
           (insert (propertize
-                   (format "    (%s %s))\n" (symbol-name name)
+                   (format "      (%s %s))\n" (symbol-name name)
                            (string-join flag-names " "))
                    'face 'font-lock-doc-face))
-        (insert (propertize (format "    %s)\n" (symbol-name name))
+        (insert (propertize (format "      %s)\n" (symbol-name name))
                             'face 'font-lock-doc-face))))
 
     ;; Packages
     (when packages
-      (insert "\n" (propertize "Packages:" 'face 'bold) "\n")
+      (insert "\n  " (propertize "Packages:" 'face 'backpack-inventory-heading-face) "\n")
       (let ((max-name-len
              (cl-reduce #'max packages
                         :key (lambda (p) (length (symbol-name (plist-get p :name))))
@@ -1186,16 +1289,8 @@ DOC-ENTRY is a plist with :binary, :description, and :level."
                     (propertize short-ref 'face 'font-lock-string-face))
             (when repo
               (insert "  " (propertize (format "(github: %s)" repo)
-                                       'face 'font-lock-comment-face)))
-            (insert "\n")))))
-
-    (insert "\n")
-    (insert (propertize "[*]" 'face 'success) " = enabled  "
-            (propertize "[ ]" 'face 'shadow)  " = disabled  "
-            (propertize "[D]" 'face 'warning) " = on by default\n")
-
-    (backpack-inventory--insert-nav-hint
-     "Press l or DEL to go back.")))
+                                       'face 'backpack-inventory-description-face)))
+            (insert "\n")))))))
 
 ;;; Navigation
 

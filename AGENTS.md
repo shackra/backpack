@@ -355,6 +355,27 @@ Navigation:
 - `g` -- refresh (re-scan files)
 - `q` -- quit
 
+### Visual Design
+
+The inventory uses a Doom Emacs-inspired visual style:
+
+- **Header bar** (`header-line-format`) shows a clickable `<- Go back` link
+  (when history exists), breadcrumb path, and context-appropriate key hints
+  aligned to the right.
+- **Icons** from `nerd-icons` (package icon for pouches, gear icon for gears)
+  with graceful fallback to plain text when `nerd-icons` is not installed.
+- **Custom faces** (`backpack-inventory-pouch-face`, `backpack-inventory-gear-face`,
+  etc.) that inherit from standard `font-lock-*` faces so themes control colours.
+- **Interactive items are underlined** -- pouch names, gear names, and the back
+  button all have `:underline t` to signal they respond to `RET` or click.
+- **Cursor/mouse highlight** using `cursor-face` and `mouse-face` properties
+  with `:inverse-video t` -- when point or mouse hovers over an interactive
+  item, the text colour becomes the background creating a "selected pill" effect.
+  Requires `cursor-face-highlight-mode` (Emacs 29.1+, enabled automatically).
+- **Tooltips** via `help-echo` replace the old `[*] = enabled` legend. Status
+  indicators, flag names, and interactive items all show contextual help on
+  hover or when point rests on them.
+
 ### How It Works
 
 The system **parses gear source files on demand** using Emacs's `read` function.
