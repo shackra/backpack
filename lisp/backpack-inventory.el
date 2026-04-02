@@ -117,16 +117,17 @@
                   (:gears
                    (concat "   "
                            (propertize (symbol-name (cdr view))
-                                       'face '(:inherit header-line :weight bold))))
+                                       'face 'backpack-inventory-pouch-face)))
                   (:gear-detail
                    (let* ((data (cdr view))
                           (pouch (plist-get data :pouch))
                           (gear (plist-get (plist-get data :data) :name)))
                      (concat "   "
-                             (propertize (format "%s / %s"
-                                                 (symbol-name pouch)
-                                                 (symbol-name gear))
-                                         'face '(:inherit header-line :weight bold)))))
+                             (propertize (symbol-name pouch)
+                                         'face 'backpack-inventory-pouch-face)
+                             " "
+                             (propertize (symbol-name gear)
+                                         'face 'backpack-inventory-gear-face))))
                   (_ "")))
              (propertize "Backpack Inventory"
                          'face '(:weight bold :inherit header-line)))))
