@@ -1,6 +1,3 @@
-(require 'backpack-pouch)
-(require 'cl-lib)
-
 (leaf default
   :when (gearp! :config default)
   :doc "Sane defaults for Emacs"
@@ -100,4 +97,18 @@
                 (process-send-eof proc))))))
 
   (when (display-graphic-p)
-    (context-menu-mode)))
+    (context-menu-mode))
+
+  ;; which-key: display available keybindings in popup
+  (unless (gearp! :config default -which-key)
+    (leaf which-key
+      :doc "display available keybindings in popup"
+      :ensure (which-key :ref "38d4308d1143b61e4004b6e7a940686784e51500")
+      :emacs< 30
+      :global-minor-mode which-key-mode)
+    (leaf which-key
+      :doc "display available keybindings in popup"
+      :tag "builtin"
+      :emacs>= 30
+      :config
+      (which-key-mode 1))))
