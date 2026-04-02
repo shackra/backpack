@@ -20,3 +20,27 @@
   (lispy-safe-delete . t)
   (lispy-safe-paste . t)
   (lispy-delete-sexp-from-within . nil))
+
+(leaf let-completion
+  :doc "Let-binding values in Elisp completion"
+  :when (gearp! :editing emacs-lisp)
+  :ensure (let-completion :host github :repo "gggion/let-completion.el" :ref "ee8822e32ba9c0a81152a5dd9bf4e272655d7319")
+  :hook ((emacs-lisp-mode-hook lisp-mode-hook lisp-interaction-mode-hook) . let-completion-mode)
+  :setq let-completion-tag-kind-alist
+  '((lambda              . "λ")
+    (cl-function         . "𝘧")
+    (function            . "𝘧")
+    (make-hash-table     . "#s")
+    (quote               . "'()")
+    (cons                . "cons")
+    (list                . "list")
+    (make-vector         . "vec")
+    (vector              . "vec")
+    (rx                  . "rx")
+    (rx-to-string        . "rx")
+    (regexp-opt          . "rx")
+    (format              . "str")
+    (get-buffer-create   . "buffer")
+    (make-process        . "proc")
+    (start-process       . "proc")
+    (make-pipe-process   . "proc")))
