@@ -156,6 +156,20 @@
 (defvar-local backpack-inventory--registry nil
   "Parsed registry cache.  Alist of (POUCH-KEYWORD . GEAR-LIST).")
 
+(defvar backpack-inventory-display-action
+  '((display-buffer-in-side-window)
+    (side . right)
+    (window-width . 0.4))
+  "Display action for the `backpack-inventory' buffer.
+This is passed to `display-buffer'.  The default opens a side window
+on the right occupying 40% of the frame width.
+
+Users can customise this to any valid display action.  For example,
+to show the inventory in the current window:
+
+  (setq backpack-inventory-display-action
+        \\='((display-buffer-same-window)))")
+
 (defconst backpack-inventory--buffer-name "*backpack-inventory*"
   "Name of the inventory buffer.")
 
@@ -1382,6 +1396,8 @@ pouch or gear, and l or DEL to go back."
       (setq backpack-inventory--registry (backpack-inventory--build-registry))
       (setq backpack-inventory--history nil)
       (backpack-inventory--navigate-to :pouches nil))
-    (switch-to-buffer buf)))
+    (let ((window (display-buffer buf backpack-inventory-display-action)))
+      (when window
+        (select-window window)))))
 
 (provide 'backpack-inventory)
