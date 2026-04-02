@@ -1015,16 +1015,16 @@ For opt-out flags, the description explains how to disable the feature."
                (highlight-face '(:inherit backpack-inventory-pouch-face :inverse-video t))
                (line-start (point)))
           (insert "  " icon
-                  (propertize name-str 'face 'backpack-inventory-pouch-face)
-                  padding
-                  (propertize count-str 'face 'backpack-inventory-description-face))
-          (when desc
-            (insert "  " (propertize desc 'face 'backpack-inventory-description-face)))
-          (let ((line-end (point)))
+                  (propertize name-str 'face 'backpack-inventory-pouch-face))
+          (let ((highlight-end (point)))
+            (insert padding
+                    (propertize count-str 'face 'backpack-inventory-description-face))
+            (when desc
+              (insert "  " desc))
             (insert "\n")
-            (put-text-property line-start line-end 'cursor-face highlight-face)
-            (put-text-property line-start line-end 'mouse-face highlight-face)
-            (put-text-property line-start line-end 'help-echo
+            (put-text-property line-start highlight-end 'cursor-face highlight-face)
+            (put-text-property line-start highlight-end 'mouse-face highlight-face)
+            (put-text-property line-start highlight-end 'help-echo
                                (format "Press RET to browse gears in %s" name-str))
             (put-text-property line-start (point)
                                'backpack-inventory-item
@@ -1060,15 +1060,15 @@ For opt-out flags, the description explains how to disable the feature."
                  (highlight-face '(:inherit backpack-inventory-gear-face :inverse-video t))
                  (line-start (point)))
             (insert "  " icon status-str " "
-                    (propertize name-str 'face 'backpack-inventory-gear-face)
-                    padding)
-            (when doc
-              (insert (propertize doc 'face 'backpack-inventory-description-face)))
-            (let ((line-end (point)))
+                    (propertize name-str 'face 'backpack-inventory-gear-face))
+            (let ((highlight-end (point)))
+              (insert padding)
+              (when doc
+                (insert doc))
               (insert "\n")
-              (put-text-property line-start line-end 'cursor-face highlight-face)
-              (put-text-property line-start line-end 'mouse-face highlight-face)
-              (put-text-property line-start line-end 'help-echo
+              (put-text-property line-start highlight-end 'cursor-face highlight-face)
+              (put-text-property line-start highlight-end 'mouse-face highlight-face)
+              (put-text-property line-start highlight-end 'help-echo
                                  (format "Press RET for details about %s" name-str))
               (put-text-property line-start (point)
                                  'backpack-inventory-item
