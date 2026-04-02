@@ -1020,14 +1020,15 @@ For opt-out flags, the description explains how to disable the feature."
                   (propertize count-str 'face 'backpack-inventory-description-face))
           (when desc
             (insert "  " (propertize desc 'face 'backpack-inventory-description-face)))
-          (insert "\n")
-          (put-text-property line-start (point) 'cursor-face highlight-face)
-          (put-text-property line-start (point) 'mouse-face highlight-face)
-          (put-text-property line-start (point) 'help-echo
-                             (format "Press RET to browse gears in %s" name-str))
-          (put-text-property line-start (point)
-                             'backpack-inventory-item
-                             (list :type :pouch :keyword pouch-kw)))))))
+          (let ((line-end (point)))
+            (insert "\n")
+            (put-text-property line-start line-end 'cursor-face highlight-face)
+            (put-text-property line-start line-end 'mouse-face highlight-face)
+            (put-text-property line-start line-end 'help-echo
+                               (format "Press RET to browse gears in %s" name-str))
+            (put-text-property line-start (point)
+                               'backpack-inventory-item
+                               (list :type :pouch :keyword pouch-kw))))))))
 
 ;;; Gear listing renderer (per-pouch view)
 
@@ -1063,16 +1064,17 @@ For opt-out flags, the description explains how to disable the feature."
                     padding)
             (when doc
               (insert (propertize doc 'face 'backpack-inventory-description-face)))
-            (insert "\n")
-            (put-text-property line-start (point) 'cursor-face highlight-face)
-            (put-text-property line-start (point) 'mouse-face highlight-face)
-            (put-text-property line-start (point) 'help-echo
-                               (format "Press RET for details about %s" name-str))
-            (put-text-property line-start (point)
-                               'backpack-inventory-item
-                               (list :type :gear
-                                     :pouch pouch-keyword
-                                     :data gear))))))))
+            (let ((line-end (point)))
+              (insert "\n")
+              (put-text-property line-start line-end 'cursor-face highlight-face)
+              (put-text-property line-start line-end 'mouse-face highlight-face)
+              (put-text-property line-start line-end 'help-echo
+                                 (format "Press RET for details about %s" name-str))
+              (put-text-property line-start (point)
+                                 'backpack-inventory-item
+                                 (list :type :gear
+                                       :pouch pouch-keyword
+                                       :data gear)))))))))
 
 ;;; Gear detail renderer
 
