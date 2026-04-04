@@ -25,16 +25,22 @@ BACKPACK_D="$TEST_HOME/.backpack.d"
 mkdir -p "$BACKPACK_D"
 
 # -- 2. Generate init.el from test declarations -------------------------
-#    Load e2e-treesit.el in a bare Emacs (only needs ert) and call
-#    backpack-e2e--print-init-el to emit the gear! form to stdout.
+#    Load e2e-treesit.el in a bare Emacs (only needs ert) with the
+#    generate-only guard set so ert-deftest forms are skipped -- we
+#    only need the accumulated gear specs to emit the gear! form.
 
 echo "Generating init.el from test declarations..."
 
-$EMACS --batch \
+if ! $EMACS --batch \
     -l ert \
+    --eval "(setq backpack-e2e--generate-only t)" \
     -l "$EMACS_D/test/e2e-treesit.el" \
     --eval "(backpack-e2e--print-init-el)" \
-    > "$BACKPACK_D/init.el"
+    > "$BACKPACK_D/init.el" 2>"$TEST_HOME/step2.log"; then
+    echo "FAILED: init.el generation." >&2
+    cat "$TEST_HOME/step2.log" >&2
+    exit 1
+fi
 
 echo "Generated init.el:"
 cat "$BACKPACK_D/init.el"
@@ -47,25 +53,57 @@ echo ""
 
 echo "Running backpack ensure..."
 
-$EMACS --batch \
+if ! $EMACS --batch \
     --eval "(setq user-emacs-directory \"$EMACS_D/\")" \
     --eval "(setq backpack-user-dir \"$BACKPACK_D/\")" \
-    -l "$EMACS_D/ensure.el"
+    -l "$EMACS_D/ensure.el" 2>&1; then
+    echo ""
+    echo "FAILED: backpack ensure." >&2
+    exit 1
+fi
 
 echo ""
 echo "backpack ensure completed."
 echo ""
 
-# -- 4. Run E2E ERT tests ----------------------------------------------
-#    Boot a fresh Emacs through the full Backpack startup sequence
-#    (early-init.el -> backpack.el -> backpack-start) with our custom
-#    backpack-user-dir, then load and execute the tests.
+# -- 4. Run E2E tests in an interactive Emacs session -------------------
+#    We launch Emacs interactively (not --batch) so that elpaca's
+#    asynchronous package activation runs normally through the event
+#    loop.  The test file hooks backpack-e2e--run-tests into
+#    elpaca-after-init-hook (via -f backpack-e2e--run-and-exit) so it
+#    runs only after every package is fully activated.  Results are
+#    written to a file; the exit code equals the number of failures.
+#
+#    `script -qec` provides a pseudo-tty so Emacs doesn't complain
+#    about "standard input is not a tty".
 
 echo "Running E2E tree-sitter tests..."
 
-$EMACS --init-directory "$EMACS_D" -batch \
-    --eval "(setq backpack-user-dir \"$BACKPACK_D/\")" \
-    -l "$EMACS_D/early-init.el" \
-    -l ert \
-    -l "$EMACS_D/test/e2e-treesit.el" \
-    -f ert-run-tests-batch-and-exit
+RESULTS_FILE="$TEST_HOME/e2e-results.txt"
+
+set +e
+script -qec "$EMACS --init-directory $EMACS_D \
+    --eval \"(setq backpack-user-dir \\\"$BACKPACK_D/\\\")\" \
+    --eval \"(setq backpack-e2e--results-file \\\"$RESULTS_FILE\\\")\" \
+    --eval \"(setq backpack-e2e--generate-only t)\" \
+    -l $EMACS_D/test/e2e-treesit.el \
+    -f backpack-e2e--run-and-exit" /dev/null > /dev/null 2>&1
+TEST_EXIT=$?
+set -e
+
+echo ""
+if [ -f "$RESULTS_FILE" ]; then
+    cat "$RESULTS_FILE"
+else
+    echo "FAILED: no results file produced.  Emacs may have crashed." >&2
+    echo "Re-running without output suppression for diagnostics..." >&2
+    script -qec "$EMACS --init-directory $EMACS_D \
+        --eval \"(setq backpack-user-dir \\\"$BACKPACK_D/\\\")\" \
+        --eval \"(setq backpack-e2e--results-file \\\"$RESULTS_FILE\\\")\" \
+        --eval \"(setq backpack-e2e--generate-only t)\" \
+        -l $EMACS_D/test/e2e-treesit.el \
+        -f backpack-e2e--run-and-exit" /dev/null
+    TEST_EXIT=1
+fi
+
+exit $TEST_EXIT
