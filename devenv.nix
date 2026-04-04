@@ -29,8 +29,14 @@ let
     };
 
   # TODO(shackra): add scripts for running emacs in -nw and as a daemon
+  prepareTestDir = (pkgs.writeShellScriptBin "prepare" (builtins.readFile ./etc/scripts/prepare.sh));
+
   prepareAndRunTest = (
     pkgs.writeShellScriptBin "prepare-and-run" (builtins.readFile ./etc/scripts/prepare-and-run.sh)
+  );
+
+  runE2eTreesit = (
+    pkgs.writeShellScriptBin "run-e2e-treesit" (builtins.readFile ./etc/scripts/run-e2e-treesit.sh)
   );
 
   run-for-each-emacs = (
@@ -45,7 +51,9 @@ in
   packages = [
     pkgs.git
     pkgs.rsync
+    prepareTestDir
     prepareAndRunTest
+    runE2eTreesit
     run-for-each-emacs
     (renameEmacs pkgs "emacs-rolling")
     (renameEmacs pkgs-30-1 "emacs-30-1")
