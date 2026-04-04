@@ -22,11 +22,11 @@ manager is **elpaca**. Both are vendored as git submodules under
 
 Backpack organises features into three levels:
 
-| Concept  | Keyword style | Example              | Description                              |
-|----------|---------------|----------------------|------------------------------------------|
-| **Pouch** | `:keyword`   | `:editing`           | A category of related features           |
-| **Gear**  | `symbol`     | `go`                 | A feature module (one `.el` file)        |
-| **Flag**  | `symbol`     | `lsp`, `-treesit`    | An option that modifies a gear's behaviour|
+| Concept   | Keyword style | Example           | Description                                |
+|-----------|---------------|-------------------|--------------------------------------------|
+| **Pouch** | `:keyword`    | `:editing`        | A category of related features             |
+| **Gear**  | `symbol`      | `go`              | A feature module (one `.el` file)          |
+| **Flag**  | `symbol`      | `lsp`, `-treesit` | An option that modifies a gear's behaviour |
 
 Flags prefixed with `-` represent features that are **on by default** and can be
 disabled by the user. Flags without `-` are **opt-in**.
@@ -53,12 +53,12 @@ Example user configuration:
 
 All live under `lisp/`:
 
-| File                       | Purpose                                                      |
-|----------------------------|--------------------------------------------------------------|
-| `backpack.el`              | Main module (~1000 lines): bootstrap, elpaca setup, startup optimisations, directory layout, gear loading, GC mode |
-| `backpack-pouch.el`        | The `gear!`/`gearp!`/`gear-with-any-flagp!` macro system     |
-| `backpack-email-utils.el`  | `backpack/mu4e-easy-context` helper macro                    |
-| `backpack-inventory.el`    | Self-documenting inventory browser (`M-x backpack-inventory`)|
+| File                      | Purpose                                                                                                            |
+|---------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `backpack.el`             | Main module (~1000 lines): bootstrap, elpaca setup, startup optimisations, directory layout, gear loading, GC mode |
+| `backpack-pouch.el`       | The `gear!`/`gearp!`/`gear-with-any-flagp!` macro system                                                           |
+| `backpack-email-utils.el` | `backpack/mu4e-easy-context` helper macro                                                                          |
+| `backpack-inventory.el`   | Self-documenting inventory browser (`M-x backpack-inventory`)                                                      |
 
 ### Gear Files
 
@@ -299,11 +299,11 @@ The new format extends the cdr to a list, adding a requirement level:
 
 Requirement levels:
 
-| Level                      | Meaning                                           |
-|----------------------------|---------------------------------------------------|
-| `required`                 | The gear needs this binary to function correctly   |
-| `optional` (or omitted)    | Nice to have, not necessary for the gear to work   |
-| `(conflicts "other-name")` | Conflicts with another binary; user should pick one|
+| Level                      | Meaning                                             |
+|----------------------------|-----------------------------------------------------|
+| `required`                 | The gear needs this binary to function correctly    |
+| `optional` (or omitted)    | Nice to have, not necessary for the gear to work    |
+| `(conflicts "other-name")` | Conflicts with another binary; user should pick one |
 
 Both formats can be mixed freely in the same `:doctor` declaration. Omitting
 the level entirely (old cons-pair format) is equivalent to `optional`.
@@ -325,16 +325,16 @@ The `:ensure` keyword is aliased to `:elpaca` internally.
 
 ## Naming Conventions
 
-| Pattern           | Example                                    | Usage                                    |
-|-------------------|--------------------------------------------|------------------------------------------|
-| `backpack-*`      | `backpack-emacs-dir`, `backpack-start`     | Public API / variables                   |
-| `backpack--*`     | `backpack--gear`, `backpack--treesit-langs`| Internal/private symbols (double hyphen) |
-| `backpack/*`      | `backpack/mu4e-easy-context`               | User-facing utility functions            |
-| `gear!`           | `gear!`                                    | Declarative macro (bang = side-effectful)|
-| `gearp!`          | `gearp!`                                   | Predicate macro (p = predicate)          |
-| `*-p`             | `backpack-sync-mode-p`                     | Boolean predicate functions              |
-| `backpack--*-h`   | `backpack--reset-file-handler-alist-h`     | Hook functions (h suffix, Doom convention)|
-| `-flag`           | `-treesit`, `-display-line-numbers`        | Negation/opt-out flags in gear!          |
+| Pattern         | Example                                     | Usage                                      |
+|-----------------|---------------------------------------------|--------------------------------------------|
+| `backpack-*`    | `backpack-emacs-dir`, `backpack-start`      | Public API / variables                     |
+| `backpack--*`   | `backpack--gear`, `backpack--treesit-langs` | Internal/private symbols (double hyphen)   |
+| `backpack/*`    | `backpack/mu4e-easy-context`                | User-facing utility functions              |
+| `gear!`         | `gear!`                                     | Declarative macro (bang = side-effectful)  |
+| `gearp!`        | `gearp!`                                    | Predicate macro (p = predicate)            |
+| `*-p`           | `backpack-sync-mode-p`                      | Boolean predicate functions                |
+| `backpack--*-h` | `backpack--reset-file-handler-alist-h`      | Hook functions (h suffix, Doom convention) |
+| `-flag`         | `-treesit`, `-display-line-numbers`         | Negation/opt-out flags in gear!            |
 
 Gear files do **not** use a `backpack-gear-` prefix. Leaf blocks are named after
 the package they configure (e.g., `go-mode`, `corfu`, `jinx`).
