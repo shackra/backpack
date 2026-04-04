@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(nix-mode . nix-ts-mode)))
 
 (leaf nix-mode
-  :doc "an Emacs major mode for editing Nix expressions"
+  :doc "it works on my machine -- then let's ship your machine"
   :ensure (nix-mode :ref "719feb7868fb567ecfe5578f6119892c771ac5e5")
   :when (gearp! :editing nix)
   :hook

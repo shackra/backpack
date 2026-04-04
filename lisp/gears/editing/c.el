@@ -8,7 +8,7 @@
   (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode)))
 
 (leaf cc-mode
-  :doc "Support for C"
+  :doc "the language that mass-produces segfaults since 1972"
   :when (gearp! :editing c)
   :hook
   ((c-mode-hook c-ts-mode-hook) . electric-pair-local-mode)

@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode)))
 
 (leaf yaml-mode
-  :doc "A major-mode for editing YAML files"
+  :doc "indentation-sensitive and ready to ruin your CI pipeline"
   :ensure (yaml-mode :ref "d91f878729312a6beed77e6637c60497c5786efa")
   :when (gearp! :editing yaml)
   :mode "\\.ya?ml\\'"

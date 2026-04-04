@@ -1,7 +1,7 @@
 ;;; objc.el --- Objective-C language support -*- lexical-binding: t; -*-
 
 (leaf cc-mode
-  :doc "Support for Objective-C"
+  :doc "[NSLanguage sendMessage:@\"from the 80s with love\"]"
   :when (gearp! :editing objc)
   :hook
   (objc-mode-hook . electric-pair-local-mode)

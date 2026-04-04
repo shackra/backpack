@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(lua-mode . lua-ts-mode)))
 
 (leaf lua-mode
-  :doc "A major-mode for editing Lua scripts"
+  :doc "arrays start at 1 and we're not sorry"
   :ensure (lua-mode :ref "2f6b8d7a6317e42c953c5119b0119ddb337e0a5f")
   :when (gearp! :editing lua)
   :hook

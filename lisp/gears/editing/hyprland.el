@@ -15,7 +15,7 @@
                   :ext "/hypr/.*\\.conf\\'"))))
 
 (leaf hyprlang-ts-mode
-  :doc "a major mode designed to provide enhanced editing support for Hyprland configuration files by leveraging Tree-Sitter"
+  :doc "for when you need your tiling window manager config to look just right"
   :when (gearp! :editing hyprland)
   :ensure (hyprlang-ts-mode :ref "4a2a257a237a4c15d1132b2ba3fdf040d7b44ef8")
   :custom (hyprlang-ts-mode-indent-offset . 2)

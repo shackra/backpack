@@ -16,7 +16,7 @@
   (add-to-list 'major-mode-remap-alist '(terraform-mode . terraform-ts-mode)))
 
 (leaf terraform-mode
-  :doc "A major-mode for editing Terraform configuration files"
+  :doc "plan, apply, pray -- infrastructure as code"
   :ensure (terraform-mode :ref "01635df3625c0cec2bb4613a6f920b8569d41009")
   :when (gearp! :editing terraform)
   :hook

@@ -8,7 +8,7 @@
   (add-to-list 'major-mode-remap-alist '(cmake-mode . cmake-ts-mode)))
 
 (leaf cmake-mode
-  :doc "Support for editing CMake source files in Emacs"
+  :doc "the build system you need a build system to understand"
   :when (gearp! :editing cmake)
   :ensure (cmake-mode :ref "1772622772133fad3b348ca4a5b4df3bbd69da75")
   :hook

@@ -13,7 +13,7 @@
   (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode)))
 
 (leaf haskell-mode
-  :doc "A Haskell editing mode for Emacs"
+  :doc "a monad is just a monoid in the category of endofunctors, what's the problem?"
   :ensure (haskell-mode :ref "2dd755a5fa11577a9388af88f385d2a8e18f7a8d")
   :when (gearp! :editing haskell)
   :hook

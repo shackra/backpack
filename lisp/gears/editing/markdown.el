@@ -1,5 +1,5 @@
 (leaf markdown-mode
-  :doc "a major mode for editing Markdown-formatted text"
+  :doc "the markup language everyone thinks they know until they hit nested lists"
   :when (gearp! :editing markdown)
   :ensure (markdown-mode :ref "9de2df5a9f2f864c82ec112d3369154767a2bb49")
   :mode ("\\.md\\'" "\\.markdown\\'" "\\.mkd\\'")

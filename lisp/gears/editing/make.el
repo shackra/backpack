@@ -1,7 +1,7 @@
 ;;; make.el --- GNU Make support -*- lexical-binding: t; -*-
 
 (leaf make-mode
-  :doc "Support for editing Makefiles in Emacs"
+  :doc "tabs vs spaces? here there's only tabs. always tabs."
   :when (gearp! :editing make)
   :hook
   ((makefile-mode-hook makefile-gmake-mode-hook makefile-bsdmake-mode-hook) . electric-pair-local-mode)

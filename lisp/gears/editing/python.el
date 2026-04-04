@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 (leaf python-mode
-  :doc "major mode for the Python Programming Language"
+  :doc "significant whitespace: where one wrong indent ruins your afternoon"
   :ensure (python-mode :ref "5aaf8b386aa694429d997c6fd49772b0b359e514")
   :when (gearp! :editing python)
   :hook

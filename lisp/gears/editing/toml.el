@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode)))
 
 (leaf toml-mode
-  :doc "A major-mode for editing TOML files"
+  :doc "Tom's Obvious Minimal Language, because YAML hurt us"
   :ensure (toml-mode :ref "f6c61817b00f9c4a3cab1bae9c309e0fc45cdd06")
   :when (gearp! :editing toml)
   :hook

@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode)))
 
 (leaf go-mode
-  :doc "Support for Go programming language in Emacs"
+  :doc "if err != nil { return nil, err } -- the language"
   :when (gearp! :editing go)
   :ensure (go-mode :ref "0ed3c5227e7f622589f1411b4939c3ee34711ebd")
   :hook

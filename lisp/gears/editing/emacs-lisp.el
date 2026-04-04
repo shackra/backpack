@@ -1,6 +1,6 @@
 (leaf emacs-lisp
   :when (gearp! :editing emacs-lisp)
-  :doc "Emacs lisp programming language"
+  :doc "the language you swore you'd never learn, and now you can't stop"
   :hook
   ((emacs-lisp-mode-hook lisp-mode-hook) .
    (lambda ()

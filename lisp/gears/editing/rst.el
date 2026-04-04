@@ -1,5 +1,5 @@
 (leaf rst
-  :doc "a major mode for editing reStructuredText documents"
+  :doc "like markdown but the kind that lectures you about proper structure"
   :tag "builtin"
   :when (gearp! :editing rst)
   :mode ("\\.rst\\'" "\\.rest\\'")

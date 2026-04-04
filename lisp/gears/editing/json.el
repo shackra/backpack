@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode)))
 
 (leaf json
-  :doc "major mode for editing JSON files"
+  :doc "the format that mass-produces missing commas and trailing comma debates"
   :when (gearp! :editing json)
   :hook
   ((js-json-mode-hook json-ts-mode-hook) . electric-pair-local-mode)

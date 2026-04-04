@@ -1,5 +1,5 @@
 (leaf auctex
-  :doc "an extensible package for writing and formatting TeX files"
+  :doc "for documents that look beautiful but whose source makes you weep"
   :when (gearp! :editing latex)
   :ensure (auctex :ref "9779fa472e50891666e23dde541e01c3cfc852ec")
   :mode ("\\.tex\\'" . LaTeX-mode)

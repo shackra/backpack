@@ -6,7 +6,7 @@
   (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode)))
 
 (leaf rust-mode
-  :doc "A major-mode for editing Rust source code"
+  :doc "the borrow checker said no, and it was right"
   :ensure (rust-mode :ref "f68ddca5c22b94a2de7c9ce20d629cd78d60b269")
   :when (gearp! :editing rust)
   :hook

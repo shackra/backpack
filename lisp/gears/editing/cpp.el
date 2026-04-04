@@ -8,7 +8,7 @@
   (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode)))
 
 (leaf cc-mode
-  :doc "Support for C++"
+  :doc "C but with templates that make the compiler question its existence"
   :when (gearp! :editing cpp)
   :hook
   ((c++-mode-hook c++-ts-mode-hook) . electric-pair-local-mode)
