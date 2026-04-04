@@ -98,34 +98,88 @@ This macro does two things at load time:
 ;;; --- Test declarations ---------------------------------------------------
 
 (backpack-e2e-treesit-test go
-  :gear (go)
-  :file "main.go"
-  :content "package main"
-  :treesit go)
+			   :gear (go)
+			   :file "main.go"
+			   :content "package main"
+			   :treesit go)
 
 (backpack-e2e-treesit-test nix
-  :gear (nix)
-  :file "default.nix"
-  :content "{ pkgs ? import <nixpkgs> {} }: pkgs"
-  :treesit nix)
+			   :gear (nix)
+			   :file "default.nix"
+			   :content "{ pkgs ? import <nixpkgs> {} }: pkgs"
+			   :treesit nix)
 
 (backpack-e2e-treesit-test lua
-  :gear (lua)
-  :file "init.lua"
-  :content "local M = {}\nreturn M"
-  :treesit lua)
+			   :gear (lua)
+			   :file "init.lua"
+			   :content "local M = {}\nreturn M"
+			   :treesit lua)
 
 (backpack-e2e-treesit-test cpp
-  :gear (cpp)
-  :file "main.cpp"
-  :content "#include <iostream>\nint main() { return 0; }"
-  :treesit cpp)
+			   :gear (cpp)
+			   :file "main.cpp"
+			   :content "#include <iostream>\nint main() { return 0; }"
+			   :treesit cpp)
 
 (backpack-e2e-treesit-test terraform
-  :gear (terraform)
-  :file "main.tf"
-  :content "resource \"time_static\" \"time_update\" {}"
-  :treesit terraform)
+			   :gear (terraform)
+			   :file "main.tf"
+			   :content "resource \"time_static\" \"time_update\" {}"
+			   :treesit terraform)
+
+(backpack-e2e-treesit-test markdown
+			   :gear (markdown)
+			   :file "README.md"
+			   :content "# Hello World"
+			   :treesit markdown)
+
+(backpack-e2e-treesit-test c
+			   :gear (c)
+			   :file "main.c"
+			   :content "#include <std.io>"
+			   :treesit c)
+
+(backpack-e2e-treesit-test cmake
+			   :gear (cmake)
+			   :file "CMakeLists.txt"
+			   :content " "
+			   :treesit cmake)
+
+(backpack-e2e-treesit-test haskell
+			   :gear (haskell)
+			   :file "main.hs"
+			   :content " "
+			   :treesit haskell)
+
+(backpack-e2e-treesit-test json
+			   :gear (json)
+			   :file "main.json"
+			   :content "{}"
+			   :treesit json)
+
+(backpack-e2e-treesit-test python
+			   :gear (python)
+			   :file "main.py"
+			   :content "import this"
+			   :treesit python)
+
+(backpack-e2e-treesit-test rust
+			   :gear (rust)
+			   :file "main.rs"
+			   :content "let a"
+			   :treesit rust)
+
+(backpack-e2e-treesit-test toml
+			   :gear (toml)
+			   :file "main.toml"
+			   :content "hello: world"
+			   :treesit toml)
+
+(backpack-e2e-treesit-test yaml
+			   :gear (yaml)
+			   :file "main.yml"
+			   :content "hello: world"
+			   :treesit yaml)
 
 ;;; --- Interactive test runner (used by step 4 of the orchestrator) ---------
 
@@ -159,8 +213,8 @@ packages are fully activated and tree-sitter grammars are discoverable."
                   (setq buf (find-file-noselect tmp-file))
                   (with-current-buffer buf
                     (let ((got (and (featurep 'treesit)
-                                   (treesit-available-p)
-                                   (treesit-language-at (point)))))
+                                    (treesit-available-p)
+                                    (treesit-language-at (point)))))
                       (if (eq got ts-lang)
                           (push (format "PASS  %-12s %-20s treesit-language-at => %s"
                                         name file got)
