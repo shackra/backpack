@@ -263,7 +263,7 @@ Returns a string containing the Elisp form."
                        backpack-e2e--test-specs)))
     ;; Remove duplicates (a gear might appear in multiple tests)
     (setq gears (delete-dups gears))
-    (format "(gear!\n  :config\n  (default hide-menu-bar hide-tool-bar no-splash)\n  :editing\n  %s)\n"
+    (format "(gear!\n  :config\n  default\n  :editing\n  %s)\n"
             (mapconcat #'symbol-name gears "\n  "))))
 
 (defun backpack-e2e--print-init-el ()
