@@ -1,7 +1,21 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing markdown)
            (not (gearp! :editing markdown -treesit)))
-  (backpack-treesit-langs! markdown))
+  (backpack-treesit-langs! markdown)
+
+  ;; replace the original recipe, as the new split_parser branch is
+  ;; the default and there is no src folder in the root of the project
+  (with-eval-after-load 'treesit-auto
+    (add-to-list 'treesit-auto-recipe-list
+		 (make-treesit-auto-recipe
+		  :lang 'markdown
+		  :ts-mode 'markdown-ts-mode
+		  :remap '(markdown-mode gfm-mode)
+		  :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+		  :source-dir "tree-sitter-markdown/src"
+		  :requires '((markdown_inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                                               "split_parser"
+                                               "tree-sitter-markdown-inline/src"))))))
 
 (leaf markdown-mode
   :doc "the markup language everyone thinks they know until they hit nested lists"
