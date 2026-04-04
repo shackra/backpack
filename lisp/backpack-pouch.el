@@ -45,7 +45,8 @@ For example, if `(gear! :ui (theme doom-one))' then:
 Return non-nil if GEAR in POUCH is active, optionally with FLAG."
   (let ((category nil)
         (module nil)
-        (ourflag nil))
+        (ourflag nil)
+        (has-gears nil))
     (cl-loop for thing in backpack--gear
 	     unless (or
 		     (and (eq pouch category) (eq gear module) (null flag))
@@ -58,25 +59,33 @@ Return non-nil if GEAR in POUCH is active, optionally with FLAG."
                (error "gear '%s' is not part of a pouch" thing))
 
               ;; two pouches in a row without defining gears
-              ((and (null module)
+              ((and (not has-gears)
                     category
                     (keywordp thing))
                (error "last pouch '%s' did not use any gear" category))
 
-              ;; found a pouch/category
+              ;; found a pouch/category -- reset per-pouch state
               ((keywordp thing)
-               (setq category thing))
+               (setq category thing
+                     module nil
+                     ourflag nil
+                     has-gears nil))
 
               ;; found a gear/module symbol
-              ((and (symbolp thing)
-                    (eq thing gear))
-               (setq module thing))
+              ((symbolp thing)
+               (setq has-gears t)
+               (when (eq thing gear)
+                 (setq module thing)))
 
               ;; found a list! => gear + flags
               ((listp thing)
-               (setq module (pop thing))
-               (when (memq flag thing)
-                 (setq ourflag flag)))))
+               (setq has-gears t)
+               (let ((name (car thing))
+                     (flags (cdr thing)))
+                 (when (eq name gear)
+                   (setq module name)
+                   (when (memq flag flags)
+                     (setq ourflag flag)))))))
 
     ;; return result
     (or

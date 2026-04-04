@@ -47,6 +47,52 @@
 
   (should-not (gearp! :ui not-included)))
 
+(ert-deftest test-gearp!-query-absent-pouch-multi-pouch ()
+  "gearp! should return nil (not error) when querying a pouch
+that does not exist in gear!, even with multiple pouches present."
+  :tags '(backpack)
+  (gear!
+   :editing
+   go
+   nix
+   :config
+   (default hide-menu-bar))
+  (should-not (gearp! :ui theme)))
+
+(ert-deftest test-gearp!-query-absent-gear-across-pouches ()
+  "gearp! should return nil when the gear is not in any pouch,
+without erroring on pouch transitions."
+  :tags '(backpack)
+  (gear!
+   :editing
+   go
+   :config
+   (default hide-menu-bar))
+  (should-not (gearp! :editing python)))
+
+(ert-deftest test-gearp!-flag-query-across-pouches ()
+  "gearp! with a flag should work correctly across multiple pouches."
+  :tags '(backpack)
+  (gear!
+   :config
+   (default hide-menu-bar)
+   :editing
+   (go lsp))
+  (should (gearp! :editing go lsp))
+  (should-not (gearp! :ui -treesit)))
+
+(ert-deftest test-gearp!-reset-across-pouches ()
+  "gearp! should not carry over module matches from a previous pouch."
+  :tags '(backpack)
+  (gear!
+   :ui
+   theme
+   :editing
+   go)
+  ;; `theme' is under :ui, not :editing
+  (should (gearp! :ui theme))
+  (should-not (gearp! :editing theme)))
+
 (ert-deftest benchmark-gearp! ()
   (gear!
    :ui
