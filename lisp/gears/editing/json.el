@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing json)
            (not (gearp! :editing json -treesit)))
-  (backpack-treesit-langs! json)
-
-  (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode)))
+  (backpack-treesit-langs! json))
 
 (leaf json
   :doc "the format that mass-produces missing commas and trailing comma debates"
@@ -11,10 +9,10 @@
   :hook
   ((js-json-mode-hook json-ts-mode-hook) . electric-pair-local-mode)
   ((js-json-mode-hook json-ts-mode-hook) .
-		  (lambda ()
-		    (toggle-truncate-lines 1)
-		    (unless (gearp! :editing json -display-line-numbers)
-		      (display-line-numbers-mode +1))))
+   (lambda ()
+     (toggle-truncate-lines 1)
+     (unless (gearp! :editing json -display-line-numbers)
+       (display-line-numbers-mode +1))))
   :config
   (leaf eglot
     :when (gearp! :editing json lsp)

@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing go)
            (not (gearp! :editing go -treesit)))
-  (backpack-treesit-langs! go gomod)
-
-  (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode)))
+  (backpack-treesit-langs! go gomod))
 
 (leaf go-mode
   :doc "if err != nil { return nil, err } -- the language"

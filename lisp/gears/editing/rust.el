@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing rust)
            (not (gearp! :editing rust -treesit)))
-  (backpack-treesit-langs! rust)
-
-  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode)))
+  (backpack-treesit-langs! rust))
 
 (leaf rust-mode
   :doc "the borrow checker said no, and it was right"

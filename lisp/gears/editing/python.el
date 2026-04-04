@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing python)
            (not (gearp! :editing python -treesit)))
-  (backpack-treesit-langs! python)
-
-  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
+  (backpack-treesit-langs! python))
 
 (leaf python-mode
   :doc "significant whitespace: where one wrong indent ruins your afternoon"

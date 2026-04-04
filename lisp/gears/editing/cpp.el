@@ -3,9 +3,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing cpp)
            (not (gearp! :editing cpp -treesit)))
-  (backpack-treesit-langs! cpp)
-
-  (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode)))
+  (backpack-treesit-langs! cpp))
 
 (leaf cc-mode
   :doc "C but with templates that make the compiler question its existence"

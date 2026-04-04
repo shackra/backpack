@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing nix)
            (not (gearp! :editing nix -treesit)))
-  (backpack-treesit-langs! nix)
-
-  (add-to-list 'major-mode-remap-alist '(nix-mode . nix-ts-mode)))
+  (backpack-treesit-langs! nix))
 
 (leaf nix-mode
   :doc "it works on my machine -- then let's ship your machine"
@@ -32,8 +30,8 @@
 	       `(nix-mode . ,(eglot-alternatives '(("nixd")
 						   ("nil" "--stdio")))))
   (add-to-list 'eglot-server-programs
-		 `(nix-ts-mode . ,(eglot-alternatives '(("nixd")
-						     ("nil" "--stdio"))))))
+	       `(nix-ts-mode . ,(eglot-alternatives '(("nixd")
+						      ("nil" "--stdio"))))))
 
 (leaf nix-ts-mode
   :doc "tree-sitter major mode for nix"

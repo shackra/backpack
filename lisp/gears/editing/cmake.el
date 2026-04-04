@@ -3,9 +3,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing cmake)
            (not (gearp! :editing cmake -treesit)))
-  (backpack-treesit-langs! cmake)
-
-  (add-to-list 'major-mode-remap-alist '(cmake-mode . cmake-ts-mode)))
+  (backpack-treesit-langs! cmake))
 
 (leaf cmake-mode
   :doc "the build system you need a build system to understand"

@@ -3,9 +3,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing c)
            (not (gearp! :editing c -treesit)))
-  (backpack-treesit-langs! c)
-
-  (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode)))
+  (backpack-treesit-langs! c))
 
 (leaf cc-mode
   :doc "the language that mass-produces segfaults since 1972"

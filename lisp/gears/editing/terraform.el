@@ -1,8 +1,6 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing terraform)
-	   (not (gearp! :editing terraform -treesit))
-	   ;; NOTE(shackra): disabled until I can figure out the reason for this error: Ignoring unknown mode ‘terraform-mode’ (remapped to `terraform-ts-mode')
-	   nil)
+	   (not (gearp! :editing terraform -treesit)))
   (backpack-treesit-langs! terraform)
 
   (with-eval-after-load 'treesit-auto
@@ -10,10 +8,9 @@
 		 (make-treesit-auto-recipe
 		  :lang 'terraform
 		  :ts-mode 'terraform-ts-mode
+		  :remap 'terraform-mode
 		  :url "https://github.com/tree-sitter-grammars/tree-sitter-hcl"
-		  :source-dir "dialects/terraform/src")))
-
-  (add-to-list 'major-mode-remap-alist '(terraform-mode . terraform-ts-mode)))
+		  :source-dir "dialects/terraform/src"))))
 
 (leaf terraform-mode
   :doc "plan, apply, pray -- infrastructure as code"
@@ -36,6 +33,12 @@
     :config
     (add-to-list 'eglot-server-programs '(terraform-mode . ("terraform-ls" "serve")))
     (add-to-list 'eglot-server-programs '(terraform-ts-mode . ("terraform-ls" "serve")))))
+
+(leaf terraform-ts-mode
+  :doc "tree-sitter support for Terraform"
+  :ensure (terraform-ts-mode :host github :repo "kgrotel/terraform-ts-mode" :ref "985ed2a65dfdddcd50c5efd52975caff10ffb9d2")
+  :unless (gearp! :editing terraform -treesit)
+  :after terraform-mode)
 
 (leaf terraform-doc
   :doc "Look up Terraform documentation from Emacs"

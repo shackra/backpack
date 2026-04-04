@@ -8,9 +8,8 @@
 		 (make-treesit-auto-recipe
 		  :lang 'haskell
 		  :ts-mode 'haskell-ts-mode
-		  :url "https://github.com/tree-sitter/tree-sitter-haskell")))
-
-  (add-to-list 'major-mode-remap-alist '(haskell-mode . haskell-ts-mode)))
+		  :remap 'haskell-mode
+		  :url "https://github.com/tree-sitter/tree-sitter-haskell"))))
 
 (leaf haskell-mode
   :doc "a monad is just a monoid in the category of endofunctors, what's the problem?"

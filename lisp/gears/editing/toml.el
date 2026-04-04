@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing toml)
            (not (gearp! :editing toml -treesit)))
-  (backpack-treesit-langs! toml)
-
-  (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode)))
+  (backpack-treesit-langs! toml))
 
 (leaf toml-mode
   :doc "Tom's Obvious Minimal Language, because YAML hurt us"

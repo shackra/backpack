@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing lua)
            (not (gearp! :editing lua -treesit)))
-  (backpack-treesit-langs! lua)
-
-  (add-to-list 'major-mode-remap-alist '(lua-mode . lua-ts-mode)))
+  (backpack-treesit-langs! lua))
 
 (leaf lua-mode
   :doc "arrays start at 1 and we're not sorry"

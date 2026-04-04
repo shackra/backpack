@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing markdown)
            (not (gearp! :editing markdown -treesit)))
-  (backpack-treesit-langs! markdown)
-
-  (add-to-list 'major-mode-remap-alist '(markdown-mode . markdown-ts-mode)))
+  (backpack-treesit-langs! markdown))
 
 (leaf markdown-mode
   :doc "the markup language everyone thinks they know until they hit nested lists"

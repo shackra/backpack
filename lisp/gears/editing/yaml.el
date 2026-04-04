@@ -1,9 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing yaml)
            (not (gearp! :editing yaml -treesit)))
-  (backpack-treesit-langs! yaml)
-
-  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode)))
+  (backpack-treesit-langs! yaml))
 
 (leaf yaml-mode
   :doc "indentation-sensitive and ready to ruin your CI pipeline"
