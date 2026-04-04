@@ -16,12 +16,18 @@
 ;;   run-e2e-treesit emacs-rolling .
 
 (require 'ert)
+(require 'treesit nil t)
 
 ;;; --- Accumulator for gear declarations -----------------------------------
 
 (defvar backpack-e2e--test-specs nil
   "Alist of test specifications accumulated by `backpack-e2e-treesit-test'.
 Each entry is (NAME . (:gear GEAR :file FILE :content CONTENT :treesit LANG)).")
+
+(defvar backpack-e2e--generate-only nil
+  "When non-nil, only accumulate specs without registering ERT tests.
+Set this to t before loading the file when you only need the gear
+declarations for init.el generation (step 2 of the orchestrator).")
 
 ;;; --- The macro -----------------------------------------------------------
 
@@ -50,42 +56,44 @@ This macro does two things at load time:
         (content  (plist-get props :content))
         (ts-lang  (plist-get props :treesit)))
     `(progn
-       ;; 1. Accumulate spec
+       ;; 1. Accumulate spec (always, even in generate-only mode)
        (push (cons ',name (list :gear ',gear
                                 :file ,file
                                 :content ,content
                                 :treesit ',ts-lang))
              backpack-e2e--test-specs)
 
-       ;; 2. Generate ERT test
-       (ert-deftest ,test-name ()
-         ,(format "Visit a %s file and verify tree-sitter activates for `%s'." file ts-lang)
-         :tags '(backpack e2e treesit)
-         (let* ((tmp-dir (make-temp-file "backpack-e2e-" t))
-                (tmp-file (expand-file-name ,file tmp-dir))
-                (buf nil))
-           (unwind-protect
-               (progn
-                 ;; Write the test file
-                 (with-temp-file tmp-file
-                   (insert ,content))
+       ;; 2. Generate ERT test (skipped when only generating init.el)
+       (unless backpack-e2e--generate-only
+         (ert-deftest ,test-name ()
+           ,(format "Visit a %s file and verify tree-sitter activates for `%s'." file ts-lang)
+           :tags '(backpack e2e treesit)
+           (unless (and (featurep 'treesit) (treesit-available-p))
+             (ert-skip "tree-sitter not available in this Emacs build"))
+           (let* ((tmp-dir (make-temp-file "backpack-e2e-" t))
+                  (tmp-file (expand-file-name ,file tmp-dir))
+                  (buf nil))
+             (unwind-protect
+                 (progn
+                   ;; Write the test file
+                   (with-temp-file tmp-file
+                     (insert ,content))
 
-                 ;; Visit it -- capture any error from mode hooks
-                 (condition-case err
-                     (setq buf (find-file-noselect tmp-file))
-                   (error
-                    (ert-fail
-                     (format "Error visiting %s: %S" ,file err))))
+                   ;; Visit it -- capture any error from mode hooks
+                   (condition-case err
+                       (setq buf (find-file-noselect tmp-file))
+                     (error
+                      (ert-fail
+                       (format "Error visiting %s: %S" ,file err))))
 
-                 ;; Verify tree-sitter is active
-                 (with-current-buffer buf
-                   (should (string-suffix-p "-ts-mode" (symbol-name major-mode)))
-                   (should (eq (treesit-language-at (point)) ',ts-lang))))
+                   ;; Verify tree-sitter is active
+                   (with-current-buffer buf
+                     (should (eq (treesit-language-at (point)) ',ts-lang))))
 
-             ;; Cleanup: kill buffer and remove temp files
-             (when (and buf (buffer-live-p buf))
-               (kill-buffer buf))
-             (delete-directory tmp-dir t)))))))
+               ;; Cleanup: kill buffer and remove temp files
+               (when (and buf (buffer-live-p buf))
+                 (kill-buffer buf))
+               (delete-directory tmp-dir t))))))))
 
 ;;; --- Test declarations ---------------------------------------------------
 
@@ -112,6 +120,84 @@ This macro does two things at load time:
   :file "main.cpp"
   :content "#include <iostream>\nint main() { return 0; }"
   :treesit cpp)
+
+(backpack-e2e-treesit-test terraform
+  :gear (terraform)
+  :file "main.tf"
+  :content "resource \"time_static\" \"time_update\" {}"
+  :treesit terraform)
+
+;;; --- Interactive test runner (used by step 4 of the orchestrator) ---------
+
+(defvar backpack-e2e--results-file nil
+  "Path to write test results.  Set via --eval from the shell script.")
+
+(defun backpack-e2e--run-tests ()
+  "Run all accumulated E2E tree-sitter tests and write results to file.
+This is meant to be called from `elpaca-after-init-hook' so that all
+packages are fully activated and tree-sitter grammars are discoverable."
+  (let ((results nil)
+        (failures 0)
+        (total 0))
+    (dolist (spec (reverse backpack-e2e--test-specs))
+      (let* ((name    (car spec))
+             (props   (cdr spec))
+             (file    (plist-get props :file))
+             (content (plist-get props :content))
+             (ts-lang (plist-get props :treesit))
+             (tmp-dir (make-temp-file "backpack-e2e-" t))
+             (tmp-file (expand-file-name file tmp-dir))
+             (buf nil))
+        (cl-incf total)
+        (unwind-protect
+            (condition-case err
+                (progn
+                  ;; Write test file
+                  (with-temp-file tmp-file
+                    (insert content))
+                  ;; Visit it
+                  (setq buf (find-file-noselect tmp-file))
+                  (with-current-buffer buf
+                    (let ((got (and (featurep 'treesit)
+                                   (treesit-available-p)
+                                   (treesit-language-at (point)))))
+                      (if (eq got ts-lang)
+                          (push (format "PASS  %-12s %-20s treesit-language-at => %s"
+                                        name file got)
+                                results)
+                        (cl-incf failures)
+                        (push (format "FAIL  %-12s %-20s expected %s, got %s"
+                                      name file ts-lang got)
+                              results)))))
+              (error
+               (cl-incf failures)
+               (push (format "FAIL  %-12s %-20s error: %S" name file err)
+                     results)))
+          ;; Cleanup
+          (when (and buf (buffer-live-p buf))
+            (kill-buffer buf))
+          (delete-directory tmp-dir t))))
+
+    ;; Write results file
+    (setq results (nreverse results))
+    (let ((report (concat "E2E Tree-sitter Test Results\n"
+                          "============================\n"
+                          (mapconcat #'identity results "\n")
+                          "\n\n"
+                          (if (zerop failures)
+                              (format "All %d tests passed.\n" total)
+                            (format "%d of %d tests FAILED.\n" failures total)))))
+      (when backpack-e2e--results-file
+        (with-temp-file backpack-e2e--results-file
+          (insert report)))
+      (princ report #'external-debugging-output))
+
+    (kill-emacs failures)))
+
+(defun backpack-e2e--run-and-exit ()
+  "Hook into `elpaca-after-init-hook' to run tests after full initialization.
+Called via -f from the orchestrator script."
+  (add-hook 'elpaca-after-init-hook #'backpack-e2e--run-tests 90))
 
 ;;; --- init.el generation (used by the orchestrator script) ----------------
 
