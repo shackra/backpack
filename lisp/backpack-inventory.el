@@ -18,13 +18,14 @@
     (:tools      . "Developer tools and utilities")
     (:checkers   . "Syntax and spell checking")
     (:email      . "Email clients and utilities")
+    (:term       . "Terminal emulators and shell integration")
     (:editing    . "Programming language support and file type modes"))
   "Brief descriptions for each pouch category.")
 
 ;; Preferred display order for pouches (pouches not listed here
 ;; appear at the end in alphabetical order).
 (defvar backpack-inventory--pouch-order
-  '(:config :ui :completion :tools :checkers :email :editing)
+  '(:config :ui :completion :tools :term :checkers :email :editing)
   "Preferred display order for pouches.")
 
 ;;; Faces
