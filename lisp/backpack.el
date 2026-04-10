@@ -126,13 +126,65 @@ These will be added to `treesit-auto-langs' and installed during sync."
   `(dolist (lang ',langs)
      (cl-pushnew lang backpack--treesit-langs)))
 
+(defun backpack--treesit-read-state ()
+  "Read the tree-sitter grammar state file.
+Returns an alist of (LANG . COMMIT-HASH) or nil if the file does
+not exist or cannot be read."
+  (when (file-exists-p backpack--treesit-state-file)
+    (condition-case nil
+        (with-temp-buffer
+          (insert-file-contents backpack--treesit-state-file)
+          (read (current-buffer)))
+      (error nil))))
+
+(defun backpack--treesit-write-state (state)
+  "Write STATE alist to the tree-sitter grammar state file.
+STATE is an alist of (LANG . COMMIT-HASH)."
+  (make-directory (file-name-directory backpack--treesit-state-file) t)
+  (with-temp-file backpack--treesit-state-file
+    (insert ";; -*- lisp-data -*-\n")
+    (insert ";; Tree-sitter grammar revisions tracked by Backpack.\n")
+    (insert ";; Auto-generated -- do not edit.\n")
+    (prin1 state (current-buffer))
+    (insert "\n")))
+
+(defun backpack--treesit-grammar-so-path (lang)
+  "Return the expected shared-library path for tree-sitter LANG.
+E.g. for `go' on GNU/Linux this returns
+\".cache/nonessentials/tree-sitter/libtree-sitter-go.so\"."
+  (let ((soext (or (car dynamic-library-suffixes) ".so")))
+    (expand-file-name (concat "libtree-sitter-" (symbol-name lang) soext)
+                      backpack-tree-sitter-installation-dir)))
+
+(defun backpack--treesit-remote-rev (url &optional revision)
+  "Query the remote commit hash for URL at REVISION via git ls-remote.
+REVISION is a branch or tag name; when nil the default branch (HEAD)
+is queried.  Returns the full commit hash as a string, or nil when
+the command fails (e.g. no network)."
+  (condition-case _err
+      (with-temp-buffer
+        (let ((exit-code
+               (call-process "git" nil t nil
+                             "ls-remote" url (or revision "HEAD"))))
+          (when (eq exit-code 0)
+            (goto-char (point-min))
+            ;; Output format: "<hash>\t<refname>\n"
+            (when (looking-at "\\([0-9a-f]\\{40,\\}\\)")
+              (match-string 1)))))
+    (error nil)))
+
 (defun backpack--install-treesit-grammars ()
   "Install all tree-sitter grammars declared by enabled gears.
+Only grammars whose upstream revision has changed since the last
+successful compilation are rebuilt.  The upstream revision is
+determined via `git ls-remote'; if the network is unreachable the
+grammar is skipped with a warning.
+
 This should be called during sync mode after all gears are loaded.
 Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
   (when (and backpack--treesit-langs
              (not (gearp! :ui -treesit)))
-    (message "Backpack: Installing tree-sitter grammars for: %s"
+    (message "Backpack: Checking tree-sitter grammars for: %s"
              (mapconcat #'symbol-name backpack--treesit-langs ", "))
 
     ;; treesit-auto should already be loaded via backpack-enable-on-sync!
@@ -147,23 +199,46 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
       ;; Build the source alist from treesit-auto recipes
       (let ((treesit-language-source-alist (treesit-auto--build-treesit-source-alist))
             (treesit-auto-install t)  ; Install without prompting
+            (state (backpack--treesit-read-state))
             (installed 0)
+            (up-to-date 0)
             (failed 0))
         (dolist (lang backpack--treesit-langs)
           (condition-case err
-              (let ((source (alist-get lang treesit-language-source-alist)))
+              (let* ((source (alist-get lang treesit-language-source-alist))
+                     (url (car source))
+                     (revision (cadr source))
+                     (so-path (backpack--treesit-grammar-so-path lang))
+                     (so-exists (file-exists-p so-path))
+                     (prev-rev (alist-get lang state)))
                 (if (not source)
                     (progn
                       (message "Backpack: No recipe found for %s, skipping" lang)
                       (cl-incf failed))
-                  (message "Backpack: Installing grammar for %s..." lang)
-                  (treesit-install-language-grammar lang backpack-tree-sitter-installation-dir)
-                  (cl-incf installed)))
+                  ;; Ask the remote for the current commit hash
+                  (let ((remote-rev (backpack--treesit-remote-rev url revision)))
+                    (cond
+                     ;; Network failure -- cannot determine state
+                     ((null remote-rev)
+                      (message "Backpack: WARNING: Cannot check updates for %s (network error?), skipping" lang)
+                      (cl-incf failed))
+                     ;; Already compiled and up to date
+                     ((and so-exists prev-rev (string= remote-rev prev-rev))
+                      (message "Backpack: Grammar for %s is up to date, skipping" lang)
+                      (cl-incf up-to-date))
+                     ;; Needs (re)compilation
+                     (t
+                      (message "Backpack: Installing grammar for %s..." lang)
+                      (treesit-install-language-grammar lang backpack-tree-sitter-installation-dir)
+                      (setf (alist-get lang state) remote-rev)
+                      (cl-incf installed))))))
             (error
              (message "Backpack: Failed to install grammar for %s: %s" lang err)
              (cl-incf failed))))
-        (message "Backpack: Tree-sitter grammars: %d installed, %d failed/skipped"
-                 installed failed)))))
+        ;; Persist state so the next run can skip unchanged grammars
+        (backpack--treesit-write-state state)
+        (message "Backpack: Tree-sitter grammars: %d installed, %d up-to-date, %d failed/skipped"
+                 installed up-to-date failed)))))
 
 (defconst backpack-system
   (pcase system-type
@@ -240,6 +315,13 @@ If anything is missing here, Backpack Emacs will work as normal.")
 (defvar backpack-tree-sitter-installation-dir
   (expand-file-name "tree-sitter" backpack-nonessential-dir)
   "Location for treesit to install compiled grammar.")
+
+(defvar backpack--treesit-state-file
+  (expand-file-name "treesit-grammars.eld" backpack-state-dir)
+  "File tracking compiled tree-sitter grammar revisions.
+Each entry maps a language symbol to the git commit hash that was
+used to compile its grammar.  This allows `backpack ensure' to
+skip recompilation when the upstream grammar has not changed.")
 
 ;;
 ;;; Startup optimizations
