@@ -21,7 +21,9 @@
   (org-pretty-entities			.	t)
   (org-agenda-tags-column		.	0)
   (org-ellipsis				.	"…")
-  :global-minor-mode global-org-modern-mode)
+  :global-minor-mode global-org-modern-mode
+  :hook
+  (org-mode-hook . (lambda () (setq line-spacing 0.2))))
 
 (leaf org-roam
   :doc "a plain-text knowledge management system. It brings some of Roam's more powerful features into the Org-mode ecosystem"
