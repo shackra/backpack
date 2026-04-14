@@ -6,3 +6,46 @@
   :config
   (when (gearp! :editing org display-line-numbers)
     (add-hook 'org-mode-hook #'display-line-numbers-mode)))
+
+(leaf org-modern
+  :doc "a modern style for your Org buffers using font locking and text properties"
+  :unless (gearp! :editing -modern)
+  :ensure (org-modern :ref "713beb72aed4db43f8a10feed72136e931eb674a" :host github :repo "minad/org-modern")
+  :custom
+  (org-auto-align-tags			.	nil)
+  (org-tags-column			.	0)
+  (org-catch-invisible-edits		.	'show-and-error)
+  (org-special-ctrl-a/e			.	t)
+  (org-insert-heading-respect-content	.	t)
+  (org-hide-emphasis-markers		.	t)
+  (org-pretty-entities			.	t)
+  (org-agenda-tags-column		.	0)
+  (org-ellipsis				.	"…")
+  :global-minor-mode global-org-modern-mode)
+
+(leaf org-roam
+  :doc "a plain-text knowledge management system. It brings some of Roam's more powerful features into the Org-mode ecosystem"
+  :url "https://github.com/org-roam/org-roam"
+  :when (gearp! :editing org roam)
+  :after org
+  :ensure (org-roam :ref "7cd906b6f8b18a21766228f074aff24586770934" :host github :repo "org-roam/org-roam")
+  :custom
+  (org-roam-directory . nil) ;; NOTE: user needs to set this value
+  :setq
+  (org-roam-node-display-template .  `,(concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  :bind
+  ("C-c n l" . org-roam-buffer-toggle)
+  ("C-c n f" . org-roam-node-find)
+  ("C-c n g" . org-roam-graph)
+  ("C-c n i" . org-roam-node-insert)
+  ("C-c n c" . org-roam-capture)
+  ;; for daily notes
+  ("C-c n j" . org-roam-dailies-capture-today)
+  :global-minor-mode org-roam-db-autosync-mode)
+
+(leaf org-noter
+  :doc "a synchronized, Org-mode, document annotator"
+  :url "https://github.com/weirdNox/org-noter"
+  :when (gearp! :editing org noter)
+  :after org
+  :ensure (org-noter :ref "9ead81d42dd4dd5074782d239b2efddf9b8b7b3d" :host github :repo "weirdNox/org-noter"))
