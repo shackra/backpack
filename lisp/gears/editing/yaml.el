@@ -14,14 +14,15 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing yaml -display-line-numbers)
-       (display-line-numbers-mode +1))))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for yaml-mode"
+  :when (gearp! :editing yaml lsp)
+  :after yaml-mode
+  :doctor
+  ("yaml-language-server" . "a Language Server for YAML files")
+  :hook ((yaml-mode-hook yaml-ts-mode-hook) . eglot-ensure)
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for yaml-mode"
-    :when (gearp! :editing yaml lsp)
-    :doctor
-    ("yaml-language-server" . "a Language Server for YAML files")
-    :hook ((yaml-mode-hook yaml-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(yaml-mode . ("yaml-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs '(yaml-ts-mode . ("yaml-language-server" "--stdio")))))
+  (add-to-list 'eglot-server-programs '(yaml-mode . ("yaml-language-server" "--stdio")))
+  (add-to-list 'eglot-server-programs '(yaml-ts-mode . ("yaml-language-server" "--stdio"))))
