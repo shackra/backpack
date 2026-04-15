@@ -41,6 +41,26 @@
   ("C-c n c" . org-roam-capture)
   ;; for daily notes
   ("C-c n j" . org-roam-dailies-capture-today)
+  :preface
+  (defun backpack--org-roam-check-directory ()
+    "Return t if `org-roam-directory' has a valid directory"
+    (and (stringp org-roam-directory)
+	 (not (string-empty-p (string-trim org-roam-directory)))
+	 (file-directory-p (expand-file-name org-roam-directory))))
+  :advice
+  (:before org-roam-db-autosync-mode
+	   (lambda (orig-func &rest arg)
+	     (when arg
+	       (if (not (backpack--org-roam-check-directory))
+		   (user-error "`org-roam-directory' not set or does not exist")
+		 (apply orig-func arg)))))
+
+  (:before org-roam-db-sync
+	   (lambda (orig-func &rest arg)
+	     (if (not (backpack--org-roam-check-directory))
+		 (user-error "`org-roam-directory' not set or does not exist")
+	       (appy orig-func arg))))
+
   :global-minor-mode org-roam-db-autosync-mode)
 
 (leaf org-noter
