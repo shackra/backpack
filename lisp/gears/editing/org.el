@@ -64,7 +64,7 @@
 	     (if (not (backpack--org-roam-check-directory))
 		 (user-error "`org-roam-directory' not set or does not exist, please set it in your private configuration"))))
 
-  :global-minor-mode org-roam-db-autosync-mode)
+  :hook (after-init-hook .  org-roam-db-autosync-mode))
 
 (leaf org-noter
   :doc "a synchronized, Org-mode, document annotator"
