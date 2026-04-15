@@ -54,13 +54,13 @@
                   (eq arg t)
                   (and (numberp arg) (> arg 0)))
               (not (backpack--org-roam-check-directory)))
-         (user-error "`org-roam-directory' not set or does not exist")
+         (user-error "`org-roam-directory' not set or does not exist, please set it in your private configuration")
        (apply orig-fun arg args))))
 
   (:before org-roam-db-sync
 	   (lambda (&rest _)
 	     (if (not (backpack--org-roam-check-directory))
-		 (user-error "`org-roam-directory' not set or does not exist"))))
+		 (user-error "`org-roam-directory' not set or does not exist, please set it in your private configuration"))))
 
   :global-minor-mode org-roam-db-autosync-mode)
 
