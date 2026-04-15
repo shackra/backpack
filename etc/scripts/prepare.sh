@@ -23,7 +23,7 @@ then
 fi
 
 TEST_HOME=$(mktemp -d)
-rsync -a --filter=':- .gitignore' --filter='- .git/' --filter='- .github/' $2 "$TEST_HOME/.emacs.d"
+rsync -a --filter=':- .gitignore' --filter='- .git/' --filter='- .github/' "$2/" "$TEST_HOME/.emacs.d"
 
 $1 --version | head -n 1 >&2
 
