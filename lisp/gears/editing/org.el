@@ -9,6 +9,14 @@
 		       (display-line-numbers-mode))))
   (org-mode-hook . visual-line-mode))
 
+(leaf mixed-pitch
+  :doc "a minor mode that enables mixing fixed-pitch (also known as fixed-width or monospace) and variable-pitch (AKA “proportional”) fonts"
+  :url "https://gitlab.com/jabranham/mixed-pitch"
+  :unless (gearp! :editing org -mixed-pitch)
+  :after org
+  :ensure (mixed-pitch :ref "519e05f74825abf04b7d2e0e38ec040d013a125a" :host gitlab :repo "jabranham/mixed-pitch")
+  :hook (org-mode-hook . mixed-pitch-mode))
+
 (leaf org-modern
   :doc "a modern style for your Org buffers using font locking and text properties"
   :unless (gearp! :editing -modern)
