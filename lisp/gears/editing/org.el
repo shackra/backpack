@@ -48,18 +48,19 @@
 	 (not (string-empty-p (string-trim org-roam-directory)))
 	 (file-directory-p (expand-file-name org-roam-directory))))
   :advice
-  (:before org-roam-db-autosync-mode
-	   (lambda (orig-func &rest arg)
-	     (when arg
-	       (if (not (backpack--org-roam-check-directory))
-		   (user-error "`org-roam-directory' not set or does not exist")
-		 (apply orig-func arg)))))
+  (:around org-roam-db-autosync-mode
+   (lambda (orig-fun arg &rest args)
+     (if (and (or (null arg)
+                  (eq arg t)
+                  (and (numberp arg) (> arg 0)))
+              (not (backpack--org-roam-check-directory)))
+         (user-error "`org-roam-directory' not set or does not exist")
+       (apply orig-fun arg args))))
 
   (:before org-roam-db-sync
-	   (lambda (orig-func &rest arg)
+	   (lambda (&rest _)
 	     (if (not (backpack--org-roam-check-directory))
-		 (user-error "`org-roam-directory' not set or does not exist")
-	       (appy orig-func arg))))
+		 (user-error "`org-roam-directory' not set or does not exist"))))
 
   :global-minor-mode org-roam-db-autosync-mode)
 
