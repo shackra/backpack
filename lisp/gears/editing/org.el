@@ -19,6 +19,14 @@
   :ensure (mixed-pitch :ref "519e05f74825abf04b7d2e0e38ec040d013a125a" :host gitlab :repo "jabranham/mixed-pitch")
   :hook (org-mode-hook . mixed-pitch-mode))
 
+(leaf olivetti
+  :doc "a simple Emacs minor mode for a nice writing environment"
+  :url "https://github.com/rnkn/olivetti"
+  :unless (gearp! :editing org -centered)
+  :after org
+  :ensure (olivetti :ref "845eb7a95a3ca3325f1120c654d761b91683f598" :host github :repo "rnkn/olivetti")
+  :hook (org-mode-hook . olivetti-mode))
+
 (leaf org-modern
   :doc "a modern style for your Org buffers using font locking and text properties"
   :unless (gearp! :editing -modern)
