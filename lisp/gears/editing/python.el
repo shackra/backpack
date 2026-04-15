@@ -13,41 +13,41 @@
    (lambda ()
      (toggle-truncate-lines 1)
      (unless (gearp! :editing python -display-line-numbers)
-       (display-line-numbers-mode +1))))
-  :config
-  (leaf eglot
-    :doc "Language Server Protocol support for python"
-    :when (gearp! :editing python lsp)
-    :hook
-    ((python-mode-hook python-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs
-		 `(python-mode . ,(eglot-alternatives
-				   '("pylsp"
-				     "pyls"
-				     ("basedpyright-langserver" "--stdio")
-				     ("pyright-langserver" "--stdio")
-				     ("pyrefly" "lsp")
-				     "jedi-language-server"
-				     ("ruff" "server")))))
+       (display-line-numbers-mode +1)))))
 
-    (add-to-list 'eglot-server-programs
-		 `(python-ts-mode . ,(eglot-alternatives
-				      '("pylsp"
-					"pyls"
-					("basedpyright-langserver" "--stdio")
-					("pyright-langserver" "--stdio")
-					("pyrefly" "lsp")
-					"jedi-language-server"
-					("ruff" "server")))))
-    :doctor
-    ("pylsp" . "python implementation of the Language Server Protocol")
-    ("pyls"  . "an implementation of the Language Server Protocol for Python")
-    ("basedpyright-langserver" . "Basedpyright is a fork of pyright with various type checking improvements, and pylance features built into the language server")
-    ("pyright-langserver" . "a full-featured, standards-based static type checker for Python")
-    ("pyrefly" . "a fast type checker and language server for Python with powerful IDE features")
-    ("jedi-language-server" . "a language server for the latest version(s) of Jedi")
-    ("ruff" . "an extremely fast Python linter, code formatter (and LSP server), written in Rust")))
+(leaf eglot
+  :doc "Language Server Protocol support for python"
+  :when (and (gearp! :editing python) (gearp! :editing python lsp))
+  :hook
+  ((python-mode-hook python-ts-mode-hook) . eglot-ensure)
+  :config
+  (add-to-list 'eglot-server-programs
+	       `(python-mode . ,(eglot-alternatives
+				 '("pylsp"
+				   "pyls"
+				   ("basedpyright-langserver" "--stdio")
+				   ("pyright-langserver" "--stdio")
+				   ("pyrefly" "lsp")
+				   "jedi-language-server"
+				   ("ruff" "server")))))
+
+  (add-to-list 'eglot-server-programs
+	       `(python-ts-mode . ,(eglot-alternatives
+				    '("pylsp"
+				      "pyls"
+				      ("basedpyright-langserver" "--stdio")
+				      ("pyright-langserver" "--stdio")
+				      ("pyrefly" "lsp")
+				      "jedi-language-server"
+				      ("ruff" "server")))))
+  :doctor
+  ("pylsp" . "python implementation of the Language Server Protocol")
+  ("pyls"  . "an implementation of the Language Server Protocol for Python")
+  ("basedpyright-langserver" . "Basedpyright is a fork of pyright with various type checking improvements, and pylance features built into the language server")
+  ("pyright-langserver" . "a full-featured, standards-based static type checker for Python")
+  ("pyrefly" . "a fast type checker and language server for Python with powerful IDE features")
+  ("jedi-language-server" . "a language server for the latest version(s) of Jedi")
+  ("ruff" . "an extremely fast Python linter, code formatter (and LSP server), written in Rust"))
 
 (leaf ob-python
   :doc "Python source blocks in org-mode"

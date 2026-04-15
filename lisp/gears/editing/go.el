@@ -15,15 +15,6 @@
      (unless (gearp! :editing go -display-line-numbers)
        (display-line-numbers-mode +1))))
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for go-mode"
-    :when (gearp! :editing go lsp)
-    :doctor ("gopls" . "the official language server protocol (lsp) implementation provided by the Go team")
-    :hook ((go-mode-hook go-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(go-mode . ("gopls" "serve")))
-    (add-to-list 'eglot-server-programs '(go-ts-mode . ("gopls" "serve"))))
-
   (leaf go-impl
     :doc "generates method stubs for implementing an interface"
     :when (gearp! :editing go impl)
@@ -34,3 +25,12 @@
     :doc "Integration of the 'gorename' tool into Emacs"
     :when (gearp! :editing go rename)
     :doctor ("gorename" . "command that performs precise type-safe renaming of identifiers in Go source code")))
+
+(leaf eglot
+  :doc "Language Server Protocol support for go-mode"
+  :when (and (gearp! :editing go) (gearp! :editing go lsp))
+  :doctor ("gopls" . "the official language server protocol (lsp) implementation provided by the Go team")
+  :hook ((go-mode-hook go-ts-mode-hook) . eglot-ensure)
+  :config
+  (add-to-list 'eglot-server-programs '(go-mode . ("gopls" "serve")))
+  (add-to-list 'eglot-server-programs '(go-ts-mode . ("gopls" "serve"))))

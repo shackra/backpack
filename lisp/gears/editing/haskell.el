@@ -23,17 +23,17 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing haskell -display-line-numbers)
-       (display-line-numbers-mode +1))))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for haskell-mode"
+  :when (and (gearp! :editing haskell) (gearp! :editing haskell lsp))
+  :doctor
+  ("haskell-language-server-wrapper" . "an integration point for ghcide and haskell-ide-engine, providing a single unified interface for editors")
+  :hook ((haskell-mode-hook haskell-ts-mode-hook) . eglot-ensure)
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for haskell-mode"
-    :when (gearp! :editing haskell lsp)
-    :doctor
-    ("haskell-language-server-wrapper" . "an integration point for ghcide and haskell-ide-engine, providing a single unified interface for editors")
-    :hook ((haskell-mode-hook haskell-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
-    (add-to-list 'eglot-server-programs '(haskell-ts-mode . ("haskell-language-server-wrapper" "--lsp")))))
+  (add-to-list 'eglot-server-programs '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
+  (add-to-list 'eglot-server-programs '(haskell-ts-mode . ("haskell-language-server-wrapper" "--lsp"))))
 
 (leaf haskell-ts-mode
   :doc "tree-sitter support for Haskell"

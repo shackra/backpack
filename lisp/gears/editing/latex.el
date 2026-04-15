@@ -11,12 +11,12 @@
   (TeX-master . nil)
   :config
   (when (gearp! :editing latex display-line-numbers)
-    (add-hook 'LaTeX-mode-hook #'display-line-numbers-mode))
+    (add-hook 'LaTeX-mode-hook #'display-line-numbers-mode)))
 
-  (leaf eglot
-    :when (gearp! :editing latex lsp)
-    :doc "Language Server Protocol support for LaTeX"
-    :doctor
-    ("texlab" . "an implementation of the Language Server Protocol for LaTeX")
-    :hook
-    (LaTeX-mode-hook . eglot-ensure)))
+(leaf eglot
+  :doc "Language Server Protocol support for LaTeX"
+  :when (and (gearp! :editing latex) (gearp! :editing latex lsp))
+  :doctor
+  ("texlab" . "an implementation of the Language Server Protocol for LaTeX")
+  :hook
+  (LaTeX-mode-hook . eglot-ensure))

@@ -15,16 +15,6 @@
      (unless (gearp! :editing rust -display-line-numbers)
        (display-line-numbers-mode +1))))
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for rust-mode"
-    :when (gearp! :editing rust lsp)
-    :doctor
-    ("rust-analyzer" . "an implementation of Language Server Protocol for the Rust programming language")
-    :hook ((rust-mode-hook rust-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(rust-mode . ("rust-analyzer")))
-    (add-to-list 'eglot-server-programs '(rust-ts-mode . ("rust-analyzer"))))
-
   (leaf cargo-mode
     :doc "Cargo process support for Emacs"
     :when (gearp! :editing rust cargo)
@@ -32,6 +22,16 @@
     :doctor ("cargo" . "the Rust package manager")
     :custom (compilation-scroll-output . t)
     :hook ((rust-mode-hook rust-ts-mode-hook) . cargo-minor-mode)))
+
+(leaf eglot
+  :doc "Language Server Protocol support for rust-mode"
+  :when (and (gearp! :editing rust) (gearp! :editing rust lsp))
+  :doctor
+  ("rust-analyzer" . "an implementation of Language Server Protocol for the Rust programming language")
+  :hook ((rust-mode-hook rust-ts-mode-hook) . eglot-ensure)
+  :config
+  (add-to-list 'eglot-server-programs '(rust-mode . ("rust-analyzer")))
+  (add-to-list 'eglot-server-programs '(rust-ts-mode . ("rust-analyzer"))))
 
 (leaf ob-rust
   :doc "Rust source blocks in org-mode"

@@ -13,14 +13,14 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing toml -display-line-numbers)
-       (display-line-numbers-mode +1))))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for toml-mode"
+  :when (and (gearp! :editing toml) (gearp! :editing toml lsp))
+  :doctor
+  ("taplo" . "a TOML toolkit with LSP, formatter, and validator")
+  :hook ((toml-mode-hook toml-ts-mode-hook) . eglot-ensure)
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for toml-mode"
-    :when (gearp! :editing toml lsp)
-    :doctor
-    ("taplo" . "a TOML toolkit with LSP, formatter, and validator")
-    :hook ((toml-mode-hook toml-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(toml-mode . ("taplo" "lsp" "stdio")))
-    (add-to-list 'eglot-server-programs '(toml-ts-mode . ("taplo" "lsp" "stdio")))))
+  (add-to-list 'eglot-server-programs '(toml-mode . ("taplo" "lsp" "stdio")))
+  (add-to-list 'eglot-server-programs '(toml-ts-mode . ("taplo" "lsp" "stdio"))))

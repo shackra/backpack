@@ -12,13 +12,13 @@
    (lambda ()
      (toggle-truncate-lines 1)
      (unless (gearp! :editing json -display-line-numbers)
-       (display-line-numbers-mode +1))))
-  :config
-  (leaf eglot
-    :when (gearp! :editing json lsp)
-    :doc "Language Server Protocol support for JSON"
-    :hook
-    ((js-json-mode-hook json-ts-mode-hook) . eglot-ensure)))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for JSON"
+  :when (and (gearp! :editing json) (gearp! :editing json lsp))
+  :hook
+  ((js-json-mode-hook json-ts-mode-hook) . eglot-ensure))
 
 (leaf json-ts-mode
   :doc "treesit support for editing JSON files"
