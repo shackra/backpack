@@ -186,6 +186,55 @@ This macro does two things at load time:
 (defvar backpack-e2e--results-file nil
   "Path to write test results.  Set via --eval from the shell script.")
 
+(defun backpack-e2e--diagnostics ()
+  "Return a string with diagnostic information about the treesit/treesit-auto state.
+Useful for understanding why a test might be failing."
+  (let ((lines '()))
+    ;; treesit availability
+    (push (format "  treesit available: %s" (and (featurep 'treesit) (treesit-available-p))) lines)
+    ;; treesit-auto state
+    (push (format "  treesit-auto loaded: %s" (featurep 'treesit-auto)) lines)
+    (when (featurep 'treesit-auto)
+      (push (format "  global-treesit-auto-mode: %s"
+                    (bound-and-true-p global-treesit-auto-mode))
+            lines)
+      (push (format "  treesit-auto-langs: %s"
+                    (bound-and-true-p treesit-auto-langs))
+            lines))
+    ;; load paths
+    (push (format "  treesit-extra-load-path: %s"
+                  (bound-and-true-p treesit-extra-load-path))
+          lines)
+    ;; mode remap alist (global)
+    (push (format "  major-mode-remap-alist (global): %s"
+                  (default-value 'major-mode-remap-alist))
+          lines)
+    (mapconcat #'identity (nreverse lines) "\n")))
+
+(defun backpack-e2e--buffer-diagnostics (buf file)
+  "Return diagnostic info about BUF after visiting FILE."
+  (with-current-buffer buf
+    (let ((lines '())
+          (ext (file-name-extension file)))
+      (push (format "  major-mode: %s" major-mode) lines)
+      (push (format "  local major-mode-remap-alist: %s"
+                    (if (local-variable-p 'major-mode-remap-alist)
+                        major-mode-remap-alist
+                      "(not buffer-local)"))
+            lines)
+      (push (format "  treesit-parser-list: %s"
+                    (and (featurep 'treesit) (treesit-parser-list)))
+            lines)
+      ;; Show auto-mode-alist entries relevant to this file's extension
+      (when ext
+        (push (format "  auto-mode-alist entries for .%s: %s" ext
+                      (seq-filter (lambda (e)
+                                    (string-match-p (concat "\\." (regexp-quote ext))
+                                                    (car e)))
+                                  auto-mode-alist))
+              lines))
+      (mapconcat #'identity (nreverse lines) "\n"))))
+
 (defun backpack-e2e--run-tests ()
   "Run all accumulated E2E tree-sitter tests and write results to file.
 This is meant to be called from `elpaca-after-init-hook' so that all
@@ -193,6 +242,13 @@ packages are fully activated and tree-sitter grammars are discoverable."
   (let ((results nil)
         (failures 0)
         (total 0))
+
+    ;; Emit global diagnostics once before running any tests
+    (push (format "--- Diagnostics at test start ---\n%s\n  backpack--treesit-langs: %s\n---"
+                  (backpack-e2e--diagnostics)
+                  (bound-and-true-p backpack--treesit-langs))
+          results)
+
     (dolist (spec (reverse backpack-e2e--test-specs))
       (let* ((name    (car spec))
              (props   (cdr spec))
@@ -220,8 +276,9 @@ packages are fully activated and tree-sitter grammars are discoverable."
                                         name file got)
                                 results)
                         (cl-incf failures)
-                        (push (format "FAIL  %-12s %-20s expected %s, got %s"
-                                      name file ts-lang got)
+                        (push (format "FAIL  %-12s %-20s expected %s, got %s\n%s"
+                                      name file ts-lang got
+                                      (backpack-e2e--buffer-diagnostics buf file))
                               results)))))
               (error
                (cl-incf failures)
