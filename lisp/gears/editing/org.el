@@ -60,7 +60,6 @@
   (set-face-attribute 'org-document-title nil   :weight 'bold :height 1.6)
   (set-face-attribute 'org-block nil            :foreground 'unspecified :inherit 'fixed-pitch :height 0.85)
   (set-face-attribute 'org-code nil             :inherit '(shadow fixed-pitch) :height 0.85)
-  (set-face-attribute 'org-indent nil           :inherit '(org-hide fixed-pitch) :height 0.85)
   (set-face-attribute 'org-verbatim nil         :inherit '(shadow fixed-pitch) :height 0.85)
   (set-face-attribute 'org-special-keyword nil  :inherit '(font-lock-comment-face fixed-pitch))
   (set-face-attribute 'org-meta-line nil        :inherit '(font-lock-comment-face fixed-pitch))
