@@ -14,19 +14,19 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing cpp -display-line-numbers)
-       (display-line-numbers-mode +1))))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for C++"
+  :when (and (gearp! :editing cpp) (gearp! :editing cpp lsp))
+  :hook ((c++-mode-hook c++-ts-mode-hook) . eglot-ensure)
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for C++"
-    :when (gearp! :editing cpp lsp)
-    :hook ((c++-mode-hook c++-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs
-                 `(c++-mode . ,(eglot-alternatives '(("clangd")
-                                                     ("ccls")))))
-    (add-to-list 'eglot-server-programs
-                 `(c++-ts-mode . ,(eglot-alternatives '(("clangd")
-                                                        ("ccls")))))
-    :doctor
-    ("clangd" . ("a language server that provides IDE-like features to editors, part of the LLVM project" required))
-    ("ccls" . ("a C/C++/Objective-C language server powered by clang" optional))))
+  (add-to-list 'eglot-server-programs
+               `(c++-mode . ,(eglot-alternatives '(("clangd")
+                                                   ("ccls")))))
+  (add-to-list 'eglot-server-programs
+               `(c++-ts-mode . ,(eglot-alternatives '(("clangd")
+                                                      ("ccls")))))
+  :doctor
+  ("clangd" . ("a language server that provides IDE-like features to editors, part of the LLVM project" required))
+  ("ccls" . ("a C/C++/Objective-C language server powered by clang" optional)))

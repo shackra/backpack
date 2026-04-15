@@ -22,17 +22,17 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing terraform -display-line-numbers)
-       (display-line-numbers-mode +1))))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for terraform-mode"
+  :when (and (gearp! :editing terraform) (gearp! :editing terraform lsp))
+  :doctor
+  ("terraform-ls" . "the official Terraform Language Server by HashiCorp")
+  :hook ((terraform-mode-hook terraform-ts-mode-hook) . eglot-ensure)
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for terraform-mode"
-    :when (gearp! :editing terraform lsp)
-    :doctor
-    ("terraform-ls" . "the official Terraform Language Server by HashiCorp")
-    :hook ((terraform-mode-hook terraform-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(terraform-mode . ("terraform-ls" "serve")))
-    (add-to-list 'eglot-server-programs '(terraform-ts-mode . ("terraform-ls" "serve")))))
+  (add-to-list 'eglot-server-programs '(terraform-mode . ("terraform-ls" "serve")))
+  (add-to-list 'eglot-server-programs '(terraform-ts-mode . ("terraform-ls" "serve"))))
 
 (leaf terraform-ts-mode
   :doc "tree-sitter support for Terraform"

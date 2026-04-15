@@ -15,13 +15,13 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing cmake -display-line-numbers)
-       (display-line-numbers-mode +1))))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for CMake"
+  :when (and (gearp! :editing cmake) (gearp! :editing cmake lsp))
+  :doctor ("cmake-language-server" . "a language server for CMake that provides completion, diagnostics and documentation")
+  :hook ((cmake-mode-hook cmake-ts-mode-hook) . eglot-ensure)
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for CMake"
-    :when (gearp! :editing cmake lsp)
-    :doctor ("cmake-language-server" . "a language server for CMake that provides completion, diagnostics and documentation")
-    :hook ((cmake-mode-hook cmake-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(cmake-mode . ("cmake-language-server")))
-    (add-to-list 'eglot-server-programs '(cmake-ts-mode . ("cmake-language-server")))))
+  (add-to-list 'eglot-server-programs '(cmake-mode . ("cmake-language-server")))
+  (add-to-list 'eglot-server-programs '(cmake-ts-mode . ("cmake-language-server"))))

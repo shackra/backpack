@@ -13,14 +13,14 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing lua -display-line-numbers)
-       (display-line-numbers-mode +1))))
+       (display-line-numbers-mode +1)))))
+
+(leaf eglot
+  :doc "Language Server Protocol support for lua-mode"
+  :when (and (gearp! :editing lua) (gearp! :editing lua lsp))
+  :doctor
+  ("lua-language-server" . "provides various language features for Lua to make development easier and faster")
+  :hook ((lua-mode-hook lua-ts-mode-hook) . eglot-ensure)
   :config
-  (leaf eglot
-    :doc "Language Server Protocol support for lua-mode"
-    :when (gearp! :editing lua lsp)
-    :doctor
-    ("lua-language-server" . "provides various language features for Lua to make development easier and faster")
-    :hook ((lua-mode-hook lua-ts-mode-hook) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs '(lua-mode . ("lua-language-server")))
-    (add-to-list 'eglot-server-programs '(lua-ts-mode . ("lua-language-server")))))
+  (add-to-list 'eglot-server-programs '(lua-mode . ("lua-language-server")))
+  (add-to-list 'eglot-server-programs '(lua-ts-mode . ("lua-language-server"))))

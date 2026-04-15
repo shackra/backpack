@@ -18,8 +18,7 @@
 
 (leaf eglot
   :doc "Language Server Protocol support for yaml-mode"
-  :when (gearp! :editing yaml lsp)
-  :after yaml-mode
+  :when (and (gearp! :editing yaml) (gearp! :editing yaml lsp))
   :doctor
   ("yaml-language-server" . "a Language Server for YAML files")
   :hook ((yaml-mode-hook yaml-ts-mode-hook) . eglot-ensure)
