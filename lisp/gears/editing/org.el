@@ -45,6 +45,9 @@
   (require 'org-indent)
   (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
 
+  ;; increase the size of LaTeX-previews
+  (plist-put org-format-latex-options :scale 2)
+
   ;; Make the document title a bit bigger
   (set-face-attribute 'org-document-title nil   :weight 'bold :height 1.8)
   (set-face-attribute 'org-block nil            :foreground 'unspecified :inherit 'fixed-pitch :height 0.85)
