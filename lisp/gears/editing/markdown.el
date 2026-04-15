@@ -39,5 +39,6 @@
 (leaf markdown-ts-mode
   :doc "tree-sitter support for Markdown"
   :ensure (markdown-ts-mode :ref "2f1ee8b94cdf53cebc31ae08ecfbba846193d5e1")
-  :unless (gearp! :editing markdown -treesit)
+  :when (and (gearp! :editing markdown)
+	     (not (gearp! :editing markdown -treesit)))
   :require t)
