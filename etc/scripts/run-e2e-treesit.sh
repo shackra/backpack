@@ -76,14 +76,21 @@ echo ""
 #
 #    `script -qec` provides a pseudo-tty so Emacs doesn't complain
 #    about "standard input is not a tty".
+#
+#    BACKPACK_USER_DIR is exported as an environment variable so that
+#    backpack.el reads it at defvar time (before backpack-start loads
+#    the user init).  Using --eval to set backpack-user-dir is too late
+#    in interactive mode: --eval args are processed during command-line-1
+#    which runs after early-init and the user init file have already been
+#    loaded.
 
 echo "Running E2E tree-sitter tests..."
 
 RESULTS_FILE="$TEST_HOME/e2e-results.txt"
 
 set +e
+BACKPACK_USER_DIR="$BACKPACK_D/" \
 script -qec "$EMACS --init-directory $EMACS_D \
-    --eval \"(setq backpack-user-dir \\\"$BACKPACK_D/\\\")\" \
     --eval \"(setq backpack-e2e--results-file \\\"$RESULTS_FILE\\\")\" \
     --eval \"(setq backpack-e2e--generate-only t)\" \
     -l $EMACS_D/test/e2e-treesit.el \
@@ -97,8 +104,8 @@ if [ -f "$RESULTS_FILE" ]; then
 else
     echo "FAILED: no results file produced.  Emacs may have crashed." >&2
     echo "Re-running without output suppression for diagnostics..." >&2
+    BACKPACK_USER_DIR="$BACKPACK_D/" \
     script -qec "$EMACS --init-directory $EMACS_D \
-        --eval \"(setq backpack-user-dir \\\"$BACKPACK_D/\\\")\" \
         --eval \"(setq backpack-e2e--results-file \\\"$RESULTS_FILE\\\")\" \
         --eval \"(setq backpack-e2e--generate-only t)\" \
         -l $EMACS_D/test/e2e-treesit.el \

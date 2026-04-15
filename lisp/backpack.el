@@ -283,14 +283,17 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
   "The directory of Backpack files.")
 
 (defvar backpack-user-dir
-  (let ((in-xdg-config (expand-file-name "backpack/" (getenv-internal "XDG_CONFIG_HOME")))
+  (let ((from-env (getenv-internal "BACKPACK_USER_DIR"))
+	(in-xdg-config (expand-file-name "backpack/" (getenv-internal "XDG_CONFIG_HOME")))
 	(in-user-home "~/.backpack.d/"))
-    (if (file-exists-p in-user-home)
-	in-user-home
-      in-xdg-config))
+    (cond
+     (from-env from-env)
+     ((file-exists-p in-user-home) in-user-home)
+     (t in-xdg-config)))
   "Location of the user's private configuration.
 
-Either ~/.config/backpack or ~/.backpack.d/.")
+Either ~/.config/backpack or ~/.backpack.d/.  Can be overridden
+by the BACKPACK_USER_DIR environment variable.")
 
 (defvar backpack-cache-dir (expand-file-name ".cache/" backpack-emacs-dir)
   "Location for local storage")
