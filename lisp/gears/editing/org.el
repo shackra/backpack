@@ -32,7 +32,7 @@
   :after org
   :ensure (org-roam :ref "7cd906b6f8b18a21766228f074aff24586770934" :host github :repo "org-roam/org-roam")
   :custom
-  (org-roam-directory . nil) ;; NOTE: user needs to set this value
+  (org-roam-directory . "") ;; NOTE: user needs to set this value
   :setq
   (org-roam-node-display-template .  `,(concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   :bind
