@@ -25,7 +25,9 @@
   :unless (gearp! :editing org -centered)
   :after org
   :ensure (olivetti :ref "845eb7a95a3ca3325f1120c654d761b91683f598" :host github :repo "rnkn/olivetti")
-  :hook (org-mode-hook . olivetti-mode))
+  :hook (org-mode-hook . olivetti-mode)
+  :custom
+  (olivetti-body-width . 0.618033988749)) ;; large segment in gold proportion
 
 (leaf org-modern
   :doc "a modern style for your Org buffers using font locking and text properties"
