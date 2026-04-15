@@ -23,9 +23,37 @@
   (org-pretty-entities			.	t)
   (org-agenda-tags-column		.	0)
   (org-ellipsis				.	"…")
+  (org-src-fontify-natively		.	t)
+  (org-src-tab-acts-natively		.	t)
+  (org-edit-src-content-indentation	.	0)
   :global-minor-mode global-org-modern-mode
   :hook
-  (org-mode-hook . (lambda () (setq line-spacing 0.2))))
+  (org-mode-hook . (lambda () (setq line-spacing 0.2)))
+  (org-mode-hook . variable-pitch-mode)
+  :config
+  ;; Resize Org headings
+  (dolist (face '((org-level-1 . 1.35)
+                  (org-level-2 . 1.3)
+                  (org-level-3 . 1.2)
+                  (org-level-4 . 1.1)
+                  (org-level-5 . 1.1)
+                  (org-level-6 . 1.1)
+                  (org-level-7 . 1.1)
+                  (org-level-8 . 1.1)))
+    (set-face-attribute (car face) nil :weight 'bold :height (cdr face)))
+
+  (require 'org-indent)
+  (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+
+  ;; Make the document title a bit bigger
+  (set-face-attribute 'org-document-title nil   :weight 'bold :height 1.8)
+  (set-face-attribute 'org-block nil            :foreground nil :inherit 'fixed-pitch :height 0.85)
+  (set-face-attribute 'org-code nil             :inherit '(shadow fixed-pitch) :height 0.85)
+  (set-face-attribute 'org-indent nil           :inherit '(org-hide fixed-pitch) :height 0.85)
+  (set-face-attribute 'org-verbatim nil         :inherit '(shadow fixed-pitch) :height 0.85)
+  (set-face-attribute 'org-special-keyword nil  :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil        :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil         :inherit 'fixed-pitch))
 
 (leaf org-roam
   :doc "a plain-text knowledge management system. It brings some of Roam's more powerful features into the Org-mode ecosystem"
@@ -51,13 +79,13 @@
 	 (file-directory-p (expand-file-name org-roam-directory))))
   :advice
   (:around org-roam-db-autosync-mode
-   (lambda (orig-fun arg &rest args)
-     (if (and (or (null arg)
-                  (eq arg t)
-                  (and (numberp arg) (> arg 0)))
-              (not (backpack--org-roam-check-directory)))
-         (user-error "`org-roam-directory' not set or does not exist, please set it in your private configuration")
-       (apply orig-fun arg args))))
+	   (lambda (orig-fun arg &rest args)
+	     (if (and (or (null arg)
+			  (eq arg t)
+			  (and (numberp arg) (> arg 0)))
+		      (not (backpack--org-roam-check-directory)))
+		 (user-error "`org-roam-directory' not set or does not exist, please set it in your private configuration")
+	       (apply orig-fun arg args))))
 
   (:before org-roam-db-sync
 	   (lambda (&rest _)
