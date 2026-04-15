@@ -38,7 +38,7 @@
   :doc "tree-sitter support for Terraform"
   :ensure (terraform-ts-mode :host github :repo "kgrotel/terraform-ts-mode" :ref "985ed2a65dfdddcd50c5efd52975caff10ffb9d2")
   :unless (gearp! :editing terraform -treesit)
-  :after terraform-mode)
+  :require t)
 
 (leaf terraform-doc
   :doc "Look up Terraform documentation from Emacs"
