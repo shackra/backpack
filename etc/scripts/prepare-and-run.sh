@@ -1,21 +1,10 @@
 set -euo pipefail
 
-if [ ! -d "$2" ]; then
-  echo "cannot copy $2, does not exist."
-  exit 1
-fi
+# prepare-and-run.sh -- Copy repo to tmpdir, run unit tests, clean up.
+#
+# Usage: prepare-and-run <emacs-binary> <source-dir>
 
-if ! command -v $1 >/dev/null 2>&1
-then
-    echo "$1 could not be found"
-    exit 1
-fi
-
-TEST_HOME=$(mktemp -d)
-rsync -a --filter=':- .gitignore' --filter='- .git/' --filter='- .github/' $2 "$TEST_HOME/.emacs.d"
-
-$1 --version | head -n 1
+TEST_HOME=$(prepare "$1" "$2")
+trap "rm -rf $TEST_HOME" EXIT
 
 $1 --init-directory $TEST_HOME/.emacs.d -batch -l $TEST_HOME/.emacs.d/early-init.el -l ert -l $TEST_HOME/.emacs.d/test/all-tests.el -f ert-run-tests-batch-and-exit
-
-rm -rf $TEST_HOME
