@@ -3,9 +3,11 @@
   :when (gearp! :editing org)
   :mode "\\.org\\'"
   :ensure (org :ref "8b15a0d0b48a0e3ce09be0d208d74a01743cbbe0" :host github :repo "emacs-straight/org-mode")
-  :hook (org-mode-hook . (lambda ()
-			   (when (gearp! :editing org display-line-numbers)
-			     (display-line-numbers-mode)))))
+  :hook
+  (org-mode-hook . (lambda ()
+		     (when (gearp! :editing org display-line-numbers)
+		       (display-line-numbers-mode))))
+  (org-mode-hook . visual-line-mode))
 
 (leaf org-modern
   :doc "a modern style for your Org buffers using font locking and text properties"
