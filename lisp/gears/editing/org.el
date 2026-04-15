@@ -7,7 +7,9 @@
   (org-mode-hook . (lambda ()
 		     (when (gearp! :editing org display-line-numbers)
 		       (display-line-numbers-mode))))
-  (org-mode-hook . visual-line-mode))
+  (org-mode-hook . visual-line-mode)
+  :custom
+  (org-startup-with-latex-preview . t))
 
 (leaf mixed-pitch
   :doc "a minor mode that enables mixing fixed-pitch (also known as fixed-width or monospace) and variable-pitch (AKA “proportional”) fonts"
@@ -22,42 +24,40 @@
   :unless (gearp! :editing -modern)
   :ensure (org-modern :ref "713beb72aed4db43f8a10feed72136e931eb674a" :host github :repo "minad/org-modern")
   :custom
-  (org-auto-align-tags			.	nil)
-  (org-tags-column			.	0)
-  (org-catch-invisible-edits		.	'show-and-error)
-  (org-special-ctrl-a/e			.	t)
-  (org-insert-heading-respect-content	.	t)
-  (org-hide-emphasis-markers		.	t)
-  (org-pretty-entities			.	t)
+  (org-adapt-indentation		.	t)
   (org-agenda-tags-column		.	0)
+  (org-auto-align-tags			.	nil)
+  (org-catch-invisible-edits		.	'show-and-error)
+  (org-edit-src-content-indentation	.	0)
   (org-ellipsis				.	"…")
+  (org-hide-emphasis-markers		.	t)
+  (org-insert-heading-respect-content	.	t)
+  (org-pretty-entities			.	t)
+  (org-special-ctrl-a/e			.	t)
   (org-src-fontify-natively		.	t)
   (org-src-tab-acts-natively		.	t)
-  (org-edit-src-content-indentation	.	0)
+  (org-tags-column			.	0)
   :global-minor-mode global-org-modern-mode
   :hook
   (org-mode-hook . (lambda () (setq line-spacing 0.2)))
   (org-mode-hook . variable-pitch-mode)
   :config
   ;; Resize Org headings
-  (dolist (face '((org-level-1 . 1.35)
-                  (org-level-2 . 1.3)
+  (dolist (face '((org-level-1 . 1.25)
+                  (org-level-2 . 1.2)
                   (org-level-3 . 1.2)
-                  (org-level-4 . 1.1)
-                  (org-level-5 . 1.1)
-                  (org-level-6 . 1.1)
-                  (org-level-7 . 1.1)
-                  (org-level-8 . 1.1)))
+                  (org-level-4 . 1.2)
+                  (org-level-5 . 1.2)
+                  (org-level-6 . 1.2)
+                  (org-level-7 . 1.2)
+                  (org-level-8 . 1.2)))
     (set-face-attribute (car face) nil :weight 'bold :height (cdr face)))
-
-  (require 'org-indent)
-  (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
 
   ;; increase the size of LaTeX-previews
   (plist-put org-format-latex-options :scale 2)
 
   ;; Make the document title a bit bigger
-  (set-face-attribute 'org-document-title nil   :weight 'bold :height 1.8)
+  (set-face-attribute 'org-document-title nil   :weight 'bold :height 1.6)
   (set-face-attribute 'org-block nil            :foreground 'unspecified :inherit 'fixed-pitch :height 0.85)
   (set-face-attribute 'org-code nil             :inherit '(shadow fixed-pitch) :height 0.85)
   (set-face-attribute 'org-indent nil           :inherit '(org-hide fixed-pitch) :height 0.85)
