@@ -1,18 +1,15 @@
-;; Declare tree-sitter languages needed by this gear
-;; Note: hyprlang requires a custom recipe since it's not in treesit-auto by default
+;; Declare tree-sitter languages needed by this gear.
+;; hyprlang is not in treesit-auto's default recipe list, so a custom recipe
+;; is required.  This must be outside the leaf form so it runs immediately
+;; when the gear loads, not deferred inside elpaca's forms (which are skipped
+;; in sync mode).
 (when (and (gearp! :editing hyprland)
            (not (gearp! :ui -treesit)))
-  (backpack-treesit-langs! hyprlang)
-  ;; Add custom recipe for hyprlang since it's not in treesit-auto by default
-  ;; This must be outside the leaf form so it runs immediately when the gear loads,
-  ;; not deferred inside elpaca's forms (which are skipped in sync mode)
-  (with-eval-after-load 'treesit-auto
-    (add-to-list 'treesit-auto-recipe-list
-                 (make-treesit-auto-recipe
-                  :lang 'hyprlang
-                  :ts-mode 'hyprlang-ts-mode
-                  :url "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
-                  :ext "/hypr/.*\\.conf\\'"))))
+  (backpack-treesit-recipe! hyprlang
+    :ts-mode 'hyprlang-ts-mode
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
+    :ext "/hypr/.*\\.conf\\'"
+    :versions ((:until-emacs "29.4" :revision "c9012d6dcaaa939f17c21e1fdb17b013d139e6b9"))))
 
 (leaf hyprlang-ts-mode
   :doc "for when you need your tiling window manager config to look just right"

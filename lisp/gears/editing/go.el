@@ -1,7 +1,18 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing go)
            (not (gearp! :editing go -treesit)))
-  (backpack-treesit-langs! go gomod))
+  (backpack-treesit-recipe! go
+    :ts-mode 'go-ts-mode
+    :remap 'go-mode
+    :url "https://github.com/tree-sitter/tree-sitter-go"
+    :ext "\\.go\\'"
+    :versions ((:until-emacs "29.4" :revision "7ee8d928db5202f6831a78f8112fd693bf69f98b")))
+  (backpack-treesit-recipe! gomod
+    :ts-mode 'go-mod-ts-mode
+    :remap 'go-mod-mode
+    :url "https://github.com/camdencheek/tree-sitter-go-mod"
+    :ext "go\\.mod\\'"
+    :versions ((:until-emacs "29.4" :revision "bbe2fe3be4b87e06a613e685250f473d2267f430"))))
 
 (leaf go-mode
   :doc "if err != nil { return nil, err } -- the language"

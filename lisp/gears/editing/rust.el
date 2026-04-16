@@ -1,7 +1,12 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing rust)
            (not (gearp! :editing rust -treesit)))
-  (backpack-treesit-langs! rust))
+  (backpack-treesit-recipe! rust
+    :ts-mode 'rust-ts-mode
+    :remap 'rust-mode
+    :url "https://github.com/tree-sitter/tree-sitter-rust"
+    :ext "\\.rs\\'"
+    :versions ((:until-emacs "29.4" :revision "9c84af007b0f144954adb26b3f336495cbb320a7"))))
 
 (leaf rust-mode
   :doc "the borrow checker said no, and it was right"

@@ -3,7 +3,12 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing cpp)
            (not (gearp! :editing cpp -treesit)))
-  (backpack-treesit-langs! cpp))
+  (backpack-treesit-recipe! cpp
+    :ts-mode 'c++-ts-mode
+    :remap 'c++-mode
+    :url "https://github.com/tree-sitter/tree-sitter-cpp"
+    :ext "\\.cpp\\'"
+    :versions ((:until-emacs "29.4" :revision "7ce8946cae4bb25adebe5b50394f702beb007026"))))
 
 (leaf cc-mode
   :doc "C but with templates that make the compiler question its existence"

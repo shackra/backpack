@@ -1,7 +1,12 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing lua)
-           (not (gearp! :editing lua -treesit)))
-  (backpack-treesit-langs! lua))
+           (not (gearp! :editing lua -treesit))
+	   (>= emacs-major-version 30))
+  (backpack-treesit-recipe! lua
+    :ts-mode 'lua-ts-mode
+    :remap 'lua-mode
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-lua"
+    :ext "\\.lua\\'"))
 
 (leaf lua-mode
   :doc "arrays start at 1 and we're not sorry"

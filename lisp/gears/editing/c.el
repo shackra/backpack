@@ -3,7 +3,12 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing c)
            (not (gearp! :editing c -treesit)))
-  (backpack-treesit-langs! c))
+  (backpack-treesit-recipe! c
+    :ts-mode 'c-ts-mode
+    :remap 'c-mode
+    :url "https://github.com/tree-sitter/tree-sitter-c"
+    :ext "\\.c\\'"
+    :versions ((:until-emacs "29.4" :revision "deca017a554045b4c203e7ddff39ae64ff05e071"))))
 
 (leaf cc-mode
   :doc "the language that mass-produces segfaults since 1972"

@@ -75,6 +75,9 @@ This macro does two things at load time:
                   (buf nil))
              (unwind-protect
                  (progn
+                   ;; Ensure parent directories exist (needed when :file
+                   ;; contains subdirectories, e.g. "hypr/hyprland.conf").
+                   (make-directory (file-name-directory tmp-file) t)
                    ;; Write the test file
                    (with-temp-file tmp-file
                      (insert ,content))
@@ -109,11 +112,14 @@ This macro does two things at load time:
 			   :content "{ pkgs ? import <nixpkgs> {} }: pkgs"
 			   :treesit nix)
 
-(backpack-e2e-treesit-test lua
-			   :gear (lua)
-			   :file "init.lua"
-			   :content "local M = {}\nreturn M"
-			   :treesit lua)
+;; lua-ts-mode was added in Emacs 30; on Emacs 29.x treesit-auto cannot
+;; remap lua-mode to it, so this test will fail on 29.x by design.
+(when (> emacs-major-version 30)
+  (backpack-e2e-treesit-test lua
+			     :gear (lua)
+			     :file "init.lua"
+			     :content "local M = {}\nreturn M"
+			     :treesit lua))
 
 (backpack-e2e-treesit-test cpp
 			   :gear (cpp)
@@ -180,6 +186,20 @@ This macro does two things at load time:
 			   :file "main.yml"
 			   :content "hello: world"
 			   :treesit yaml)
+
+(backpack-e2e-treesit-test gomod
+			   :gear (go)
+			   :file "go.mod"
+			   :content "module example.com\n\ngo 1.21\n"
+			   :treesit gomod)
+
+;; The hyprlang ext pattern is /hypr/.*\.conf\' so the file must live under
+;; a directory named "hypr/".  The e2e macro creates parent dirs as needed.
+(backpack-e2e-treesit-test hyprlang
+			   :gear (hyprland)
+			   :file "hypr/hyprland.conf"
+			   :content "monitor=,preferred,auto,1\n"
+			   :treesit hyprlang)
 
 ;;; --- Interactive test runner (used by step 4 of the orchestrator) ---------
 
@@ -260,11 +280,14 @@ packages are fully activated and tree-sitter grammars are discoverable."
              (buf nil))
         (cl-incf total)
         (unwind-protect
-            (condition-case err
-                (progn
-                  ;; Write test file
-                  (with-temp-file tmp-file
-                    (insert content))
+             (condition-case err
+                 (progn
+                   ;; Ensure parent directories exist (needed for nested
+                   ;; paths such as "hypr/hyprland.conf").
+                   (make-directory (file-name-directory tmp-file) t)
+                   ;; Write test file
+                   (with-temp-file tmp-file
+                     (insert content))
                   ;; Visit it
                   (setq buf (find-file-noselect tmp-file))
                   (with-current-buffer buf

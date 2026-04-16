@@ -12,8 +12,13 @@
   :advice
   (:around treesit-install-language-grammar
            (lambda (orig-fun lang &optional out-dir)
-             "Ensure that all grammars are compiled and put on `backpack-tree-sitter-installation-dir'."
-             (apply orig-fun lang (list (or out-dir backpack-tree-sitter-installation-dir)))))
+             "Ensure that all grammars are compiled and put on `backpack-tree-sitter-installation-dir'.
+On Emacs 29, `treesit-install-language-grammar' does not accept an
+OUT-DIR argument, so we call it with LANG only and let grammars land
+in the default location \(<user-emacs-directory>/tree-sitter/\)."
+             (if (>= emacs-major-version 30)
+                 (funcall orig-fun lang (or out-dir backpack-tree-sitter-installation-dir))
+               (funcall orig-fun lang))))
   :init
   ;; In normal mode, don't auto-install - grammars should already be installed from sync
   ;; In sync mode, allow prompting (though we control installation via backpack)

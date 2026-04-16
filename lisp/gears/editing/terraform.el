@@ -1,16 +1,13 @@
-;; Declare tree-sitter languages needed by this gear
+;; Declare tree-sitter languages needed by this gear.
+;; The HCL grammar hosts Terraform as a dialect under dialects/terraform/src.
 (when (and (gearp! :editing terraform)
 	   (not (gearp! :editing terraform -treesit)))
-  (backpack-treesit-langs! terraform)
-
-  (with-eval-after-load 'treesit-auto
-    (add-to-list 'treesit-auto-recipe-list
-		 (make-treesit-auto-recipe
-		  :lang 'terraform
-		  :ts-mode 'terraform-ts-mode
-		  :remap 'terraform-mode
-		  :url "https://github.com/tree-sitter-grammars/tree-sitter-hcl"
-		  :source-dir "dialects/terraform/src"))))
+  (backpack-treesit-recipe! terraform
+    :ts-mode 'terraform-ts-mode
+    :remap 'terraform-mode
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-hcl"
+    :source-dir "dialects/terraform/src"
+    :versions ((:until-emacs "29.4" :revision "422cbe1d93a8ae3847744b664041fc76876babcd"))))
 
 (leaf terraform-mode
   :doc "plan, apply, pray -- infrastructure as code"

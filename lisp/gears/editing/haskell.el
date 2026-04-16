@@ -1,15 +1,13 @@
-;; Declare tree-sitter languages needed by this gear
+;; Declare tree-sitter languages needed by this gear.
+;; haskell is not in treesit-auto's default recipe list, so a custom recipe
+;; is required.
 (when (and (gearp! :editing haskell)
            (not (gearp! :editing haskell -treesit)))
-  (backpack-treesit-langs! haskell)
-
-  (with-eval-after-load 'treesit-auto
-    (add-to-list 'treesit-auto-recipe-list
-		 (make-treesit-auto-recipe
-		  :lang 'haskell
-		  :ts-mode 'haskell-ts-mode
-		  :remap 'haskell-mode
-		  :url "https://github.com/tree-sitter/tree-sitter-haskell"))))
+  (backpack-treesit-recipe! haskell
+    :ts-mode 'haskell-ts-mode
+    :remap 'haskell-mode
+    :url "https://github.com/tree-sitter/tree-sitter-haskell"
+    :versions ((:until-emacs "29.4" :revision "a50070d5bb5bd5c1281740a6102ecf1f4b0c4f19"))))
 
 (leaf haskell-mode
   :doc "a monad is just a monoid in the category of endofunctors, what's the problem?"

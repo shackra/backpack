@@ -1,28 +1,23 @@
-;; Declare tree-sitter languages needed by this gear
+;; Declare tree-sitter languages needed by this gear.
+;; The split_parser branch reorganised the repo so there is no src/ in the
+;; root; both markdown and markdown-inline grammars live in subdirectories.
+;; markdown-inline is not in treesit-auto's default recipe list at all.
 (when (and (gearp! :editing markdown)
            (not (gearp! :editing markdown -treesit)))
-  (backpack-treesit-langs! markdown markdown-inline)
+  (backpack-treesit-recipe! markdown
+			    :ts-mode 'markdown-ts-mode
+			    :remap '(markdown-mode gfm-mode)
+			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+			    :revision "split_parser"
+			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+			    :source-dir "tree-sitter-markdown/src")
 
-  ;; replace the original recipe, as the new split_parser branch is
-  ;; the default and there is no src folder in the root of the project.
-  ;; Also add a recipe for markdown-inline which is required by markdown-ts-mode
-  ;; but is not in treesit-auto's default recipe list.
-  (with-eval-after-load 'treesit-auto
-    (add-to-list 'treesit-auto-recipe-list
-		 (make-treesit-auto-recipe
-		  :lang 'markdown
-		  :ts-mode 'markdown-ts-mode
-		  :remap '(markdown-mode gfm-mode)
-		  :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-		  :revision "split_parser"
-		  :source-dir "tree-sitter-markdown/src"))
-    (add-to-list 'treesit-auto-recipe-list
-		 (make-treesit-auto-recipe
-		  :lang 'markdown-inline
-		  :ts-mode 'markdown-ts-mode
-		  :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-		  :revision "split_parser"
-		  :source-dir "tree-sitter-markdown-inline/src"))))
+  (backpack-treesit-recipe! markdown-inline
+			    :ts-mode 'markdown-ts-mode
+			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+			    :revision "split_parser"
+			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+			    :source-dir "tree-sitter-markdown-inline/src"))
 
 (leaf markdown-mode
   :doc "the markup language everyone thinks they know until they hit nested lists"
