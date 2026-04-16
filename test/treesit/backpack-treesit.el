@@ -19,7 +19,7 @@
 (unless (featurep 'treesit-auto)
   (cl-defstruct treesit-auto-recipe
     "Minimal stub of the treesit-auto-recipe struct."
-    lang ts-mode remap url revision source-dir ext)
+    lang ts-mode remap requires url revision source-dir cc c++ ext)
   (defvar treesit-auto-recipe-list nil
     "Stub for treesit-auto-recipe-list used in tests.")
   (provide 'treesit-auto))

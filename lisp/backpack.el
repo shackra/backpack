@@ -166,6 +166,25 @@ Returns BASE unchanged when no clause matches or VERSIONS is nil."
                                (backpack--plist-remove override :until-emacs))
       base)))
 
+(defun backpack--treesit-recipe-to-plist (recipe)
+  "Convert a `treesit-auto-recipe' struct to a keyword plist.
+Only non-nil slots are included.  The `:lang' slot is omitted because
+it is always set explicitly by `backpack-treesit-recipe!'."
+  (let (result)
+    (dolist (slot '((:ts-mode    . treesit-auto-recipe-ts-mode)
+                    (:remap      . treesit-auto-recipe-remap)
+                    (:requires   . treesit-auto-recipe-requires)
+                    (:url        . treesit-auto-recipe-url)
+                    (:revision   . treesit-auto-recipe-revision)
+                    (:source-dir . treesit-auto-recipe-source-dir)
+                    (:cc         . treesit-auto-recipe-cc)
+                    (:c++        . treesit-auto-recipe-c++)
+                    (:ext        . treesit-auto-recipe-ext)))
+      (let ((val (funcall (cdr slot) recipe)))
+        (when val
+          (setq result (nconc result (list (car slot) val))))))
+    result))
+
 (defmacro backpack-treesit-recipe! (lang &rest args)
   "Register a treesit-auto recipe for LANG with optional version overrides.
 
@@ -197,6 +216,9 @@ Version selection runs at the time treesit-auto loads (inside
 This macro also implicitly calls `backpack-treesit-langs!' for LANG,
 so there is no need to call it separately.
 
+Fields not supplied in ARGS are inherited from `treesit-auto's built-in
+recipe for LANG (if one exists), so only overrides need to be specified.
+
 Example -- use a pinned commit on Emacs 29.x due to ABI mismatch:
 
   (backpack-treesit-recipe! markdown
@@ -210,19 +232,30 @@ Example -- use a pinned commit on Emacs 29.x due to ABI mismatch:
   `(progn
      (backpack-treesit-langs! ,lang)
      (with-eval-after-load 'treesit-auto
-       (let* ((merged (backpack--treesit-resolve-recipe
-                       (list ,@(backpack--plist-remove args :versions))
+       (let* (;; 1. built-in treesit-auto recipe for this lang (may be nil)
+              (existing (cl-find ',lang treesit-auto-recipe-list
+                                 :key #'treesit-auto-recipe-lang))
+              ;; 2. caller-supplied args, minus :versions
+              (caller-args (list ,@(backpack--plist-remove args :versions)))
+              ;; 3. merge: built-in <- caller <- :versions clause
+              (merged (backpack--treesit-resolve-recipe
+                       (backpack--plist-merge
+                        (when existing
+                          (backpack--treesit-recipe-to-plist existing))
+                        caller-args)
                        ',(plist-get args :versions)))
               (ts-mode    (plist-get merged :ts-mode))
               (remap      (plist-get merged :remap))
+              (requires   (plist-get merged :requires))
               (url        (plist-get merged :url))
               (revision   (plist-get merged :revision))
               (source-dir (plist-get merged :source-dir))
+              (cc         (plist-get merged :cc))
+              (c++        (plist-get merged :c++))
               (ext        (plist-get merged :ext)))
-         ;; Remove any existing recipe for this lang (e.g. treesit-auto's
-         ;; built-in default) before adding ours, so there is never more
-         ;; than one entry per language in the list.  add-to-list would
-         ;; create a duplicate because the structs differ by field values.
+         ;; Remove the existing entry (now captured above) before pushing
+         ;; the merged replacement, so there is never more than one entry
+         ;; per language in the list.
          (setq treesit-auto-recipe-list
                (seq-remove (lambda (r)
                              (eq (treesit-auto-recipe-lang r) ',lang))
@@ -232,9 +265,12 @@ Example -- use a pinned commit on Emacs 29.x due to ABI mismatch:
                        (list :lang ',lang)
                        (when ts-mode    (list :ts-mode    ts-mode))
                        (when remap      (list :remap      remap))
+                       (when requires   (list :requires   requires))
                        (when url        (list :url        url))
                        (when revision   (list :revision   revision))
                        (when source-dir (list :source-dir source-dir))
+                       (when cc         (list :cc         cc))
+                       (when c++        (list :c++        c++))
                        (when ext        (list :ext        ext))))
                treesit-auto-recipe-list)))))
 
