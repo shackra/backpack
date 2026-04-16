@@ -22,11 +22,17 @@
        (display-line-numbers-mode +1)))))
 
 (leaf eglot
-  :doc "Language Server Protocol support for yaml-mode"
+  :doc "Language Server Protocol support for yaml-mode.
+Flags: lsp (enable yaml-language-server), -yaml-ls-ext (disable
+yaml-language-server protocol extensions for schema selection)"
   :when (and (gearp! :editing yaml) (gearp! :editing yaml lsp))
   :doctor
   ("yaml-language-server" . "a Language Server for YAML files")
   :hook ((yaml-mode-hook yaml-ts-mode-hook) . eglot-ensure)
   :config
   (add-to-list 'eglot-server-programs '(yaml-mode . ("yaml-language-server" "--stdio")))
-  (add-to-list 'eglot-server-programs '(yaml-ts-mode . ("yaml-language-server" "--stdio"))))
+  (add-to-list 'eglot-server-programs '(yaml-ts-mode . ("yaml-language-server" "--stdio")))
+  ;; Load yaml-language-server protocol extensions (schema selection support)
+  ;; unless the user opts out with the -yaml-ls-ext flag.
+  (unless (gearp! :editing yaml -yaml-ls-ext)
+    (require 'backpack-yaml-ls)))
