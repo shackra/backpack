@@ -28,7 +28,9 @@ auto-idle-slow (with auto-idle: use 2s delay instead of 1s)"
                 (setq-local corfu-auto-delay
                             (if (gearp! :completion corfu auto-idle-slow)
                                 2.0
-                              1.0)))))
+                              1.0))
+                (setq-local corfu-auto-commands
+                            (append corfu-auto-commands '(newline newline-and-indent)))))
   :custom
   (tab-always-indent . 'complete)
   (text-mode-ispell-word-completion . nil)
