@@ -26,6 +26,9 @@
 (require 'eglot)
 (require 'cl-lib)
 
+(defvar backpack-yaml-ls--ready-servers (make-hash-table :test 'eq :weakness 'key)
+  "Hash table mapping yaml-ls servers to schema-store readiness.")
+
 ;;; ---------------------------------------------------------------------------
 ;;; Detection
 ;;; ---------------------------------------------------------------------------
@@ -59,6 +62,7 @@ handshake completes -- the correct moment for post-connect notifications."
 The server sends this once it has finished loading schemas from the
 schema store.  We acknowledge it and tell the user."
   (when (backpack-yaml-ls--server-p server)
+    (puthash server t backpack-yaml-ls--ready-servers)
     (message "[eglot] yaml: schema store initialized")))
 
 ;;; ---------------------------------------------------------------------------
@@ -75,9 +79,11 @@ Returns a vector of plists; each plist has keys :uri, :name,
       (user-error "No eglot server managing this buffer"))
     (unless (backpack-yaml-ls--server-p server)
       (user-error "Active eglot server is not yaml-language-server"))
+    (unless (gethash server backpack-yaml-ls--ready-servers)
+      (user-error "Schema store not ready yet; wait for '[eglot] yaml: schema store initialized'"))
     (eglot--request server
                     :yaml/get/all/jsonSchemas
-                    (list :uri (eglot-path-to-uri (buffer-file-name))))))
+                    (eglot-path-to-uri (buffer-file-name)))))
 
 (defun backpack-yaml-ls--get-schemas-for-buffer ()
   "Request schemas applied to the current buffer from yaml-language-server.
@@ -89,9 +95,11 @@ Returns a vector of plists; each plist has keys :uri, :name,
       (user-error "No eglot server managing this buffer"))
     (unless (backpack-yaml-ls--server-p server)
       (user-error "Active eglot server is not yaml-language-server"))
+    (unless (gethash server backpack-yaml-ls--ready-servers)
+      (user-error "Schema store not ready yet; wait for '[eglot] yaml: schema store initialized'"))
     (eglot--request server
                     :yaml/get/jsonSchema
-                    (list :uri (eglot-path-to-uri (buffer-file-name))))))
+                    (eglot-path-to-uri (buffer-file-name)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; Display helpers
