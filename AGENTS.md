@@ -55,8 +55,9 @@ All live under `lisp/`:
 
 | File                      | Purpose                                                                                                            |
 |---------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `backpack.el`             | Main module (~1000 lines): bootstrap, elpaca setup, startup optimisations, directory layout, gear loading, GC mode |
-| `backpack-pouch.el`       | The `gear!`/`gearp!`/`gear-with-any-flagp!` macro system                                                           |
+| `backpack.el`             | Main module (~1600 lines): bootstrap, elpaca setup, startup optimisations, directory layout, gear loading, GC mode |
+| `backpack-pouch.el`       | The `gear!`/`gearp!`/`gear-with-any-flagp!` macro system; `backpack--extract-gear-form` for split init loading      |
+| `backpack-treesit.el`     | Tree-sitter grammar introspection (`M-x backpack-treesit-grammar-info`)                                               |
 | `backpack-email-utils.el` | `backpack/mu4e-easy-context` helper macro                                                                          |
 | `backpack-inventory.el`   | Self-documenting inventory browser (`M-x backpack-inventory`)                                                      |
 | `backpack-yaml-ls.el`     | yaml-language-server LSP protocol extensions for Eglot (schema selection, schema browsing)                         |
@@ -81,6 +82,7 @@ emacs-backpack/
 │   ├── backpack-pouch.el          # gear!/gearp! configuration query system
 │   ├── backpack-email-utils.el    # mu4e context helper
 │   ├── backpack-inventory.el      # Self-documenting inventory browser
+│   ├── backpack-treesit.el        # Tree-sitter grammar introspection
 │   ├── backpack-yaml-ls.el        # yaml-language-server LSP protocol extensions
 │   └── gears/                     # All feature modules, organised by pouch
 │       ├── config/
@@ -143,7 +145,7 @@ emacs-backpack/
 │   ├── all-tests.el               # Test runner
 │   ├── startup-time.el            # Startup time benchmark
 │   └── pouch/
-│       └── backpack-pouch.el      # Unit tests for gear!/gearp!
+│       └── backpack-pouch.el      # Unit tests for gear!/gearp! and backpack--extract-gear-form
 │
 ├── etc/scripts/
 │   ├── prepare-and-run.sh         # Test helper: copy config to tmpdir, run tests
@@ -171,18 +173,28 @@ early-init.el
      ├─ Checks Emacs >= 29.1
      ├─ Adds base-packages/ to load-path
      ├─ (require 'leaf), (require 'leaf-keywords)
-     ├─ (require 'backpack-pouch), (require 'backpack-email-utils), (require 'backpack-inventory)
+     ├─ (require 'backpack-pouch), (require 'backpack-email-utils), (require 'backpack-inventory), (require 'backpack-treesit)
      ├─ Sets up elpaca from base-packages/ (offline, no internet)
      └─ Defines backpack-start, backpack-finalize, backpack-load-gear-files
  └─ (backpack-start t)
      ├─ Creates required directories (.cache/etc, .cache/nonessentials, etc.)
-     ├─ Loads user init: $backpack-user-dir/init.el  (contains the gear! declaration)
-     ├─ Loads custom.el
+     ├─ Parses user init ($backpack-user-dir/init.el) via backpack--extract-gear-form
+     │   ├─ Splits into (GEAR-FORM . REST-FORMS)
+     │   └─ The (gear! ...) form and everything else are separated
+     ├─ Evaluates the gear! form (populates backpack--gear)
      ├─ Calls backpack-load-gear-files
      │   └─ Loads ALL gear files in explicit order (each self-gates with gearp!)
+     │      Gear defaults are now set -- user overrides come next
+     ├─ Evaluates REST-FORMS from init.el (user customizations override gear defaults)
+     ├─ Loads custom.el
      ├─ Adds backpack-finalize as advice on command-line-1
      └─ On finalize: runs backpack-after-init-hook → activates packages via elpaca
 ```
+
+This split-loading order ensures that user customizations (e.g. `setq`,
+`set-face-attribute`, `with-eval-after-load`) always override defaults set by
+gear files, since the user's non-`gear!` forms are evaluated **after** all gears
+have loaded.
 
 ### Batch sync mode (`backpack ensure`)
 

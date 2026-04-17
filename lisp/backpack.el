@@ -1316,11 +1316,23 @@ The behavior depends on `backpack-mode':
 
 	;; load user's private configuration
 	(let ((init-file (expand-file-name "init.el" backpack-user-dir)))
-	  (load init-file t)
+	  (if (file-exists-p init-file)
+              (pcase-let ((`(,gear-form . ,rest-forms)
+                           (backpack--extract-gear-form init-file)))
+                ;; Evaluate the gear! declaration first so backpack--gear
+                ;; is populated before gears load
+                (when gear-form
+                  (eval gear-form))
+                ;; Load gears -- their defaults are set based on backpack--gear
+                (backpack-load-gear-files)
+                ;; Now evaluate user customizations (without gear! forms)
+                ;; so they override gear defaults
+                (dolist (form rest-forms)
+                  (eval form)))
+            ;; No init file: load gears with empty configuration
+            (backpack-load-gear-files)))
 	  ;; load custom file
-	  (load custom-file t)
-	  ;; load all gears
-	  (backpack-load-gear-files)))
+	  (load custom-file t))
     (progn ;; CLI/batch mode
       nil))
 

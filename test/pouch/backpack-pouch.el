@@ -99,3 +99,48 @@ without erroring on pouch transitions."
    (theme doom-one)
 
    (should (< (benchmark-run 10000 (gearp! :ui theme)) 0.1))))
+
+(ert-deftest test-backpack--extract-gear-form-with-gear ()
+  "Should extract gear! form and rest forms from a file containing both."
+  :tags '(backpack)
+  (let ((tmpfile (make-temp-file "backpack-test-" nil ".el"
+                                  ";; test config\n(gear!\n :ui\n (theme doom-one)\n :editing go)\n\n(set-face-attribute 'default nil :height 160)\n(setq some-var t)")))
+    (unwind-protect
+        (pcase-let ((`(,gear-form . ,rest-forms) (backpack--extract-gear-form tmpfile)))
+          (should (equal gear-form '(gear! :ui (theme doom-one) :editing go)))
+          (should (= 2 (length rest-forms)))
+          (should (equal (car rest-forms) '(set-face-attribute (quote default) nil :height 160)))
+          (should (equal (cadr rest-forms) '(setq some-var t))))
+      (delete-file tmpfile))))
+
+(ert-deftest test-backpack--extract-gear-form-no-gear ()
+  "Should return nil gear form when file has no gear! declaration."
+  :tags '(backpack)
+  (let ((tmpfile (make-temp-file "backpack-test-" nil ".el"
+                                  "(setq some-var t)\n(message \"hello\")")))
+    (unwind-protect
+        (pcase-let ((`(,gear-form . ,rest-forms) (backpack--extract-gear-form tmpfile)))
+          (should (null gear-form))
+          (should (= 2 (length rest-forms))))
+      (delete-file tmpfile))))
+
+(ert-deftest test-backpack--extract-gear-form-empty ()
+  "Should return nil gear form and empty rest for an empty file."
+  :tags '(backpack)
+  (let ((tmpfile (make-temp-file "backpack-test-" nil ".el" "")))
+    (unwind-protect
+        (pcase-let ((`(,gear-form . ,rest-forms) (backpack--extract-gear-form tmpfile)))
+          (should (null gear-form))
+          (should (null rest-forms)))
+      (delete-file tmpfile))))
+
+(ert-deftest test-backpack--extract-gear-form-only-gear ()
+  "Should return gear form and empty rest when file only has gear!."
+  :tags '(backpack)
+  (let ((tmpfile (make-temp-file "backpack-test-" nil ".el"
+                                  "(gear! :ui theme)")))
+    (unwind-protect
+        (pcase-let ((`(,gear-form . ,rest-forms) (backpack--extract-gear-form tmpfile)))
+          (should (equal gear-form '(gear! :ui theme)))
+          (should (null rest-forms)))
+      (delete-file tmpfile))))

@@ -92,4 +92,27 @@ Return non-nil if GEAR in POUCH is active, optionally with FLAG."
      (and (eq pouch category) (eq gear module) (null flag))
      (and (eq pouch category) (eq gear module) (eq ourflag flag)))))
 
+(defun backpack--extract-gear-form (file)
+  "Read FILE and split it into two parts: the gear! form and everything else.
+Return a cons cell (GEAR-FORM . REST-FORMS) where GEAR-FORM is the
+first top-level (gear! ...) form found (or nil), and REST-FORMS is
+a list of all other top-level forms in evaluation order."
+  (let ((gear-form nil)
+        (rest-forms nil)
+        (found-gear nil))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (goto-char (point-min))
+      (condition-case nil
+          (while t
+            (let ((form (read (current-buffer))))
+              (if (and (not found-gear)
+                       (listp form)
+                       (eq (car form) 'gear!))
+                  (setq gear-form form
+                        found-gear t)
+                (push form rest-forms))))
+        (end-of-file nil)))
+    (cons gear-form (nreverse rest-forms))))
+
 (provide 'backpack-pouch)
