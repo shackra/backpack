@@ -59,6 +59,7 @@ All live under `lisp/`:
 | `backpack-pouch.el`       | The `gear!`/`gearp!`/`gear-with-any-flagp!` macro system                                                           |
 | `backpack-email-utils.el` | `backpack/mu4e-easy-context` helper macro                                                                          |
 | `backpack-inventory.el`   | Self-documenting inventory browser (`M-x backpack-inventory`)                                                      |
+| `backpack-yaml-ls.el`     | yaml-language-server LSP protocol extensions for Eglot (schema selection, schema browsing)                         |
 
 ### Gear Files
 
@@ -80,6 +81,7 @@ emacs-backpack/
 │   ├── backpack-pouch.el          # gear!/gearp! configuration query system
 │   ├── backpack-email-utils.el    # mu4e context helper
 │   ├── backpack-inventory.el      # Self-documenting inventory browser
+│   ├── backpack-yaml-ls.el        # yaml-language-server LSP protocol extensions
 │   └── gears/                     # All feature modules, organised by pouch
 │       ├── config/
 │       │   └── default.el
@@ -103,7 +105,13 @@ emacs-backpack/
 │       │   └── spellchecking.el
 │       ├── email/
 │       │   └── mu4e.el
+│       ├── term/
+│       │   ├── eshell.el
+│       │   └── vterm.el
 │       └── editing/
+│           ├── c.el
+│           ├── cmake.el
+│           ├── cpp.el
 │           ├── emacs-lisp.el
 │           ├── go.el
 │           ├── haskell.el
@@ -111,8 +119,10 @@ emacs-backpack/
 │           ├── json.el
 │           ├── latex.el
 │           ├── lua.el
+│           ├── make.el
 │           ├── markdown.el
 │           ├── nix.el
+│           ├── objc.el
 │           ├── org.el
 │           ├── python.el
 │           ├── rst.el
@@ -322,6 +332,53 @@ All packages use pinned git refs via `:ensure`:
 ```
 
 The `:ensure` keyword is aliased to `:elpaca` internally.
+
+Multiple `:ensure` entries can appear in a single leaf block -- leaf merges
+duplicate keyword values by appending. The `:config` body is attached to the
+**last** `:ensure` package's elpaca form; all preceding packages are installed
+as standalone `(elpaca pkg-spec)` calls. When each package needs its own config,
+use separate leaf blocks.
+
+### Gear-Specific Details
+
+#### eglot (completion)
+
+The eglot gear adds a `-hover` flag (default-on). When active, the LSP
+`textDocument/hover` results display via eldoc in the echo area or childframe.
+Users can opt out with `(gearp! :completion eglot -hover)` to remove
+`eglot-hover-eldoc-function` from `eldoc-documentation-functions`.
+
+The gear also sets `eldoc-documentation-strategy` to
+`eldoc-documentation-compose-eagerly` in eglot-managed buffers so that
+signature help, hover, and highlight results display as they arrive.
+
+#### corfu (completion)
+
+On Emacs < 31 running in a terminal, the corfu gear loads `corfu-terminal`
+(and its dependency `popon`) to provide overlay-based completion popups as a
+fallback for childframes (which don't work in TTY). Emacs 31+ supports
+childframes in terminals natively, so `corfu-terminal` is gated behind
+`:emacs< 31`.
+
+#### eldoc (tools)
+
+The eldoc gear provides a `box` flag for rich documentation display:
+
+- **GUI frames**: `eldoc-box-hover-at-point-mode` shows docs in a childframe
+  at point (via the `eldoc-box` package).
+- **TTY frames**: childframes are unavailable; instead, the echo area shows
+  a concise single-line summary (`eldoc-echo-area-use-multiline-p` nil,
+  `eldoc-echo-area-prefer-doc-buffer` `maybe`, truncation hint enabled).
+- **Daemon mode**: both paths work per-frame -- the `eldoc-mode-hook` lambda
+  checks `(display-graphic-p)` at runtime to decide per-buffer.
+
+`C-h .` (remapped by eglot to `eldoc-doc-buffer`) shows full documentation in
+a right-side window. `C-u C-h .` dismisses it. In GUI frames, `C-h .` also
+turns off `eldoc-box-hover-at-point-mode` (saving its state), and `C-u C-h .`
+restores it.
+
+The side window routing uses `backpack--display-eldoc-side-window`, registered
+in `display-buffer-alist` for the `*eldoc*` buffer.
 
 ## Naming Conventions
 
