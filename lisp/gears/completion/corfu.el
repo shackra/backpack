@@ -1,26 +1,19 @@
-;; TODO(shackra): handle when Emacs is ran in a terminal
 (leaf corfu
   :doc "enhances in-buffer completion with a small completion popup.
 Flags: auto-for-prog (auto in prog-mode), auto-for-text (auto in text-mode),
 auto-idle (zero-prefix auto when LSP active, 1s delay),
-auto-idle-slow (with auto-idle: use 2s delay instead of 1s)"
+auto-idle-slow (with auto-idle: use 2s delay instead of 1s).
+On Emacs < 31 in terminal, uses corfu-terminal (overlay-based popup)."
   :when (gearp! :completion corfu)
   :ensure (corfu :ref "76ee8f4e57d4cfb0deb3988cde199e6028cfbe7e")
   :init
   (when (gearp! :completion corfu auto-for-prog)
-    ;; activate auto-completion for programming major modes
-    ;; WARNING: per corfu readme: this may be dangerous in non-trusted files or buffers
     (add-hook 'prog-mode-hook (lambda () (setq-local corfu-auto t))))
 
   (when (gearp! :completion corfu auto-for-text)
-    ;; activate auto-completion for text major modes
     (add-hook 'text-mode-hook (lambda () (setq-local corfu-auto t))))
 
   (when (or (gearp! :completion corfu auto-idle) (gearp! :completion corfu auto-idle-slow))
-    ;; Zero-prefix auto-completion when an LSP server is active.
-    ;; Mirrors the "completions appear immediately" behaviour of vscode-yaml.
-    ;; WARNING: corfu-auto-prefix 0 fires on every keystroke while an LSP is
-    ;; running; use auto-idle-slow to reduce load on slower machines.
     (add-hook 'eglot-managed-mode-hook
               (lambda ()
                 (setq-local corfu-auto t)
@@ -38,3 +31,19 @@ auto-idle-slow (with auto-idle: use 2s delay instead of 1s)"
   :hook
   (corfu-mode-hook . corfu-popupinfo-mode)
   :global-minor-mode global-corfu-mode)
+
+(leaf popon
+  :doc "Overlay-based popup library for corfu-terminal"
+  :emacs< 31
+  :when (gearp! :completion corfu)
+  :ensure (popon :ref "bf8174cb7e6e8fe0fe91afe6b01b6562c4dc39da"))
+
+(leaf corfu-terminal
+  :doc "Corfu popup on terminal. Auto-enabled when Emacs < 31 runs in a TTY."
+  :emacs< 31
+  :when (gearp! :completion corfu)
+  :ensure (corfu-terminal :ref "501548c3d51f926c687e8cd838c5865ec45d03cc")
+  :after corfu
+  :config
+  (unless (display-graphic-p)
+    (corfu-terminal-mode +1)))
