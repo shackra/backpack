@@ -32,9 +32,9 @@ auto-idle-slow (with auto-idle: use 2s delay instead of 1s)"
                 (setq-local corfu-auto-commands
                             (append corfu-auto-commands '(newline newline-and-indent))))))
   :custom
-  (tab-always-indent . 'complete)
-  (text-mode-ispell-word-completion . nil)
-  (read-extended-command-predicate . #'command-completion-default-include-p)
+  (tab-always-indent			.	'complete)
+  (text-mode-ispell-word-completion	.	nil)
+  (read-extended-command-predicate	.	#'command-completion-default-include-p)
   :hook
   (corfu-mode-hook . corfu-popupinfo-mode)
   :global-minor-mode global-corfu-mode)
