@@ -16,7 +16,7 @@ auto-idle-slow (with auto-idle: use 2s delay instead of 1s)"
     ;; activate auto-completion for text major modes
     (add-hook 'text-mode-hook (lambda () (setq-local corfu-auto t))))
 
-  (when (gearp! :completion corfu auto-idle)
+  (when (or (gearp! :completion corfu auto-idle) (gearp! :completion corfu auto-idle-slow))
     ;; Zero-prefix auto-completion when an LSP server is active.
     ;; Mirrors the "completions appear immediately" behaviour of vscode-yaml.
     ;; WARNING: corfu-auto-prefix 0 fires on every keystroke while an LSP is
