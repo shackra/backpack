@@ -6,7 +6,8 @@
     :remap 'go-mode
     :url "https://github.com/tree-sitter/tree-sitter-go"
     :ext "\\.go\\'"
-    :versions ((:until-emacs "29.4" :revision "7ee8d928db5202f6831a78f8112fd693bf69f98b")))
+    :versions ((:until-emacs "29.4" :revision "7ee8d928db5202f6831a78f8112fd693bf69f98b")
+               (:until-emacs "30.2" :revision "12fe553fdaaa7449f764bc876fd777704d4fb752")))
   (backpack-treesit-recipe! gomod
     :ts-mode 'go-mod-ts-mode
     :remap 'go-mod-mode
@@ -24,18 +25,18 @@
    (lambda ()
      (toggle-truncate-lines +1)
      (unless (gearp! :editing go -display-line-numbers)
-       (display-line-numbers-mode +1))))
-  :config
-  (leaf go-impl
-    :doc "generates method stubs for implementing an interface"
-    :when (gearp! :editing go impl)
-    :ensure (go-impl :ref "1eebba6ccd02d11a5a82ad4540a8d562797bc3b3")
-    :doctor ("impl" . "command that generates method stubs for implementing an interface"))
+       (display-line-numbers-mode +1)))))
 
-  (leaf go-rename
-    :doc "Integration of the 'gorename' tool into Emacs"
-    :when (gearp! :editing go rename)
-    :doctor ("gorename" . "command that performs precise type-safe renaming of identifiers in Go source code")))
+(leaf go-impl
+  :doc "generates method stubs for implementing an interface"
+  :when (gearp! :editing go impl)
+  :ensure (go-impl :ref "1eebba6ccd02d11a5a82ad4540a8d562797bc3b3")
+  :doctor ("impl" . "command that generates method stubs for implementing an interface"))
+
+(leaf go-rename
+  :doc "Integration of the 'gorename' tool into Emacs"
+  :when (gearp! :editing go rename)
+  :doctor ("gorename" . "command that performs precise type-safe renaming of identifiers in Go source code"))
 
 (leaf eglot
   :doc "Language Server Protocol support for go-mode"
