@@ -10,4 +10,5 @@
   :hook
   (eglot-managed-mode-hook . (lambda ()
 			       (setq-local eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-			       (remove-hook 'eldoc-documentation-functions #'eglot-hover-eldoc-function t))))
+			       (when (gearp! :completion eglot -hover)
+				 (remove-hook 'eldoc-documentation-functions #'eglot-hover-eldoc-function t)))))
