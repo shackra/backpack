@@ -48,6 +48,21 @@ in
     EMACS_VERSIONS_TO_TEST = "emacs-rolling emacs-30-1 emacs-29-4 emacs-29-3 emacs-29-2 emacs-29-1";
   };
 
+  languages = {
+    python = {
+      enable = true;
+      directory = "./";
+      uv = {
+        enable = true;
+	sync.enable = true;
+      };
+      # NOTE(shackra): required for ty
+      venv = {
+        enable = true;
+      };
+    };
+  };
+
   packages = [
     pkgs.git
     pkgs.rsync
@@ -66,7 +81,7 @@ in
     pkgs.enchant.dev # for jinx
   ];
   enterTest = ''
-    for-each-emacs $DEVENV_ROOT/.
+      for-each-emacs $DEVENV_ROOT/.
     exit $?
   '';
 }
