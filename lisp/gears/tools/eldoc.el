@@ -20,8 +20,13 @@ In terminal, use C-h . to show documentation in a side window."
   (add-to-list 'display-buffer-alist
                '("\\*eldoc\\*"
                  (display-buffer-in-side-window)
-                 (side . bottom)
-                 (window-height . 0.15)
+                 (side . right)
+                 (window-width . 0.35)
                  (slot . 0)
                  (window-parameters . ((no-other-window . t)
-                                       (no-delete-other-windows . t))))))
+                                       (no-delete-other-windows . t)))))
+  (define-advice eldoc-doc-buffer (:around (fn &rest args) dismiss-with-prefix)
+    (if current-prefix-arg
+        (let ((win (get-buffer-window "*eldoc*")))
+          (when win (quit-window nil win)))
+      (apply fn args))))
