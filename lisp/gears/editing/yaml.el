@@ -18,8 +18,12 @@
   ((yaml-mode-hook yaml-ts-mode-hook) .
    (lambda ()
      (toggle-truncate-lines +1)
+     (setq-local indent-tabs-mode nil)
      (unless (gearp! :editing yaml -display-line-numbers)
-       (display-line-numbers-mode +1)))))
+       (display-line-numbers-mode +1))))
+  (yaml-ts-mode-hook .
+   (lambda ()
+     (setq-local indent-line-function 'yaml-indent-line))))
 
 (leaf eglot
   :doc "Language Server Protocol support for yaml-mode.
