@@ -34,6 +34,7 @@
 (require 'backpack-pouch)
 (require 'backpack-email-utils)
 (require 'backpack-inventory)
+(require 'backpack-treesit)
 
 (define-key help-map (kbd "B") #'backpack-inventory)
 
