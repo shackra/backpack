@@ -17,7 +17,7 @@ fi
 
 # Determine the Backpack installation directory based on this script's location
 # This makes the script work regardless of where it's called from
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 BACKPACK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Verify this is actually a Backpack installation

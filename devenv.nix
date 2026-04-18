@@ -42,6 +42,15 @@ let
   run-for-each-emacs = (
     pkgs.writeShellScriptBin "for-each-emacs" (builtins.readFile ./etc/scripts/for-each-emacs.sh)
   );
+
+  driveConf = (pkgs.writeShellScriptBin "drive-conf" (builtins.readFile ./etc/scripts/drive-conf.sh));
+
+  # Wrapper that auto-fills the project dir from $DEVENV_ROOT
+  driveConfHere = (
+    pkgs.writeShellScriptBin "drive-conf-here" ''
+      exec drive-conf "$@" "$BACKPACK_ROOT"
+    ''
+  );
 in
 {
   env = {
@@ -55,6 +64,8 @@ in
     prepareAndRunTest
     runE2eTreesit
     run-for-each-emacs
+    driveConf
+    driveConfHere
     (renameEmacs pkgs "emacs-rolling")
     (renameEmacs pkgs-30-1 "emacs-30-1")
     (renameEmacs pkgs-29-4 "emacs-29-4")
@@ -65,6 +76,9 @@ in
     # development files
     pkgs.enchant.dev # for jinx
   ];
+  enterShell = ''
+    export BACKPACK_ROOT="$DEVENV_ROOT"
+  '';
   enterTest = ''
     for-each-emacs $DEVENV_ROOT/.
     exit $?
