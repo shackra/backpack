@@ -22,7 +22,8 @@
 (leaf mu4e
   :when (gearp! :email mu4e)
   :tag "email" "mu4e"
-  :ensure (mu4e :host github :repo "djcb/mu" :ref "1a501281443eca6ccf7a7267a1c9c720bc6ccca1")
+  :ensure (mu4e :host github :repo "djcb/mu" :ref "1a501281443eca6ccf7a7267a1c9c720bc6ccca1"
+                 :files ("mu4e/*.el" "mu4e/*.el.in"))
   :doctor
   ("msmtp" . "program that sends email")
   :bind
