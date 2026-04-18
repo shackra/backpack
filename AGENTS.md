@@ -55,9 +55,13 @@ All live under `lisp/`:
 
 | File                      | Purpose                                                                                                            |
 |---------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `backpack.el`             | Main module (~1600 lines): bootstrap, elpaca setup, startup optimisations, directory layout, gear loading, GC mode |
+| `backpack.el`             | Main module (~300 lines): bootstrap, startup optimisations, directory layout, gear loading, orchestration           |
 | `backpack-pouch.el`       | The `gear!`/`gearp!`/`gear-with-any-flagp!` macro system; `backpack--extract-gear-form` for split init loading      |
-| `backpack-treesit.el`     | Tree-sitter grammar introspection (`M-x backpack-treesit-grammar-info`)                                               |
+| `backpack-platform.el`    | Platform and system detection (OS, WSL)                                                                             |
+| `backpack-defaults.el`    | Sensible global defaults (native comp, security, file locations)                                                    |
+| `backpack-sync.el`        | Package synchronisation (elpaca install/build/activate, sync-mode form filtering, gc-mode advice)                   |
+| `backpack-gc.el`          | Orphaned package cleanup (`backpack-gc` command)                                                                    |
+| `backpack-treesit.el`     | Tree-sitter grammar declaration, installation, state tracking, and introspection                                   |
 | `backpack-email-utils.el` | `backpack/mu4e-easy-context` helper macro                                                                          |
 | `backpack-inventory.el`   | Self-documenting inventory browser (`M-x backpack-inventory`)                                                      |
 | `backpack-yaml-ls.el`     | yaml-language-server LSP protocol extensions for Eglot (schema selection, schema browsing)                         |
@@ -78,11 +82,15 @@ emacs-backpack/
 ├── gc.el                          # Batch-mode orphan package cleanup (backpack gc)
 │
 ├── lisp/                          # Core Backpack Emacs Lisp library
-│   ├── backpack.el                # Main module
+│   ├── backpack.el                # Main module: bootstrap, startup optimisations, orchestration
 │   ├── backpack-pouch.el          # gear!/gearp! configuration query system
+│   ├── backpack-platform.el       # Platform and system detection (OS, WSL)
+│   ├── backpack-defaults.el       # Sensible global defaults (native comp, security, file locations)
+│   ├── backpack-sync.el           # Package synchronisation (elpaca install/build/activate)
+│   ├── backpack-gc.el             # Orphaned package cleanup
 │   ├── backpack-email-utils.el    # mu4e context helper
-│   ├── backpack-inventory.el      # Self-documenting inventory browser
-│   ├── backpack-treesit.el        # Tree-sitter grammar introspection
+│   ├── backpack-inventory.el     # Self-documenting inventory browser
+│   ├── backpack-treesit.el        # Tree-sitter grammar declaration, installation, and introspection
 │   ├── backpack-yaml-ls.el        # yaml-language-server LSP protocol extensions
 │   └── gears/                     # All feature modules, organised by pouch
 │       ├── config/
@@ -173,7 +181,9 @@ early-init.el
      ├─ Checks Emacs >= 29.1
      ├─ Adds base-packages/ to load-path
      ├─ (require 'leaf), (require 'leaf-keywords)
+     ├─ (require 'backpack-platform), (require 'backpack-defaults)
      ├─ (require 'backpack-pouch), (require 'backpack-email-utils), (require 'backpack-inventory), (require 'backpack-treesit)
+     ├─ (require 'backpack-sync), (require 'backpack-gc)
      ├─ Sets up elpaca from base-packages/ (offline, no internet)
      └─ Defines backpack-start, backpack-finalize, backpack-load-gear-files
  └─ (backpack-start t)
