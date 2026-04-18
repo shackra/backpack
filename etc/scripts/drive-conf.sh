@@ -54,6 +54,8 @@ rsync -a \
     --filter='- .git/' \
     --filter='- .github/' \
     --filter='- .cache/' \
+    --filter='- .direnv/' \
+    --filter='- .envrc' \
     "$BACKPACK_DIR/" "$TEST_HOME/.emacs.d"
 
 # Show info
