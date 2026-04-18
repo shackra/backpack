@@ -87,4 +87,8 @@ Dispatches to `backpack/vterm-project'."
             (lambda ()
               ;; Ensure the process uses UTF-8
               (set-process-coding-system (get-buffer-process (current-buffer))
-                                        'utf-8-unix 'utf-8-unix))))
+                                        'utf-8-unix 'utf-8-unix)))
+  (add-hook 'vterm-exit-functions
+            (lambda (&rest _)
+              (when-let* ((win (get-buffer-window)))
+                (delete-window win)))))

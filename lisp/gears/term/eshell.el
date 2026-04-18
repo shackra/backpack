@@ -73,7 +73,12 @@ Prefers vterm when the vterm gear is active, falls back to eshell."
   ;; Ensure UTF-8 for sub-processes launched from eshell
   (add-hook 'eshell-mode-hook
             (lambda ()
-              (set-buffer-file-coding-system 'utf-8-unix))))
+              (set-buffer-file-coding-system 'utf-8-unix)
+              (add-hook 'kill-buffer-hook
+                        (lambda ()
+                          (when-let* ((win (get-buffer-window)))
+                            (delete-window win)))
+                        nil t))))
 
 ;; -- eat integration (default-on flag; opt-out with -eat) --
 
@@ -104,4 +109,8 @@ Prefers vterm when the vterm gear is active, falls back to eshell."
   ;; applications correctly by delegating rendering to eat.
   (eat-eshell-mode +1)
   ;; Also let eat handle "visual" commands (less, htop, etc.)
-  (eat-eshell-visual-command-mode +1))
+  (eat-eshell-visual-command-mode +1)
+  (add-hook 'eat-exit-hook
+            (lambda ()
+              (when-let* ((win (get-buffer-window)))
+                (delete-window win)))))
