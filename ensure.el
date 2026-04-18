@@ -99,6 +99,26 @@
       (setq backpack--last-progress-message msg)
       (message "Installing packages... %s" msg))))
 
+(defun backpack--format-elpaca-log-entry (entry)
+  "Format a single elpaca log ENTRY for display."
+  (let ((status (car entry))
+        (time (nth 1 entry))
+        (text (nth 2 entry)))
+    (format "  [%s] %s%s"
+            status
+            (if text (if (string-prefix-p "  " text) text (concat "  " text)) "")
+            (if time (format " (%s)" (format-time-string "%H:%M:%S" time)) ""))))
+
+(defun backpack--dump-failed-package-logs (q)
+  "Dump elpaca log entries for each failed package in queue Q."
+  (dolist (entry (elpaca-q<-elpacas q))
+    (let ((e (cdr entry)))
+      (when (eq (elpaca--status e) 'failed)
+        (message "")
+        (message "  ── %s ──" (elpaca<-package e))
+        (dolist (log-entry (reverse (elpaca<-log e)))
+          (message "%s" (backpack--format-elpaca-log-entry log-entry)))))))
+
 (defun backpack--queue-finished-p (q)
   "Return non-nil if queue Q is finished (complete or all packages processed)."
   (or (eq (elpaca-q<-status q) 'complete)
@@ -161,6 +181,10 @@
       (message "WARNING: %d package(s) failed to install:" (length failed-pkgs))
       (dolist (pkg failed-pkgs)
         (message "  - %s" pkg))
+      (message "")
+      (message "Failed package details:")
+      (dolist (q elpaca--queues)
+        (backpack--dump-failed-package-logs q))
       (message "")
       (message "You may need to run 'backpack ensure' again or check the package recipes."))))
 
