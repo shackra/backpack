@@ -121,29 +121,32 @@
     (let ((last-print-time 0)
           (stall-count 0)
           (last-summary nil))
-      (condition-case nil
-          (while (not (backpack--queue-finished-p q))
-            (discard-input)
-            ;; Print progress every 0.5 seconds
-            (let* ((now (float-time))
-                   (summary (backpack--get-package-status-summary)))
-              (when (> (- now last-print-time) 0.5)
-                (setq last-print-time now)
-                (backpack--print-progress)
-                ;; Check for stall (no progress for too long)
-                (if (equal summary last-summary)
-                    (cl-incf stall-count)
-                  (setq stall-count 0)
-                  (setq last-summary summary))
-                ;; If stalled for 60 iterations (~30 seconds) and we have failures, break
-                (when (and (> stall-count 60)
-                           (> (plist-get summary :failed) 0)
-                           (= (plist-get summary :in-progress) 0))
-                  (message "Installation stalled with failures, continuing...")
-                  (cl-return))))
-            (sit-for elpaca-wait-interval))
-        (quit (cl-loop for (_ . e) in (elpaca-q<-elpacas q) do
-                       (or (eq (elpaca--status e) 'finished) (elpaca--fail e "User quit"))))))
+      (cl-block nil
+        (condition-case nil
+            (while (not (backpack--queue-finished-p q))
+              (discard-input)
+              ;; Print progress every 0.5 seconds
+              (let* ((now (float-time))
+                     (summary (backpack--get-package-status-summary)))
+                (when (> (- now last-print-time) 0.5)
+                  (setq last-print-time now)
+                  (backpack--print-progress)
+                  ;; Check for stall (no progress for too long)
+                  (if (equal summary last-summary)
+                      (cl-incf stall-count)
+                    (setq stall-count 0)
+                    (setq last-summary summary))
+                  ;; If stalled for 60 iterations (~30 seconds) and we have failures, break
+                  (when (and (> stall-count 60)
+                             (> (plist-get summary :failed) 0)
+                             (= (plist-get summary :in-progress) 0))
+                    (message "Installation stalled -- %d package(s) failed: %s"
+                             (plist-get summary :failed)
+                             (mapconcat #'identity (plist-get summary :failed-packages) ", "))
+                    (cl-return))))
+              (sit-for elpaca-wait-interval))
+          (quit (cl-loop for (_ . e) in (elpaca-q<-elpacas q) do
+                         (or (eq (elpaca--status e) 'finished) (elpaca--fail e "User quit")))))))
     (elpaca-split-queue)
     (setq elpaca--waiting nil))
   ;; Final progress
