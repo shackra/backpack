@@ -111,6 +111,6 @@ Prefers vterm when the vterm gear is active, falls back to eshell."
   ;; Also let eat handle "visual" commands (less, htop, etc.)
   (eat-eshell-visual-command-mode +1)
   (add-hook 'eat-exit-hook
-            (lambda ()
+            (lambda (_process)
               (when-let* ((win (get-buffer-window)))
                 (delete-window win)))))
