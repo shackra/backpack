@@ -21,8 +21,17 @@ if not exist "%BACKPACK_DIR%\base-packages" (
     exit /b 1
 )
 
-REM --- Convert backslashes to forward slashes for Emacs ---
-set "EMACS_DIR=%BACKPACK_DIR:\=/%"
+REM --- Convert backslashes to forward slashes for Emacs.
+REM     NOTE: do not name this BACKPACK_EMACS_DIR or anything that case-
+REM     insensitively matches "emacs_dir" -- on Windows that would shadow
+REM     Emacs's own reserved emacs_dir variable (see src/emacs.c
+REM     decode_env_path) and break data-directory / exec-directory
+REM     resolution, causing fatal "charsets: No such file or directory". ---
+set "BACKPACK_DIR_FWD=%BACKPACK_DIR:\=/%"
+
+REM --- Defensive: clear any inherited emacs_dir so a parent shell that
+REM     happens to export it cannot poison Emacs's path resolution. ---
+set "emacs_dir="
 
 if "%ACTION%"=="ensure" goto :ensure
 if "%ACTION%"=="gc" goto :gc
@@ -34,7 +43,7 @@ exit /b 1
 echo Backpack: Synchronizing packages...
 echo Backpack directory: %BACKPACK_DIR%
 echo.
-emacs --batch --eval "(setq user-emacs-directory \"%EMACS_DIR%/\")" -l "%EMACS_DIR%/ensure.el"
+emacs --batch --eval "(setq user-emacs-directory \"%BACKPACK_DIR_FWD%/\")" -l "%BACKPACK_DIR_FWD%/ensure.el"
 exit /b %errorlevel%
 
 :gc
@@ -48,7 +57,7 @@ if "!DRY_RUN!"=="t" (
 )
 echo Backpack directory: %BACKPACK_DIR%
 echo.
-emacs --batch --eval "(setq user-emacs-directory \"%EMACS_DIR%/\")" --eval "(setq backpack-gc-dry-run !DRY_RUN!)" -l "%EMACS_DIR%/gc.el"
+emacs --batch --eval "(setq user-emacs-directory \"%BACKPACK_DIR_FWD%/\")" --eval "(setq backpack-gc-dry-run !DRY_RUN!)" -l "%BACKPACK_DIR_FWD%/gc.el"
 exit /b %errorlevel%
 
 :usage
