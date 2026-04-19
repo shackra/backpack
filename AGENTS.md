@@ -120,6 +120,8 @@ emacs-backpack/
 │       │   └── vterm.el
 │       ├── ai/
 │       │   └── anvil.el
+│       └── os/
+│           └── windows.el
 │       └── editing/
 │           ├── c.el
 │           ├── cmake.el
@@ -431,6 +433,28 @@ restores it.
 
 The side window routing uses `backpack--display-eldoc-side-window`, registered
 in `display-buffer-alist` for the `*eldoc*` buffer.
+
+#### windows (os)
+
+The windows gear applies performance optimizations for GNU Emacs running natively
+on Windows. It is opt-in — users add `(gear! :os windows)` to their configuration.
+
+Settings applied (grouped by category):
+
+- **Process/subprocess**: `w32-pipe-read-delay` → 0, `w32-pipe-buffer-size` → 64KB,
+  `w32-quote-process-args` → t, `process-connection-type` → nil (pipes, not ptys),
+  `read-process-output-max` → 64KB
+- **File I/O**: `w32-get-true-file-attributes` → nil, `w32-get-true-file-link-count` → nil
+- **Display**: `inhibit-compacting-font-caches` → t, `fast-but-imprecise-scrolling` → t,
+  `cursor-in-non-selected-windows` → nil, `highlight-nonselected-windows` → nil,
+  `auto-mode-case-fold` → nil
+- **Bidi**: suppressed by default (`left-to-right`), opt out with the `bidi` flag
+- **Native comp**: `native-comp-defer-time` → 1.0
+- **Network**: `url-http-attempt-keepalives` → t
+- **Shell**: auto-detects bash (Git for Windows / MSYS2) and sets `shell-file-name`
+
+The `bidi` flag is **opt-in** (bidi is suppressed by default on Windows for performance).
+Users who need RTL text support add `(gear! :os (windows bidi))`.
 
 #### anvil (ai)
 
