@@ -6,7 +6,7 @@
     :remap 'rust-mode
     :url "https://github.com/tree-sitter/tree-sitter-rust"
     :ext "\\.rs\\'"
-    :versions ((:until-emacs "29.4" :revision "9c84af007b0f144954adb26b3f336495cbb320a7"))))
+    :versions ((:until-abi 14 :revision "9c84af007b0f144954adb26b3f336495cbb320a7"))))
 
 (leaf rust-mode
   :doc "the borrow checker said no, and it was right"
