@@ -6,7 +6,7 @@
     :remap 'yaml-mode
     :url "https://github.com/tree-sitter-grammars/tree-sitter-yaml"
     :ext "\\.ya?ml\\'"
-    :versions ((:until-emacs "29.4" :revision "7b03feefd36b5f155465ca736c6304aca983b267"))))
+    :versions ((:until-abi 14 :revision "7b03feefd36b5f155465ca736c6304aca983b267"))))
 
 (leaf yaml-mode
   :doc "indentation-sensitive and ready to ruin your CI pipeline"
