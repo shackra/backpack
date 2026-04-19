@@ -149,7 +149,8 @@ emacs-backpack/
 │   └── leaf-keywords.el/          # Extended leaf keywords
 │
 ├── bin/
-│   └── backpack                   # Shell CLI (backpack ensure, backpack gc)
+│   ├── backpack                   # Shell CLI for Unix (backpack ensure, backpack gc)
+│   └── backpack.cmd               # Batch CLI for Windows (backpack ensure, backpack gc)
 │
 ├── test/
 │   ├── all-tests.el               # Test runner
@@ -236,7 +237,8 @@ activation are guaranteed to run.
 ### Batch sync mode (`backpack ensure`)
 
 ```
-bin/backpack ensure
+bin/backpack ensure        # Unix
+bin\backpack.cmd ensure    # Windows
  → emacs --batch -l ensure.el
     ├─ Sets backpack-mode to 'sync
     ├─ Loads backpack.el, user init.el
@@ -250,7 +252,8 @@ bin/backpack ensure
 ### Garbage collection (`backpack gc`)
 
 ```
-bin/backpack gc [--dry-run]
+bin/backpack gc [--dry-run]        # Unix
+bin\backpack.cmd gc [--dry-run]    # Windows
  → emacs --batch -l gc.el
     ├─ Collects declared packages from gear files
     ├─ Compares against installed packages
