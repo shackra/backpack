@@ -359,6 +359,7 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/email/mu4e" backpack-core-dir))
   (load (expand-file-name "gears/term/vterm" backpack-core-dir))
   (load (expand-file-name "gears/term/eshell" backpack-core-dir))
+  (load (expand-file-name "gears/ai/anvil" backpack-core-dir))
   (load (expand-file-name "gears/editing/c" backpack-core-dir))
   (load (expand-file-name "gears/editing/cmake" backpack-core-dir))
   (load (expand-file-name "gears/editing/cpp" backpack-core-dir))
