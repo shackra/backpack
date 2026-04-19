@@ -7,7 +7,7 @@
     :remap 'terraform-mode
     :url "https://github.com/tree-sitter-grammars/tree-sitter-hcl"
     :source-dir "dialects/terraform/src"
-    :versions ((:until-emacs "29.4" :revision "422cbe1d93a8ae3847744b664041fc76876babcd"))))
+    :versions ((:until-abi 14 :revision "422cbe1d93a8ae3847744b664041fc76876babcd"))))
 
 (leaf terraform-mode
   :doc "plan, apply, pray -- infrastructure as code"
