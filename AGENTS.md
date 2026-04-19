@@ -118,6 +118,8 @@ emacs-backpack/
 │       ├── term/
 │       │   ├── eshell.el
 │       │   └── vterm.el
+│       ├── ai/
+│       │   └── anvil.el
 │       └── editing/
 │           ├── c.el
 │           ├── cmake.el
@@ -199,12 +201,37 @@ early-init.el
      ├─ Loads custom.el
      ├─ Adds backpack-finalize as advice on command-line-1
      └─ On finalize: runs backpack-after-init-hook → activates packages via elpaca
+             → runs backpack-user-after-init-hook (packages fully loaded)
 ```
 
 This split-loading order ensures that user customizations (e.g. `setq`,
 `set-face-attribute`, `with-eval-after-load`) always override defaults set by
 gear files, since the user's non-`gear!` forms are evaluated **after** all gears
 have loaded.
+
+### Init Hooks
+
+Backpack provides two hooks that run during startup, in this order:
+
+| Hook | When it runs | Purpose |
+|------|-------------|---------|
+| `backpack-after-init-hook` | After `command-line-1`, before GC restore | Package activation (`elpaca-process-queues`). Internal use only — do not add gear functions here. |
+| `backpack-user-after-init-hook` | After `backpack-after-init-hook` completes | Packages fully loaded and configured. Safe for gear setup code that depends on packages being ready. |
+
+**Why two hooks?** Elpaca defers leaf body forms (including `add-hook`) until
+after package activation. If a gear registers a function on
+`backpack-after-init-hook` via leaf's `:hook` keyword, that `add-hook` happens
+*inside* `backpack-after-init-hook` (during `elpaca-process-queues`). By the
+time the function is added, `run-hooks` has already started iterating — the new
+function may be missed. `backpack-user-after-init-hook` runs *after*
+`backpack-after-init-hook` completes, so any functions added during package
+activation are guaranteed to run.
+
+**When to use which hook:**
+- `backpack-user-after-init-hook`: Gear setup that needs packages loaded
+  (e.g. `(anvil-enable)`, `(anvil-server-start)`). Use this in leaf `:hook`.
+- `backpack-after-init-hook`: Internal Backpack machinery only
+  (`backpack--activate-packages`).
 
 ### Batch sync mode (`backpack ensure`)
 
@@ -401,6 +428,33 @@ restores it.
 
 The side window routing uses `backpack--display-eldoc-side-window`, registered
 in `display-buffer-alist` for the `*eldoc*` buffer.
+
+#### anvil (ai)
+
+The anvil gear exposes Emacs as an MCP (Model Context Protocol) server so AI
+agents can call Emacs capabilities directly. It uses `backpack-user-after-init-hook`
+for startup (not `backpack-after-init-hook`) because elpaca defers leaf body
+forms until after package activation — any `add-hook` on
+`backpack-after-init-hook` during elpaca finalization would be too late.
+
+Core modules are always loaded when the gear is active. Optional modules are
+controlled by opt-in flags:
+
+| Flag   | Modules enabled                  | Notes                              |
+|--------|----------------------------------|-------------------------------------|
+| `ide`  | `ide`                            | xref, diagnostics, imenu            |
+| `state`| `sqlite`, `org-index`            | Persistent KV store                 |
+| `cron` | `cron`                           | Scheduled task runner               |
+| `http` | `http`, `sqlite`, `org-index`    | HTTP with ETag cache (needs state)  |
+| `browser` | `browser`                    | Web capture via agent-browser CLI   |
+
+Example user configuration:
+
+```elisp
+(gear! :ai anvil)                        ;; core only
+(gear! :ai (anvil ide state))            ;; core + selective optional
+(gear! :ai (anvil ide state http browser)) ;; everything
+```
 
 ## Naming Conventions
 

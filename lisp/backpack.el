@@ -249,7 +249,19 @@ skip recompilation when the upstream grammar has not changed.")
 (backpack--ensure-elpaca)
 
 (defvar backpack-after-init-hook nil
-  "Abnormal hook for functions to be run after Backpack was initialized.")
+  "Abnormal hook for functions to be run after Backpack was initialized.
+This hook fires before packages are activated.  Packages registered via
+elpaca add their body forms during this phase.  Use
+`backpack-user-after-init-hook' for setup code that depends on packages
+being fully loaded.")
+
+(defvar backpack-user-after-init-hook nil
+  "Abnormal hook run after all packages have been activated and configured.
+This hook fires after `backpack-after-init-hook' has completed (including
+elpaca package activation and elpaca-after-init-hook).  Packages can
+safely add functions to this hook during their elpaca body evaluation,
+since the hook has not yet run at that point.  Use this hook for setup
+code that requires packages to be fully loaded and configured.")
 
 (defun backpack-start (&optional interactive?)
   "Start the Backpack session.
@@ -331,6 +343,12 @@ The behavior depends on `backpack-mode':
 
   ;; Run backpack hooks which will trigger package processing
   (run-hooks 'backpack-after-init-hook)
+
+  ;; Run user-facing hook after packages are fully activated and configured.
+  ;; Packages can add functions to this hook during their elpaca body
+  ;; evaluation (which happens inside backpack-after-init-hook), and
+  ;; those functions will run here, after all packages are ready.
+  (run-hooks 'backpack-user-after-init-hook)
 
   (when (eq (default-value 'gc-cons-threshold) most-positive-fixnum)
     (setq-default gc-cons-threshold (* 16 1024 1024)))
