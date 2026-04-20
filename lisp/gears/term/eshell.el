@@ -13,6 +13,17 @@ If an eshell window is visible, delete it.  Otherwise open one."
         (pop-to-buffer "*eshell*")
       (eshell))))
 
+(defun backpack/eat-toggle ()
+  "Toggle an eat terminal buffer in a bottom side window.
+If an eat window is visible, delete it.  Otherwise open one."
+  (interactive)
+  (if-let* ((buf (get-buffer "*eat*"))
+            (win (get-buffer-window buf)))
+      (delete-window win)
+    (if (get-buffer "*eat*")
+        (pop-to-buffer "*eat*")
+      (eat))))
+
 (defun backpack/eshell-project ()
   "Open eshell at the current project root.
 Creates a per-project buffer named *eshell:<project>*."
@@ -30,19 +41,42 @@ Creates a per-project buffer named *eshell:<project>*."
         (let ((eshell-buffer-name name))
           (eshell t))))))
 
+(defun backpack/eat-project ()
+  "Open eat at the current project root.
+Creates a per-project buffer named *eat:<project>*."
+  (interactive)
+  (let* ((pr (project-current t))
+         (root (project-root pr))
+         (name (format "*eat:%s*" (file-name-nondirectory
+                                     (directory-file-name root))))
+         (default-directory root))
+    (if-let* ((buf (get-buffer name))
+              (win (get-buffer-window buf)))
+        (delete-window win)
+      (if (get-buffer name)
+          (pop-to-buffer name)
+        (let ((eat-buffer-name name))
+          (eat))))))
+
 ;; -- Dispatch function for C-c t p --
 ;; This file loads after vterm.el, so this definition takes precedence.
-;; At runtime it checks whether the vterm gear is active and available;
-;; if so it delegates to vterm, otherwise uses eshell.
+;; Priority: vterm > eat > eshell.
 
 (defun backpack/term-project ()
   "Open a terminal at the current project root.
-Prefers vterm when the vterm gear is active, falls back to eshell."
+Prefers vterm when active, then eat, then eshell."
   (interactive)
-  (if (and (backpack--gearp!-impl :term 'vterm nil)
-           (fboundp 'backpack/vterm-project))
-      (backpack/vterm-project)
-    (backpack/eshell-project)))
+  (cond
+   ((and (gearp! :term vterm)
+         (fboundp 'backpack/vterm-project))
+    (backpack/vterm-project))
+   ((and (gearp! :term eshell)
+         (not (gearp! :term eshell -eat))
+         (fboundp 'backpack/eat-project))
+    (backpack/eat-project))
+   ((fboundp 'backpack/eshell-project)
+    (backpack/eshell-project))
+   (t (error "No terminal gear enabled"))))
 
 ;; -- Display rule: eshell buffers always appear at the bottom --
 
@@ -98,7 +132,7 @@ Prefers vterm when the vterm gear is active, falls back to eshell."
   :ensure (eat :host codeberg :repo "akib/emacs-eat"
                :ref "c8d54d649872bfe7b2b9f49ae5c2addbf12d3b99")
   :bind
-  ("C-c t a" . eat)
+  ("C-c t a" . backpack/eat-toggle)
   :custom
   ;; Large scrollback for the eat terminal (in bytes)
   (eat-term-scrollback-size . 131072)
