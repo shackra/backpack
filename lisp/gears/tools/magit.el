@@ -25,3 +25,14 @@
   :ensure (forge :ref "315e8e9a2b45d050ca7fc717595cc698e175b140")
   :config
   (setq forge-database-file (expand-file-name "forge-database.sqlite" backpack-cache-dir)))
+;; Register magit-project-status in project-switch-commands eagerly
+;; so it appears in C-x p p dispatch before magit is loaded.
+;; magit-extras.el does this after loading, but we want it available
+;; immediately.  Its guard clause prevents duplication when magit
+;; later loads.
+(when (gearp! :tools magit)
+  (autoload 'magit-project-status "magit-extras"
+    "Run `magit-status' in the current project's root." t)
+  (with-eval-after-load 'project
+    (keymap-set project-prefix-map "m" #'magit-project-status)
+    (add-to-list 'project-switch-commands '(magit-project-status "Magit") t)))
