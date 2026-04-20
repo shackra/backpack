@@ -9,7 +9,8 @@
 		       (display-line-numbers-mode))))
   (org-mode-hook . visual-line-mode)
   :custom
-  (org-startup-with-latex-preview . t))
+  (org-startup-with-latex-preview . t)
+  (org-src-window-setup . 'other-window))
 
 (leaf mixed-pitch
   :doc "a minor mode that enables mixing fixed-pitch (also known as fixed-width or monospace) and variable-pitch (AKA “proportional”) fonts"
@@ -31,7 +32,7 @@
 
 (leaf org-modern
   :doc "a modern style for your Org buffers using font locking and text properties"
-  :unless (gearp! :editing -modern)
+  :unless (gearp! :editing org -modern)
   :ensure (org-modern :ref "713beb72aed4db43f8a10feed72136e931eb674a" :host github :repo "minad/org-modern")
   :custom
   (org-adapt-indentation		.	t)
@@ -50,7 +51,6 @@
   :global-minor-mode global-org-modern-mode
   :hook
   (org-mode-hook . (lambda () (setq line-spacing 0.2)))
-  (org-mode-hook . variable-pitch-mode)
   :config
   ;; Resize Org headings
   (dolist (face '((org-level-1 . 1.25)
@@ -81,6 +81,7 @@
   :when (gearp! :editing org roam)
   :after org
   :ensure (org-roam :ref "7cd906b6f8b18a21766228f074aff24586770934" :host github :repo "org-roam/org-roam")
+  :doctor ("sqlite3" . ("SQLite database engine" required))
   :setq
   (org-roam-node-display-template .  `,(concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   :bind
@@ -120,3 +121,18 @@
   :when (gearp! :editing org noter)
   :after org
   :ensure (org-noter :ref "9ead81d42dd4dd5074782d239b2efddf9b8b7b3d" :host github :repo "weirdNox/org-noter"))
+
+(leaf org-appear
+  :doc "toggle hidden Org mode element parts on cursor hover"
+  :when (gearp! :editing org appear)
+  :after org
+  :ensure (org-appear :ref "32ee50f8fdfa449bbc235617549c1bccb503cb09" :host github :repo "awth13/org-appear")
+  :hook (org-mode-hook . org-appear-mode))
+
+(leaf ob-org
+  :doc "Org source blocks in org-mode"
+  :when (gearp! :editing org)
+  :after org
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages (append org-babel-load-languages '((org . t)))))
