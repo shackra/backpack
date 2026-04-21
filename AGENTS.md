@@ -80,6 +80,7 @@ emacs-backpack/
 ├── early-init.el                  # Emacs entry point; loads backpack.el, calls backpack-start
 ├── ensure.el                      # Batch-mode package sync (backpack ensure)
 ├── gc.el                          # Batch-mode orphan package cleanup (backpack gc)
+├── bench.el                       # Batch-mode benchmark entry (backpack bench)
 │
 ├── lisp/                          # Core Backpack Emacs Lisp library
 │   ├── backpack.el                # Main module: bootstrap, startup optimisations, orchestration
@@ -151,14 +152,20 @@ emacs-backpack/
 │   └── leaf-keywords.el/          # Extended leaf keywords
 │
 ├── bin/
-│   ├── backpack                   # Shell CLI for Unix (backpack ensure, backpack gc)
-│   └── backpack.cmd               # Batch CLI for Windows (backpack ensure, backpack gc)
+│   ├── backpack                   # Shell CLI for Unix (ensure, gc, bench)
+│   └── backpack.cmd               # Batch CLI for Windows (ensure, gc, bench)
 │
 ├── test/
 │   ├── all-tests.el               # Test runner
 │   ├── startup-time.el            # Startup time benchmark
-│   └── pouch/
-│       └── backpack-pouch.el      # Unit tests for gear!/gearp! and backpack--extract-gear-form
+│   ├── pouch/
+│   │   └── backpack-pouch.el      # Unit tests for gear!/gearp! and backpack--extract-gear-form
+│   ├── treesit/
+│   │   └── backpack-treesit.el    # Unit tests for tree-sitter grammar handling
+│   └── benchmark/                 # A/B performance benchmark suite (backpack bench)
+│       ├── backpack-bench-harness.el  # Timing, stats, table & history output
+│       ├── backpack-bench-defs.el     # Windows-focused A/B benchmark pairs
+│       └── run.el                     # Batch entry point for `backpack bench'
 │
 ├── etc/scripts/
 │   ├── prepare-and-run.sh         # Test helper: copy config to tmpdir, run tests
@@ -260,6 +267,19 @@ bin\backpack.cmd gc [--dry-run]    # Windows
     ├─ Collects declared packages from gear files
     ├─ Compares against installed packages
     └─ Deletes orphaned packages (or reports in dry-run)
+```
+
+### Benchmarks (`backpack bench`)
+
+```
+bin/backpack bench                 # Unix
+bin\backpack.cmd bench             # Windows
+ → emacs --batch -l bench.el
+    ├─ Captures the real repo root before backpack-defaults rebinds user-emacs-directory
+    ├─ Loads lisp/backpack.el (elpaca warnings suppressed -- bench runs without packages)
+    ├─ Loads test/benchmark/run.el which registers specs and runs the suite
+    ├─ Prints a human-readable A/B table to stdout
+    └─ Appends a timestamped .eld history file under .cache/etc/benchmarks/
 ```
 
 ## Gear File Conventions
@@ -582,6 +602,95 @@ emacs --batch -l test/all-tests.el -f ert-run-tests-batch-and-exit
 The `devenv.nix` environment provides Emacs versions 29.1, 29.2, 29.3, 29.4,
 30.1, and rolling. CI runs `devenv test` which executes
 `etc/scripts/for-each-emacs.sh` to test against all versions.
+
+## Benchmarks
+
+The benchmark suite is separate from the ERT unit tests.  It lives under
+`test/benchmark/` and is invoked via the `bench` CLI subcommand.  Unlike
+`devenv test`, the benchmark suite is **not** run automatically in CI; it
+is a developer tool for validating that performance tweaks (in particular
+those in the `:os windows` gear) actually earn their line of code.
+
+### Running
+
+```sh
+bin/backpack bench                 # Unix
+bin\backpack.cmd bench             # Windows
+```
+
+Useful environment variables (all optional):
+
+| Variable                     | Effect                                                    |
+|------------------------------|-----------------------------------------------------------|
+| `BACKPACK_BENCH_FILTER`      | Substring match; only run benchmarks whose name contains it |
+| `BACKPACK_BENCH_ITERATIONS`  | Override the iteration count of every registered bench    |
+| `BACKPACK_BENCH_NO_SAVE`     | Non-empty string skips writing the `.eld` history file    |
+
+A full run takes a few minutes on Windows (the subprocess benches dominate).
+For iterative work, use `BACKPACK_BENCH_FILTER=subprocess` (or similar) and a
+small `BACKPACK_BENCH_ITERATIONS=3`.
+
+### What is measured
+
+Every benchmark is an **A/B pair**: variant A runs with stock Emacs defaults,
+variant B with the values installed by Backpack's `:os windows` gear.  The
+harness reports the delta (both absolute milliseconds and percent) so you
+can see at a glance whether a knob is helping, hurting, or merely noise.
+
+The benches exercise the three dimensions the Windows gear targets:
+
+| Benchmark                       | Primary knobs probed                                                                |
+|---------------------------------|-------------------------------------------------------------------------------------|
+| `bench-startup`                 | Cold startup cost of a child `emacs --batch -Q` loading early-init.el              |
+| `bench-file-attributes`         | `w32-get-true-file-attributes`, `w32-get-true-file-link-count`                      |
+| `bench-directory-scan`          | Same, at recursive-walk scale                                                       |
+| `bench-load-path-probe`         | `file-name-handler-alist`, `auto-mode-case-fold`                                    |
+| `bench-auto-mode-match`         | `auto-mode-case-fold` / `case-fold-search` during `auto-mode-alist` matching         |
+| `bench-subprocess-echo`         | `process-connection-type`, `w32-pipe-read-delay`, `w32-pipe-buffer-size`             |
+| `bench-subprocess-large-output` | `w32-pipe-buffer-size`, `read-process-output-max`, `process-adaptive-read-buffering` |
+
+On non-Windows hosts the W32-specific variables are declared special via
+stub `defvar`s so `let`-binding them compiles clean; the underlying C code
+simply ignores them.  Those benches therefore report ~0 delta, which is a
+cheap smoke check that the gear is not accidentally regressing other
+platforms.
+
+### Output
+
+Two outputs are produced on every run:
+
+1. A human-readable ASCII table printed to stdout.
+2. A timestamped plist file under `.cache/etc/benchmarks/bench-YYYYMMDD-HHMMSS.eld`
+   containing the full per-variant stats (min, max, median, mean, stddev, n)
+   together with environment metadata (timestamp, system type, Emacs version,
+   native-comp availability, host name).  These files are `read`-able Elisp
+   so they can be diffed, plotted, or aggregated externally.
+
+### Adding a new benchmark
+
+Register via `backpack-bench-defbench` in `test/benchmark/backpack-bench-defs.el`:
+
+```elisp
+(backpack-bench-defbench bench-my-new-thing
+  :doc "One-line description of what is measured."
+  :iterations 15
+  :warmup 2
+  :available-p (lambda () (eq system-type 'windows-nt)) ; optional
+  :setup       (lambda () ...)                           ; optional one-shot fixture
+  :run-a       (lambda () ...)                           ; stock defaults variant
+  :run-b       (lambda () ...))                          ; Windows-optimized variant
+```
+
+Guidelines:
+
+- Keep per-iteration work in the single-digit-ms to low-hundred-ms range so
+  noise does not dwarf the signal.  Very short bodies should loop internally.
+- `let`-bind the variables the benchmark is measuring *inside* `:run-a` /
+  `:run-b`, not in `:setup` -- this keeps the two variants symmetric and
+  makes the bench source easy to read.
+- Use `backpack-emacs-dir` (not `user-emacs-directory`) for any path that
+  must resolve to the repo root; `backpack-defaults.el` rebinds
+  `user-emacs-directory` to live inside `.cache/` early in startup.
 
 ## Key Conventions and Rules
 
