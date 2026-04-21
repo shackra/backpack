@@ -15,7 +15,7 @@ Cleared on daemon exit since it is an in-memory variable.")
   (add-hook 'delete-frame-functions
             (defun backpack--save-frame-state (frame)
               "Save window configuration when the last visible frame is closed."
-              (when (<= (length (visible-frame-list)) 1)
+              (when (= (length (visible-frame-list)) 2)
                 (with-selected-frame frame
                   (setq backpack--persistence-window-state (window-state-get nil t)
                         backpack--persistence-saved-p t)))))
