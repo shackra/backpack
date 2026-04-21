@@ -26,7 +26,7 @@ Cleared on daemon exit since it is an in-memory variable.")
               (when (and backpack--persistence-saved-p
                          backpack--persistence-window-state)
                 (let ((window-restore-killed-buffer-windows
-                       (lambda (windows)
+                       (lambda (windows &rest _)
                          (dolist (win windows)
                            (set-window-buffer win (get-buffer "*scratch*"))))))
                   (window-state-put backpack--persistence-window-state nil t))
