@@ -360,7 +360,6 @@ The behavior depends on `backpack-mode':
 (defun backpack-load-gear-files ()
   "Load all gears available."
   (load (expand-file-name "gears/config/default" backpack-core-dir))
-  (load (expand-file-name "gears/config/persistence" backpack-core-dir))
   (load (expand-file-name "gears/ui/theme" backpack-core-dir))
   (load (expand-file-name "gears/ui/treesit" backpack-core-dir))
   (load (expand-file-name "gears/completion/corfu" backpack-core-dir))
