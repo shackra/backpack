@@ -8,7 +8,7 @@
     :remap 'c-mode
     :url "https://github.com/tree-sitter/tree-sitter-c"
     :ext "\\.c\\'"
-    :versions ((:until-emacs "29.4" :revision "deca017a554045b4c203e7ddff39ae64ff05e071"))))
+    :versions ((:until-abi 14 :revision "deca017a554045b4c203e7ddff39ae64ff05e071"))))
 
 (leaf cc-mode
   :doc "the language that mass-produces segfaults since 1972"

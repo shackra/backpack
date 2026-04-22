@@ -9,14 +9,14 @@
 			    :remap '(markdown-mode gfm-mode)
 			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
 			    :revision "split_parser"
-			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+			    :versions ((:until-abi 14 :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
 			    :source-dir "tree-sitter-markdown/src")
 
   (backpack-treesit-recipe! markdown-inline
 			    :ts-mode 'markdown-ts-mode
 			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
 			    :revision "split_parser"
-			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+			    :versions ((:until-abi 14 :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
 			    :source-dir "tree-sitter-markdown-inline/src"))
 
 (leaf markdown-mode

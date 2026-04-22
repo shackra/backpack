@@ -21,6 +21,15 @@ git clone --recurse-submodules https://github.com/shackra/backpack.git ~/.emacs.
 
 Be sure to put `$HOME/.emacs.d/bin/` in your path, otherwise your shell won't know where `backpack` is.
 
+On Windows, use `backpack.cmd` instead of `backpack`:
+
+```
+backpack.cmd ensure
+backpack.cmd gc --dry-run
+```
+
+Make sure `emacs.exe` is on your PATH.
+
 ### Writing your initial configuration
 
 Now that you have the starter kit cloned with its corresponding sub-modules (right?), you need to write your configuration. It has to go in either `$HOME/.backpack.d` or `$XDG_CONFIG_HOME/backpack`, in any of those two directories make a file called `init.el`:
