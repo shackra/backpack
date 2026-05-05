@@ -131,6 +131,26 @@ Prefers vterm when active, then eat, then eshell."
              (not (gearp! :term eshell -eat)))
   :ensure (eat :host codeberg :repo "akib/emacs-eat"
                :ref "c8d54d649872bfe7b2b9f49ae5c2addbf12d3b99")
+  :preface
+  ;; Eat hardcodes "/usr/bin/env" "sh" for a stty+exec bootstrap; that path
+  ;; does not exist on native Windows.  Git Bash / MSYS2 provide bash.exe.
+  (defun backpack--make-process-eat-windows (orig &rest plist)
+    "Around-advice for `make-process'.
+Rewrite eat's POSIX-only bootstrap command when bash is available."
+    (let ((cmd (plist-get plist :command)))
+      (if (and backpack--system-windows-p
+               (listp cmd)
+               (>= (length cmd) 4)
+               (equal (car cmd) "/usr/bin/env")
+               (equal (nth 1 cmd) "sh")
+               (equal (nth 2 cmd) "-c")
+               (stringp (nth 3 cmd))
+               (string-match-p "\\bstty\\b" (nth 3 cmd))
+               (executable-find "bash"))
+          (apply orig (plist-put (copy-tree plist) :command
+                                 (cons (executable-find "bash")
+                                       (cons "-c" (nthcdr 3 cmd)))))
+        (apply orig plist))))
   :bind
   ("C-c t a" . backpack/eat-toggle)
   :custom
@@ -139,6 +159,11 @@ Prefers vterm when active, then eat, then eshell."
   ;; Enable automatic line rewrapping on window resize
   (eat-enable-auto-line-translation . t)
   :config
+  (when (and backpack--system-windows-p
+             (executable-find "bash"))
+    (setq eat-shell (executable-find "bash"))
+    (advice-remove #'make-process #'backpack--make-process-eat-windows)
+    (advice-add #'make-process :around #'backpack--make-process-eat-windows))
   ;; Integrate eat with eshell -- this makes eshell handle TUI/curses
   ;; applications correctly by delegating rendering to eat.
   (eat-eshell-mode +1)
