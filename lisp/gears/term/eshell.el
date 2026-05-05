@@ -137,19 +137,28 @@ Prefers vterm when active, then eat, then eshell."
   (defun backpack--make-process-eat-windows (orig &rest plist)
     "Around-advice for `make-process'.
 Rewrite eat's POSIX-only bootstrap command when bash is available."
-    (let ((cmd (plist-get plist :command)))
+    (let ((cmd (plist-get plist :command))
+          (bash (backpack--windows-posix-bash-executable)))
       (if (and backpack--system-windows-p
+               bash
                (listp cmd)
                (>= (length cmd) 4)
                (equal (car cmd) "/usr/bin/env")
                (equal (nth 1 cmd) "sh")
                (equal (nth 2 cmd) "-c")
                (stringp (nth 3 cmd))
-               (string-match-p "\\bstty\\b" (nth 3 cmd))
-               (executable-find "bash"))
-          (apply orig (plist-put (copy-tree plist) :command
-                                 (cons (executable-find "bash")
-                                       (cons "-c" (nthcdr 3 cmd)))))
+               (string-match-p "\\bstty\\b" (nth 3 cmd)))
+          (let* ((tail (nthcdr 3 cmd))
+                 (script (car tail))
+                 ;; Eat sends stderr to `null-device' (NUL); MSYS bash treats
+                 ;; that poorly — use /dev/null like on Unix.
+                 (script-fixed (if (stringp script)
+                                   (replace-regexp-in-string
+                                    "2>[Nn][Uu][Ll]" "2>/dev/null" script)
+                                 script))
+                 (tail-fixed (cons script-fixed (cdr tail))))
+            (apply orig (plist-put (copy-tree plist) :command
+                                   (cons bash (cons "-c" tail-fixed)))))
         (apply orig plist))))
   :bind
   ("C-c t a" . backpack/eat-toggle)
@@ -159,9 +168,8 @@ Rewrite eat's POSIX-only bootstrap command when bash is available."
   ;; Enable automatic line rewrapping on window resize
   (eat-enable-auto-line-translation . t)
   :config
-  (when (and backpack--system-windows-p
-             (executable-find "bash"))
-    (setq eat-shell (executable-find "bash"))
+  (when-let ((bash (backpack--windows-posix-bash-executable)))
+    (setq eat-shell bash)
     (advice-remove #'make-process #'backpack--make-process-eat-windows)
     (advice-add #'make-process :around #'backpack--make-process-eat-windows))
   ;; Integrate eat with eshell -- this makes eshell handle TUI/curses

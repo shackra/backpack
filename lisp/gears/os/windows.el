@@ -73,10 +73,10 @@ Lisp-level setting in this gear combined."
   ;; Prefer bash (Git for Windows / MSYS2) if available;
   ;; fall back to cmdproxy.exe (bundled with Emacs)
   (when (and (or (null shell-file-name)
-                 (string-match-p "cmd\\(proxy\\)?\\.exe" shell-file-name))
-             (executable-find "bash"))
-    (setq shell-file-name (executable-find "bash")
-          shell-command-switch "-c")))
+                 (string-match-p "cmd\\(proxy\\)?\\.exe" shell-file-name)))
+    (when-let ((bash (backpack--windows-posix-bash-executable)))
+      (setq shell-file-name bash
+            shell-command-switch "-c"))))
 
 (leaf windows-legacy
   :when (gearp! :os windows)
