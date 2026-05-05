@@ -150,13 +150,28 @@ Rewrite eat's POSIX-only bootstrap command when bash is available."
                (string-match-p "\\bstty\\b" (nth 3 cmd)))
           (let* ((tail (nthcdr 3 cmd))
                  (script (car tail))
-                 ;; Eat sends stderr to `null-device' (NUL); MSYS bash treats
-                 ;; that poorly — use /dev/null like on Unix.
+                 (dotdot (cadr tail))
+                 (rest (cddr tail))
+                 ;; Drop stty stderr redirect: NUL, /dev/null, and MSYS
+                 ;; `/DEV/NULL' all misbehave or break `sh -c' parsing here.
                  (script-fixed (if (stringp script)
-                                   (replace-regexp-in-string
-                                    "2>[Nn][Uu][Ll]" "2>/dev/null" script)
+                                   (replace-regexp-in-string " 2>[^ ;]+" "" script)
                                  script))
-                 (tail-fixed (cons script-fixed (cdr tail))))
+                 (rest-fixed
+                  (if (and (equal dotdot "..")
+                           (= (length rest) 4)
+                           (equal (nth 0 rest) "/usr/bin/env")
+                           (equal (nth 1 rest) "sh")
+                           (equal (nth 2 rest) "-c")
+                           (stringp (nth 3 rest))
+                           (let ((inner (nth 3 rest)))
+                             (or (file-exists-p inner)
+                                 (file-exists-p (expand-file-name inner)))))
+                      ;; Avoid `sh -c c:/Program Files/...' word-splitting: exec
+                      ;; the shell binary with one argv per token.
+                      (list (nth 3 rest) "-i")
+                    rest))
+                 (tail-fixed (cons script-fixed (cons dotdot rest-fixed))))
             (apply orig (plist-put (copy-tree plist) :command
                                    (cons bash (cons "-c" tail-fixed)))))
         (apply orig plist))))
