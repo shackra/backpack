@@ -29,17 +29,6 @@ Creates a per-project buffer named *vterm:<project>*."
           (pop-to-buffer name)
         (vterm name)))))
 
-;; -- Dispatch function for C-c t p --
-;; When only vterm is active (no eshell gear), this definition is used.
-;; If eshell.el also loads, its definition of `backpack/term-project'
-;; takes precedence (it checks for vterm first, then falls back to eshell).
-
-(defun backpack/term-project ()
-  "Open a terminal at the current project root.
-Dispatches to `backpack/vterm-project'."
-  (interactive)
-  (backpack/vterm-project))
-
 ;; -- Display rule: vterm buffers always appear at the bottom --
 
 (when (gearp! :term vterm)

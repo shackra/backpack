@@ -5,7 +5,7 @@
   :url "https://github.com/zawatton/anvil.el"
   :when (gearp! :ai anvil)
   :ensure (anvil :host github :repo "zawatton/anvil.el"
-                 :ref "0b9c56b73b0afff5b8972aeda5cd184d06cbdc65"
+                 :ref "a3049952dff6c6cfe07e7a01fc1571a0f410688c"
                  :files ("anvil*.el" "anvil-stdio.sh"))
   :hook (backpack-user-after-init-hook . (lambda ()
 					   (unless (file-exists-p (expand-file-name "anvil-stdio.sh" anvil-server-install-directory))

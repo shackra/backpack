@@ -35,8 +35,9 @@ set "emacs_dir="
 
 if "%ACTION%"=="ensure" goto :ensure
 if "%ACTION%"=="gc" goto :gc
+if "%ACTION%"=="bench" goto :bench
 echo Error: unknown action '%ACTION%'>&2
-echo Available actions: ensure, gc>&2
+echo Available actions: ensure, gc, bench>&2
 exit /b 1
 
 :ensure
@@ -60,6 +61,16 @@ echo.
 emacs --batch --eval "(setq user-emacs-directory \"%BACKPACK_DIR_FWD%/\")" --eval "(setq backpack-gc-dry-run !DRY_RUN!)" -l "%BACKPACK_DIR_FWD%/gc.el"
 exit /b %errorlevel%
 
+:bench
+echo Backpack: Running benchmark suite...
+echo Backpack directory: %BACKPACK_DIR%
+echo.
+echo Tip: set BACKPACK_BENCH_FILTER=substring to run a subset
+echo      set BACKPACK_BENCH_ITERATIONS=N to override the default sample count
+echo.
+emacs --batch --eval "(setq user-emacs-directory \"%BACKPACK_DIR_FWD%/\")" -l "%BACKPACK_DIR_FWD%/bench.el"
+exit /b %errorlevel%
+
 :usage
 echo Error: missing argument>&2
 echo Usage: backpack ^<action^> [flags]>&2
@@ -67,4 +78,5 @@ echo.>&2
 echo Available actions:>&2
 echo   ensure          Install and build all packages ^(without activation^)>&2
 echo   gc [--dry-run]  Remove orphaned packages no longer needed>&2
+echo   bench           Run the Backpack benchmark suite ^(A/B vs :os windows^)>&2
 exit /b 1

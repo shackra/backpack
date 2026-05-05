@@ -79,12 +79,6 @@
   (unless (gearp! :config default -pixel-scroll)
     (pixel-scroll-precision-mode))
 
-  (leaf dired
-    :tag "builtin"
-    :custom
-    (dired-listing-switches . "-alh --group-directories-first")
-    (dired-kill-when-opening-new-dired-buffer . t))
-
   ;; Under WSL, killed/copied text does not reach the Windows clipboard.
   ;; Pipe it through clip.exe so yanked text is available system-wide.
   ;; We write directly to the process stdin to avoid any shell quoting issues.
