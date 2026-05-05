@@ -152,11 +152,21 @@ Rewrite eat's POSIX-only bootstrap command when bash is available."
                  (script (car tail))
                  (dotdot (cadr tail))
                  (rest (cddr tail))
-                 ;; Drop stty stderr redirect: NUL, /dev/null, and MSYS
-                 ;; `/DEV/NULL' all misbehave or break `sh -c' parsing here.
-                 (script-fixed (if (stringp script)
-                                   (replace-regexp-in-string " 2>[^ ;]+" "" script)
-                                 script))
+                 (script-fixed
+                  (if (stringp script)
+                      (let ((s (replace-regexp-in-string " 2>[^ ;]+" "" script)))
+                        ;; Eat uses `[ $1 = .. ]' with unquoted `$1'; a spaced path
+                        ;; becomes multiple words → `[: too many arguments]'.
+                        (setq s (replace-regexp-in-string
+                                 "if \\[ \\$1 = \\.\\. \\]; then shift; fi"
+                                 "if [ \"$1\" = .. ]; then shift; fi"
+                                 s))
+                        ;; Pipe IPC is not a tty — stty ioctl fails; do not abort.
+                        (replace-regexp-in-string
+                         "^\\(stty[^;]+\\);"
+                         "(\\1) || true;"
+                         s))
+                    script))
                  (rest-fixed
                   (if (and (equal dotdot "..")
                            (= (length rest) 4)
@@ -167,9 +177,9 @@ Rewrite eat's POSIX-only bootstrap command when bash is available."
                            (let ((inner (nth 3 rest)))
                              (or (file-exists-p inner)
                                  (file-exists-p (expand-file-name inner)))))
-                      ;; Avoid `sh -c c:/Program Files/...' word-splitting: exec
-                      ;; the shell binary with one argv per token.
-                      (list (nth 3 rest) "-i")
+                      ;; Avoid `sh -c c:/Program Files/...' word-splitting; `+m'
+                      ;; quiets job-control complaints when stdin is not a pty.
+                      (list (nth 3 rest) "-i" "+m")
                     rest))
                  (tail-fixed (cons script-fixed (cons dotdot rest-fixed))))
             (apply orig (plist-put (copy-tree plist) :command
