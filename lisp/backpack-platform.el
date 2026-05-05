@@ -56,5 +56,28 @@
     (setenv "HOME" realhome)
     (setq abbreviated-home-dir nil)))
 
+(defun backpack--windows-posix-bash-executable ()
+  "Return bash.exe suitable for POSIX subprocesses on Windows, or nil.
+
+Prefer Git for Windows and MSYS2 over the Store `WindowsApps' bash shim,
+which mishandles `bash -c' argument passing for subprocesses."
+  (when backpack--system-windows-p
+    (or (catch 'backpack--got-bash
+          (dolist (p (list (when-let ((pf (getenv "ProgramFiles")))
+                             (expand-file-name "Git/bin/bash.exe" pf))
+                           (when-let ((pfx86 (getenv "ProgramFiles(x86)")))
+                             (expand-file-name "Git/bin/bash.exe" pfx86))
+                           "c:/msys64/usr/bin/bash.exe"
+                           "c:/msys64/bin/bash.exe"))
+            (when (and p (file-exists-p p)
+                       (not (string-match-p "[/\\\\]WindowsApps[/\\\\]" p)))
+              (throw 'backpack--got-bash p))))
+        (catch 'backpack--got-bash
+          (dolist (dir (split-string (or (getenv "PATH") "") path-separator t))
+            (let ((exe (expand-file-name "bash.exe" dir)))
+              (when (and (file-exists-p exe)
+                         (not (string-match-p "[/\\\\]WindowsApps[/\\\\]" exe)))
+                (throw 'backpack--got-bash exe))))))))
+
 (provide 'backpack-platform)
 ;;; backpack-platform.el ends here

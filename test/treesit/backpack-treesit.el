@@ -29,10 +29,20 @@
 ;;; ---------------------------------------------------------------------------
 
 (defmacro with-clean-treesit-state (&rest body)
-  "Run BODY with fresh `treesit-auto-recipe-list' and `backpack--treesit-langs'."
+  "Run BODY with fresh `treesit-auto-recipe-list' and `backpack--treesit-langs'.
+
+Also pretends `backpack-treesit-available-p' returns t so that
+`backpack-treesit-langs!' and `backpack-treesit-recipe!' execute
+their bodies regardless of whether the Emacs running the test
+suite was actually built with tree-sitter support.  Tests that
+specifically want to exercise the unavailable branch should
+shadow `backpack-treesit-available-p' explicitly inside BODY (see
+`with-stubbed-treesit-availability')."
   `(let ((treesit-auto-recipe-list nil)
          (backpack--treesit-langs nil))
-     ,@body))
+     (cl-letf (((symbol-function 'backpack-treesit-available-p)
+                (lambda () t)))
+       ,@body)))
 
 ;;; ---------------------------------------------------------------------------
 ;;; backpack--plist-remove
@@ -110,21 +120,29 @@
                    base))))
 
 (ert-deftest test-resolve-recipe-matching-clause-overrides-revision ()
-  "A clause whose :until-emacs >= emacs-version replaces :revision."
+  "A clause whose :until-abi >= local max ABI replaces :revision."
   :tags '(backpack treesit)
   (let* ((base '(:url "u" :revision "main"))
-         ;; Use a far-future version string so this clause always matches.
-         (versions '((:until-emacs "99.9" :revision "pinned")))
+         ;; A far-future ABI ceiling guarantees the clause always matches.
+         (versions '((:until-abi 9999 :revision "pinned")))
          (result (backpack--treesit-resolve-recipe base versions)))
     (should (equal (plist-get result :revision) "pinned"))
     (should (equal (plist-get result :url) "u"))))
 
 (ert-deftest test-resolve-recipe-non-matching-clause-keeps-base ()
-  "A clause whose :until-emacs < emacs-version is skipped."
+  "A clause whose :until-abi < local max ABI is skipped."
   :tags '(backpack treesit)
-  ;; emacs-version is at least "29.1"; "1.0" is guaranteed to be less.
+  ;; Any reasonable Emacs build supports ABI > 1, so this clause never matches.
   (let* ((base '(:url "u" :revision "main"))
-         (versions '((:until-emacs "1.0" :revision "old")))
+         (versions '((:until-abi 1 :revision "old")))
+         (result (backpack--treesit-resolve-recipe base versions)))
+    (should (equal (plist-get result :revision) "main"))))
+
+(ert-deftest test-resolve-recipe-clause-without-gating-key-is-skipped ()
+  "A clause with no :until-abi gating key never matches."
+  :tags '(backpack treesit)
+  (let* ((base '(:revision "main"))
+         (versions '((:revision "ignored")))
          (result (backpack--treesit-resolve-recipe base versions)))
     (should (equal (plist-get result :revision) "main"))))
 
@@ -132,16 +150,25 @@
   "When multiple clauses match, the first one is used."
   :tags '(backpack treesit)
   (let* ((base '(:revision "main"))
-         (versions '((:until-emacs "99.8" :revision "first")
-                     (:until-emacs "99.9" :revision "second")))
+         (versions '((:until-abi 9998 :revision "first")
+                     (:until-abi 9999 :revision "second")))
          (result (backpack--treesit-resolve-recipe base versions)))
     (should (equal (plist-get result :revision) "first"))))
+
+(ert-deftest test-resolve-recipe-skips-non-matching-then-matches-later ()
+  "A non-matching clause is skipped and later matching clauses still apply."
+  :tags '(backpack treesit)
+  (let* ((base '(:revision "main"))
+         (versions '((:until-abi 1    :revision "skipped")
+                     (:until-abi 9999 :revision "applied")))
+         (result (backpack--treesit-resolve-recipe base versions)))
+    (should (equal (plist-get result :revision) "applied"))))
 
 (ert-deftest test-resolve-recipe-override-preserves-other-base-fields ()
   "An override clause only touches the keys it specifies."
   :tags '(backpack treesit)
   (let* ((base '(:url "u" :revision "main" :source-dir "src"))
-         (versions '((:until-emacs "99.9" :revision "pinned")))
+         (versions '((:until-abi 9999 :revision "pinned")))
          (result (backpack--treesit-resolve-recipe base versions)))
     (should (equal (plist-get result :source-dir) "src"))
     (should (equal (plist-get result :url) "u"))
@@ -151,7 +178,7 @@
   "An override clause can introduce keys not present in the base."
   :tags '(backpack treesit)
   (let* ((base '(:url "u" :revision "main"))
-         (versions '((:until-emacs "99.9" :source-dir "sub/src")))
+         (versions '((:until-abi 9999 :source-dir "sub/src")))
          (result (backpack--treesit-resolve-recipe base versions)))
     (should (equal (plist-get result :source-dir) "sub/src"))))
 
@@ -215,12 +242,12 @@
   "A matching :versions clause replaces :revision in the registered recipe."
   :tags '(backpack treesit)
   (with-clean-treesit-state
-   ;; Use a far-future :until-emacs so the clause always matches.
+   ;; A far-future ABI ceiling guarantees the clause always matches.
    (backpack-treesit-recipe! go
      :ts-mode 'go-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-go"
      :revision "master"
-     :versions ((:until-emacs "99.9" :revision "deadbeef")))
+     :versions ((:until-abi 9999 :revision "deadbeef")))
    (let ((recipe (cl-find 'go treesit-auto-recipe-list
                           :key #'treesit-auto-recipe-lang)))
      (should (equal (treesit-auto-recipe-revision recipe) "deadbeef")))))
@@ -229,12 +256,12 @@
   "A non-matching :versions clause is skipped; base :revision is used."
   :tags '(backpack treesit)
   (with-clean-treesit-state
-   ;; Use a past :until-emacs string so the clause never matches.
+   ;; Any reasonable Emacs build supports ABI > 1, so this clause never matches.
    (backpack-treesit-recipe! go
      :ts-mode 'go-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-go"
      :revision "master"
-     :versions ((:until-emacs "1.0" :revision "ancient")))
+     :versions ((:until-abi 1 :revision "ancient")))
    (let ((recipe (cl-find 'go treesit-auto-recipe-list
                           :key #'treesit-auto-recipe-lang)))
      (should (equal (treesit-auto-recipe-revision recipe) "master")))))
@@ -248,7 +275,7 @@
      :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
      :revision "split_parser"
      :source-dir "tree-sitter-markdown/src"
-     :versions ((:until-emacs "99.9" :revision "oldcommit")))
+     :versions ((:until-abi 9999 :revision "oldcommit")))
    (let ((recipe (cl-find 'markdown treesit-auto-recipe-list
                           :key #'treesit-auto-recipe-lang)))
      (should (equal (treesit-auto-recipe-revision recipe) "oldcommit"))
@@ -360,6 +387,47 @@
    (should (cl-find 'rust treesit-auto-recipe-list :key #'treesit-auto-recipe-lang))
    (let ((go-recipe (cl-find 'go treesit-auto-recipe-list :key #'treesit-auto-recipe-lang)))
      (should (equal (treesit-auto-recipe-revision go-recipe) "new-go")))))
+
+;;; ---------------------------------------------------------------------------
+;;; backpack-treesit-available-p -- detection and graceful no-ops
+;;; ---------------------------------------------------------------------------
+
+(defmacro with-stubbed-treesit-availability (available-p &rest body)
+  "Run BODY pretending `backpack-treesit-available-p' returns AVAILABLE-P."
+  (declare (indent 1))
+  `(cl-letf (((symbol-function 'backpack-treesit-available-p)
+              (lambda () ,available-p)))
+     ,@body))
+
+(ert-deftest test-treesit-langs-noop-when-unavailable ()
+  "`backpack-treesit-langs!' must not register langs on a non-treesit Emacs."
+  :tags '(backpack treesit)
+  (with-clean-treesit-state
+   (with-stubbed-treesit-availability nil
+     (backpack-treesit-langs! python json yaml)
+     (should (null backpack--treesit-langs)))))
+
+(ert-deftest test-treesit-langs-registers-when-available ()
+  "`backpack-treesit-langs!' must register langs when treesit is available."
+  :tags '(backpack treesit)
+  (with-clean-treesit-state
+   (with-stubbed-treesit-availability t
+     (backpack-treesit-langs! python json)
+     (should (memq 'python backpack--treesit-langs))
+     (should (memq 'json   backpack--treesit-langs)))))
+
+(ert-deftest test-treesit-recipe-noop-when-unavailable ()
+  "`backpack-treesit-recipe!' must not register a recipe or lang on a non-treesit Emacs."
+  :tags '(backpack treesit)
+  (with-clean-treesit-state
+   (with-stubbed-treesit-availability nil
+     (backpack-treesit-recipe! go
+       :ts-mode 'go-ts-mode
+       :url "https://github.com/tree-sitter/tree-sitter-go"
+       :revision "master")
+     (should (null backpack--treesit-langs))
+     (should-not (cl-find 'go treesit-auto-recipe-list
+                          :key #'treesit-auto-recipe-lang)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; backpack--remove-flag
