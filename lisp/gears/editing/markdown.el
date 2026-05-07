@@ -32,8 +32,16 @@
     (add-hook 'markdown-ts-mode-hook #'display-line-numbers-mode)))
 
 (leaf markdown-ts-mode
-  :doc "tree-sitter support for Markdown"
+  :doc "tree-sitter support for Markdown (external, Emacs < 31)"
+  :emacs< 31
   :ensure (markdown-ts-mode :ref "2f1ee8b94cdf53cebc31ae08ecfbba846193d5e1")
+  :when (and (gearp! :editing markdown)
+	     (not (gearp! :editing markdown -treesit)))
+  :require t)
+
+(leaf markdown-ts-mode
+  :doc "tree-sitter support for Markdown (built-in, Emacs >= 31)"
+  :emacs>= 31
   :when (and (gearp! :editing markdown)
 	     (not (gearp! :editing markdown -treesit)))
   :require t)
