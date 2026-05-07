@@ -5,19 +5,19 @@
 (when (and (gearp! :editing markdown)
            (not (gearp! :editing markdown -treesit)))
   (backpack-treesit-recipe! markdown
-			    :ts-mode 'markdown-ts-mode
-			    :remap '(markdown-mode gfm-mode)
-			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-			    :revision "split_parser"
-			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
-			    :source-dir "tree-sitter-markdown/src")
+    :ts-mode 'markdown-ts-mode
+    :remap '(markdown-mode gfm-mode)
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+    :revision "split_parser"
+    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+    :source-dir "tree-sitter-markdown/src")
 
   (backpack-treesit-recipe! markdown-inline
-			    :ts-mode 'markdown-ts-mode
-			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-			    :revision "split_parser"
-			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
-			    :source-dir "tree-sitter-markdown-inline/src"))
+    :ts-mode 'markdown-ts-mode
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+    :revision "split_parser"
+    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+    :source-dir "tree-sitter-markdown-inline/src"))
 
 (leaf markdown-mode
   :doc "the markup language everyone thinks they know until they hit nested lists"
