@@ -1,8 +1,9 @@
 (require 'backpack-pouch)
 
 (leaf transient
-  :doc "Installs transient 0.12, needed for Magit 4.5"
-  :when (gearp! :tools magit)
+  :doc "Transient command dispatching (needed by Magit and diff-hl menu)"
+  :when (or (gearp! :tools magit)
+            (gearp! :ui diff-hl))
   :ensure (transient :ref "1f7039ef8d548d6fe858084fcbeae7588eba4190"))
 
 (leaf magit
