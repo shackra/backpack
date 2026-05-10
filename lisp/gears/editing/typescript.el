@@ -43,6 +43,7 @@
 
 (leaf ob-typescript
   :doc "TypeScript source blocks in org-mode"
+  :ensure (ob-typescript :ref "5fe1762f8d8692dd5b6f1697bedbbf4cae9ef036")
   :when (and (gearp! :editing typescript) (gearp! :editing org))
   :after org
   :config
