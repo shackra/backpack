@@ -1,4 +1,3 @@
-;; -*- lexical-binding: t; -*-
 ;;; backpack-treesit.el --- Tree-sitter grammar management and introspection  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 Jorge Javier Araya Navarro and Backpack contributors
