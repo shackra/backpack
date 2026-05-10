@@ -162,6 +162,7 @@ skip recompilation when the upstream grammar has not changed.")
 
 ;; These modules depend on directory variables defined above
 (require 'backpack-defaults)
+(require 'backpack-buffers)
 (require 'backpack-sync)
 (require 'backpack-gc)
 
