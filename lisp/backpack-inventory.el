@@ -394,6 +394,69 @@ Shape is always (\"KEY\" . KEYMAP-SYMBOL)."
               result)))
     (nreverse result)))
 
+(defun backpack-inventory--extract-keymap-set-from-forms (forms)
+  "Recursively extract `keymap-set' and `define-key' calls from FORMS.
+Returns a list of binding plists (:key :command :keymap).
+Skips dotted pairs and other non-proper lists."
+  (let (result)
+    (dolist (form forms)
+      (when (and (consp form) (proper-list-p form))
+        (cond
+         ;; (keymap-set MAP "KEY" #'CMD) or (keymap-set MAP "KEY" 'CMD)
+         ((and (eq (car form) 'keymap-set)
+               (= (length form) 4))
+          (let ((map (nth 1 form))
+                (key (nth 2 form))
+                (cmd (nth 3 form)))
+            (when (and (symbolp map) (stringp key))
+              (push (list :key key
+                          :command (if (and (consp cmd)
+                                           (memq (car cmd) '(function quote)))
+                                       (cadr cmd)
+                                     cmd)
+                          :keymap map)
+                    result))))
+         ;; (define-key MAP (kbd "KEY") #'CMD)
+         ((and (eq (car form) 'define-key)
+               (= (length form) 4))
+          (let ((map (nth 1 form))
+                (key-form (nth 2 form))
+                (cmd (nth 3 form)))
+            (when (symbolp map)
+              (let ((key (cond
+                          ((stringp key-form) key-form)
+                          ((and (consp key-form)
+                                (eq (car key-form) 'kbd)
+                                (stringp (cadr key-form)))
+                           (cadr key-form))
+                          (t nil))))
+                (when key
+                  (push (list :key key
+                              :command (if (and (consp cmd)
+                                               (memq (car cmd) '(function quote)))
+                                           (cadr cmd)
+                                         cmd)
+                              :keymap map)
+                        result))))))
+         ;; Recurse into nested forms (with-eval-after-load, progn, let, etc.)
+         (t
+          (dolist (sub (cdr form))
+            (when (and (consp sub) (proper-list-p sub))
+              (setq result (append result
+                                   (backpack-inventory--extract-keymap-set-from-forms
+                                    (list sub))))))))))
+    result))
+
+(defun backpack-inventory--extract-keymap-set-from-body (props)
+  "Extract `keymap-set' bindings from leaf body keywords in PROPS.
+Scans :config, :init, and :preface sections."
+  (let (result)
+    (dolist (section '(:config :init :preface))
+      (let ((body (backpack-inventory--extract-leaf-keyword props section)))
+        (setq result (append result
+                             (backpack-inventory--extract-keymap-set-from-forms body)))))
+    result))
+
 (defconst backpack-inventory--variable-keywords
   '(:custom :setq :setq-default :setf :pre-setq :pre-setf :push :pre-push)
   "Leaf keywords that set variables.")
@@ -558,7 +621,8 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
            (fonts (backpack-inventory--extract-font-entries props))
            (packages (backpack-inventory--extract-package-entries props))
            (bindings (append (backpack-inventory--extract-bind-entries props)
-                             (backpack-inventory--extract-bind-keymap-entries props)))
+                             (backpack-inventory--extract-bind-keymap-entries props)
+                             (backpack-inventory--extract-keymap-set-from-body props)))
            (variables (backpack-inventory--extract-variable-entries props))
            (when-val (car (backpack-inventory--extract-leaf-keyword props :when)))
            (unless-val (car (backpack-inventory--extract-leaf-keyword props :unless)))
@@ -725,7 +789,8 @@ Returns a gear-info plist or nil."
                             (fonts (backpack-inventory--extract-font-entries props))
                             (packages (backpack-inventory--extract-package-entries props))
                             (binds (append (backpack-inventory--extract-bind-entries props)
-                                           (backpack-inventory--extract-bind-keymap-entries props)))
+                                           (backpack-inventory--extract-bind-keymap-entries props)
+                                           (backpack-inventory--extract-keymap-set-from-body props)))
                             (vars (backpack-inventory--extract-variable-entries props))
                             (unless-val (car (backpack-inventory--extract-leaf-keyword props :unless)))
                             ;; Check if this is a default-on gear (has :unless)
@@ -766,7 +831,30 @@ Returns a list of parsed entries (gear-info and flag-info plists)."
             (let ((leaf-results (backpack-inventory--parse-leaf-form body-form pouch-keyword)))
               (when (cl-some (lambda (r) (eq (plist-get r :type) :gear)) leaf-results)
                 (setq found-gear-p t))
-              (setq results (append results leaf-results))))))))
+              (setq results (append results leaf-results)))))
+        ;; Extract keymap-set bindings from the bare block body and
+        ;; attach them to the gear identified by the gearp! gate
+        (let* ((condition (cadr form))
+               (gate-infos (backpack-inventory--analyze-gate condition))
+               (body (cddr form))
+               (ks-bindings (backpack-inventory--extract-keymap-set-from-forms body)))
+          (when ks-bindings
+            (dolist (info gate-infos)
+              (let ((g-pouch (nth 0 info))
+                    (g-gear  (nth 1 info))
+                    (g-flag  (nth 2 info)))
+                (when (and (eq g-pouch pouch-keyword) (null g-flag))
+                  (push (list :type :gear
+                              :name g-gear
+                              :leaf-name nil
+                              :doc nil
+                              :default-on nil
+                              :doctors nil
+                              :fonts nil
+                              :packages nil
+                              :bindings ks-bindings
+                              :variables nil)
+                        results)))))))))
 
     ;; If no gear entry was created from gearp! calls, infer one from the file
     (unless found-gear-p
