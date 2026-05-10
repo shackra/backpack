@@ -3,7 +3,7 @@
            (not (gearp! :editing html -treesit)))
   (backpack-treesit-recipe! html
     :ts-mode 'html-ts-mode
-    :remap (mhtml-mode sgml-mode html-mode)
+    :remap '(mhtml-mode sgml-mode html-mode)
     :url "https://github.com/tree-sitter/tree-sitter-html"
     :ext "\\.html\\'"))
 
