@@ -9,7 +9,7 @@
     :ts-mode 'hyprlang-ts-mode
     :url "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
     :ext "/hypr/.*\\.conf\\'"
-    :versions ((:until-emacs "29.4" :revision "c9012d6dcaaa939f17c21e1fdb17b013d139e6b9"))))
+    :versions ((:until-abi 14 :revision "c9012d6dcaaa939f17c21e1fdb17b013d139e6b9"))))
 
 (leaf hyprlang-ts-mode
   :doc "for when you need your tiling window manager config to look just right"

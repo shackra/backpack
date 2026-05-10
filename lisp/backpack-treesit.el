@@ -28,8 +28,24 @@
 
 ;;; Code:
 
-(require 'treesit)
+;; `treesit.el' ships with Emacs 29+ regardless of compile flags, but every
+;; useful function it documents is implemented in C (treesit.c).  When Emacs
+;; is built without `--with-tree-sitter', loading the elisp library succeeds
+;; but the underlying C symbols are unbound.  Use `noerror' so we never block
+;; startup just because the user happens to be on a non-treesit build.
+(require 'treesit nil 'noerror)
 (require 'backpack-pouch)
+
+(defun backpack-treesit-available-p ()
+  "Return non-nil when this Emacs build has tree-sitter support compiled in.
+This checks both that the elisp library is present and that the
+underlying C runtime (`treesit-available-p') is bound and reports
+itself as available.  When this returns nil, every Backpack
+treesit facility (recipe registration, grammar installation,
+treesit-auto activation) becomes a no-op."
+  (and (featurep 'treesit)
+       (fboundp 'treesit-available-p)
+       (treesit-available-p)))
 
 ;;; Tree-sitter language management
 (defvar backpack--treesit-langs nil
@@ -38,10 +54,16 @@ This is populated by `backpack-treesit-langs!' calls in gear files.")
 
 (defmacro backpack-treesit-langs! (&rest langs)
   "Declare that the current gear needs tree-sitter support for LANGS.
-LANGS should be symbols like `go', `python', `json', etc.
-These will be added to `treesit-auto-langs' and installed during sync."
-  `(dolist (lang ',langs)
-     (cl-pushnew lang backpack--treesit-langs)))
+LANGS should be symbols like `go', `python', `json', etc.  These
+will be added to `treesit-auto-langs' and installed during sync.
+
+When the running Emacs has no tree-sitter support compiled in
+\(see `backpack-treesit-available-p'), the macro expands to a
+no-op so gear files do not pollute Backpack's bookkeeping with
+languages we cannot use anyway."
+  `(when (backpack-treesit-available-p)
+     (dolist (lang ',langs)
+       (cl-pushnew lang backpack--treesit-langs))))
 
 (defun backpack--plist-remove (plist key)
   "Return a copy of PLIST with KEY (and its value) removed.
@@ -66,21 +88,35 @@ only in BASE or only in OVERRIDE are preserved."
         (setq result (plist-put result k v))))
     result))
 
+(defun backpack--treesit-clause-matches-p (clause)
+  "Return non-nil if CLAUSE applies to the current treesit environment.
+
+A clause is a plist gated by `:until-abi N': it matches when the
+running Emacs's maximum supported tree-sitter ABI
+\(`treesit-library-abi-version') is less than or equal to N.  In
+other words, the clause activates on installations whose local
+libtree-sitter cannot load grammars compiled to ABIs newer than N.
+
+A clause without `:until-abi' never matches."
+  (let ((until-abi (plist-get clause :until-abi)))
+    (and until-abi
+         (fboundp 'treesit-library-abi-version)
+         (let ((max-abi (treesit-library-abi-version)))
+           (and (numberp max-abi) (<= max-abi until-abi))))))
+
 (defun backpack--treesit-resolve-recipe (base versions)
   "Return the effective recipe plist for BASE merged with the first matching clause.
-BASE is a plist of recipe fields.  VERSIONS is a list of override plists,
-each with an `:until-emacs VERSION-STRING' key.  The first clause whose
-`:until-emacs' value is >= `emacs-version' (i.e. `version<=' holds) wins;
-its remaining keys are merged over BASE, replacing existing values.
-Returns BASE unchanged when no clause matches or VERSIONS is nil."
-  (let* ((override (cl-find-if
-                    (lambda (clause)
-                      (version<= emacs-version
-                                 (plist-get clause :until-emacs)))
-                    versions)))
+BASE is a plist of recipe fields.  VERSIONS is a list of override
+plists, each gated by `:until-abi N'.  The first clause for which
+`backpack--treesit-clause-matches-p' returns non-nil wins; its
+remaining keys (with `:until-abi' stripped) are merged over BASE,
+replacing existing values.  Returns BASE unchanged when no clause
+matches or VERSIONS is nil."
+  (let* ((override (cl-find-if #'backpack--treesit-clause-matches-p versions)))
     (if override
-        (backpack--plist-merge base
-                               (backpack--plist-remove override :until-emacs))
+        (backpack--plist-merge
+         base
+         (backpack--plist-remove override :until-abi))
       base)))
 
 (defun backpack--treesit-recipe-to-plist (recipe)
@@ -117,36 +153,38 @@ In addition ARGS may contain:
 
   :versions CLAUSES
 
-where CLAUSES is a list of override plists.  Each override plist must
-contain an `:until-emacs VERSION-STRING' key; if `emacs-version' is
-less than or equal to VERSION-STRING at the time the form is evaluated,
-the remaining keys in that clause are merged over the base recipe fields,
-replacing any existing values.  The first matching clause wins.  When no
-clause matches the base fields are used unchanged.
+where CLAUSES is a list of override plists.  Each override plist
+must contain a `:until-abi N' gating key: the clause matches when
+the running Emacs's maximum supported tree-sitter ABI
+\(`treesit-library-abi-version') is less than or equal to N.  Use
+this to pin grammars whose upstream regenerated `parser.c' to an
+ABI newer than the local libtree-sitter supports (which causes a
+`version-mismatch' load failure).
 
-Inside a version clause, use `:revision' to pin to a specific commit
-hash (this replaces the base `:revision' branch/tag with the pinned ref).
+The first matching clause wins.  When no clause matches the base
+fields are used unchanged.
 
-Version selection runs at the time treesit-auto loads (inside
-`with-eval-after-load'), so the running Emacs version is used.
+Inside a clause, use `:revision' to pin to a specific commit hash
+\(this replaces the base `:revision' branch/tag with the pinned ref).
 
-This macro also implicitly calls `backpack-treesit-langs!' for LANG,
-so there is no need to call it separately.
+Clause selection runs at the time treesit-auto loads (inside
+`with-eval-after-load'), so the running Emacs's libtree-sitter
+ABI range is used.
 
-Fields not supplied in ARGS are inherited from `treesit-auto's built-in
-recipe for LANG (if one exists), so only overrides need to be specified.
+This macro also implicitly calls `backpack-treesit-langs!' for
+LANG, so there is no need to call it separately.
 
-Example -- use a pinned commit on Emacs 29.x due to ABI mismatch:
+Fields not supplied in ARGS are inherited from `treesit-auto's
+built-in recipe for LANG (if one exists), so only overrides need
+to be specified.
 
-  (backpack-treesit-recipe! markdown
-    :ts-mode \\='markdown-ts-mode
-    :remap \\='(markdown-mode gfm-mode)
-    :url \"https://github.com/tree-sitter-grammars/tree-sitter-markdown\"
-    :revision \"split_parser\"
-    :source-dir \"tree-sitter-markdown/src\"
-    :versions ((:until-emacs \"29.4\" :revision \"abc123oldcommit\")))"
+Example -- pin by ABI (any Emacs whose libtree-sitter caps at ABI 14):
+
+  (backpack-treesit-recipe! yaml
+    :url \"https://github.com/tree-sitter-grammars/tree-sitter-yaml\"
+    :versions ((:until-abi 14 :revision \"abc123lastABI14commit\")))"
   (declare (indent 1))
-  `(progn
+  `(when (backpack-treesit-available-p)
      (backpack-treesit-langs! ,lang)
      (with-eval-after-load 'treesit-auto
        (let* (;; 1. built-in treesit-auto recipe for this lang (may be nil)
@@ -336,6 +374,59 @@ short-circuit to the hash itself."
               (match-string 1)))))
     (error nil)))
 
+(defun backpack--treesit-quarantine-broken-grammar (so-path lang)
+  "Best-effort removal of a broken tree-sitter grammar SO-PATH for LANG.
+
+After the post-install ABI check, the grammar shared library is
+typically already mapped into the running Emacs process.  On
+Windows, mapped libraries cannot be deleted (the OS reports
+`permission-denied \"Removing old name\"'), but they can usually
+be renamed.  This function tries:
+
+  1. `delete-file' (works on GNU/Linux, macOS, and on Windows when
+     the library is not currently mapped).
+  2. Otherwise renames SO-PATH to SO-PATH + \".broken\" so that the
+     next `backpack ensure' run does not see the broken DLL as
+     up-to-date and can clean it up before any treesit operation
+     maps it (see `backpack--treesit-cleanup-broken-grammars').
+
+Recoverable errors are swallowed so the caller's outer error message
+\(e.g. \"ABI version-mismatch\") is not displaced by a misleading
+\"permission-denied\" message."
+  (when (file-exists-p so-path)
+    (condition-case _err
+        (delete-file so-path)
+      (file-error
+       (let ((quarantine (concat so-path ".broken")))
+         (condition-case err2
+             (progn
+               (when (file-exists-p quarantine)
+                 (ignore-errors (delete-file quarantine)))
+               (rename-file so-path quarantine t)
+               (message "Backpack: Could not delete broken grammar for %s on this OS; renamed to %s.  The next `backpack ensure' will clean it up."
+                        lang (file-name-nondirectory quarantine)))
+           (file-error
+            (message "Backpack: Could not delete or rename broken grammar for %s at %s (%s).  Restart Emacs and re-run `backpack ensure' to recover."
+                     lang so-path (error-message-string err2)))))))))
+
+(defun backpack--treesit-cleanup-broken-grammars (dir)
+  "Delete any leftover `*.broken' grammar files from previous runs in DIR.
+These files are produced by `backpack--treesit-quarantine-broken-grammar'
+when the running Emacs process had the freshly-compiled DLL mapped and
+could therefore not delete it (Windows behaviour).  A subsequent
+`backpack ensure' run starts in a fresh process where nothing is mapped
+yet, so the cleanup succeeds."
+  (when (file-directory-p dir)
+    (dolist (broken (directory-files dir t "\\.broken\\'"))
+      (condition-case err
+          (progn
+            (delete-file broken)
+            (message "Backpack: Removed leftover broken grammar %s"
+                     (file-name-nondirectory broken)))
+        (file-error
+         (message "Backpack: Could not remove leftover %s: %s"
+                  broken (error-message-string err)))))))
+
 (defun backpack--install-treesit-grammars ()
   "Install all tree-sitter grammars declared by enabled gears.
 Only grammars whose upstream revision has changed since the last
@@ -344,9 +435,19 @@ determined via `git ls-remote'; if the network is unreachable the
 grammar is skipped with a warning.
 
 This should be called during sync mode after all gears are loaded.
-Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
-  (when (and backpack--treesit-langs
-             (not (gearp! :ui -treesit)))
+Requires treesit-auto to be activated (via `backpack-enable-on-sync!').
+
+When the running Emacs has no tree-sitter support compiled in
+\(see `backpack-treesit-available-p') the function short-circuits
+with a single informational message and does no work."
+  (cond
+   ((not (backpack-treesit-available-p))
+    (message "Backpack: This Emacs build was not compiled with tree-sitter support; skipping grammar installation.  Rebuild Emacs with `--with-tree-sitter' to enable tree-sitter modes."))
+   ((gearp! :ui -treesit)
+    nil)
+   ((null backpack--treesit-langs)
+    nil)
+   (t
     (message "Backpack: Checking tree-sitter grammars for: %s"
              (mapconcat #'symbol-name backpack--treesit-langs ", "))
 
@@ -375,6 +476,11 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
       ;; directory explicitly and keep treesit-extra-load-path pointing at it.
       (let ((grammar-dir (backpack--treesit-grammar-dir)))
         (make-directory grammar-dir t)
+        ;; Sweep any *.broken files left by a previous run that hit the
+        ;; Windows file-lock path in `backpack--treesit-quarantine-broken-grammar'.
+        ;; We are in a fresh emacs process here, so nothing is mapped yet
+        ;; and the deletion will succeed.
+        (backpack--treesit-cleanup-broken-grammars grammar-dir)
         (when (>= emacs-major-version 30)
           (setq treesit-extra-load-path (list grammar-dir))))
       ;; Build the source alist from treesit-auto recipes
@@ -463,17 +569,23 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
                         (`(t . ,_)
                          (setf (alist-get lang state) remote-rev)
                          (cl-incf installed))
-                        (`(nil . (version-mismatch . ,_))
-                         (message "Backpack: Grammar for %s has ABI version-mismatch with this Emacs build, marking as failed" lang)
-                         ;; Delete the unusable .so so the next ensure run
-                         ;; does not treat it as up-to-date.
-                         (when (file-exists-p so-path)
-                           (delete-file so-path))
+                        (`(nil . (version-mismatch . ,abi))
+                         (message "Backpack: Grammar for %s has ABI version-mismatch (compiled to ABI %s, this Emacs supports up to ABI %s); marking as failed.  Pin an older revision via `:versions ((:until-abi %s :revision \"...\"))' or upgrade libtree-sitter."
+                                  lang abi
+                                  (and (fboundp 'treesit-library-abi-version)
+                                       (treesit-library-abi-version))
+                                  (and (fboundp 'treesit-library-abi-version)
+                                       (treesit-library-abi-version)))
+                         ;; Best-effort cleanup of the unusable library so
+                         ;; the next ensure run does not treat it as
+                         ;; up-to-date.  On Windows the freshly-compiled
+                         ;; DLL is now mapped into this process and cannot
+                         ;; be deleted; quarantine handles that case.
+                         (backpack--treesit-quarantine-broken-grammar so-path lang)
                          (cl-incf failed))
                         (`(nil . ,err)
                          (message "Backpack: Grammar for %s failed post-install check (%s), marking as failed" lang err)
-                         (when (file-exists-p so-path)
-                           (delete-file so-path))
+                         (backpack--treesit-quarantine-broken-grammar so-path lang)
                          (cl-incf failed))))))))
             (error
              (message "Backpack: Failed to install grammar for %s: %s" lang err)
@@ -481,7 +593,7 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
         ;; Persist state so the next run can skip unchanged grammars
         (backpack--treesit-write-state state)
         (message "Backpack: Tree-sitter grammars: %d installed, %d up-to-date, %d failed/skipped"
-                 installed up-to-date failed)))))
+                 installed up-to-date failed))))))
 
 
 (defun backpack-treesit--buffer-language ()
@@ -536,8 +648,13 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
 
 ;;;###autoload
 (defun backpack-treesit-grammar-info ()
-  "Display tree-sitter grammar info for the current buffer's language."
+  "Display tree-sitter grammar info for the current buffer's language.
+On Emacs builds without tree-sitter support compiled in, this
+command reports that condition instead of trying to inspect a
+non-existent grammar."
   (interactive)
+  (if (not (backpack-treesit-available-p))
+      (message "Backpack: This Emacs build was not compiled with tree-sitter support.")
   (let* ((lang (backpack-treesit--buffer-language))
          (propertize (lambda (str) (propertize str 'face 'font-lock-type-face))))
     (if (not lang)
@@ -570,7 +687,7 @@ Requires treesit-auto to be activated (via `backpack-enable-on-sync!')."
                      (funcall propertize short-lang)
                      abi-str lib-range
                      (or short-path "path unknown")
-                     commit-str)))))))
+                     commit-str))))))))
 
 (provide 'backpack-treesit)
 ;;; backpack-treesit.el ends here

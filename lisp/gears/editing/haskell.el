@@ -7,7 +7,7 @@
     :ts-mode 'haskell-ts-mode
     :remap 'haskell-mode
     :url "https://github.com/tree-sitter/tree-sitter-haskell"
-    :versions ((:until-emacs "29.4" :revision "a50070d5bb5bd5c1281740a6102ecf1f4b0c4f19"))))
+    :versions ((:until-abi 14 :revision "a50070d5bb5bd5c1281740a6102ecf1f4b0c4f19"))))
 
 (leaf haskell-mode
   :doc "a monad is just a monoid in the category of endofunctors, what's the problem?"

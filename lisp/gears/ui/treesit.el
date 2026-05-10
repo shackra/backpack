@@ -1,12 +1,18 @@
-;; Mark treesit-auto for activation in sync mode (needed for grammar installation)
-;; This must come BEFORE the leaf declaration so the package is registered
-;; before elpaca processes the queue
-(unless (gearp! :ui -treesit)
+;; Mark treesit-auto for activation in sync mode (needed for grammar
+;; installation).  This must come BEFORE the leaf declaration so the
+;; package is registered before elpaca processes the queue.  We also
+;; refuse to even register treesit-auto when this Emacs was built
+;; without tree-sitter support: the package's own load-time code
+;; calls treesit C functions that are not bound on such builds, which
+;; would crash the gear before our :unless can take effect.
+(when (and (not (gearp! :ui -treesit))
+           (backpack-treesit-available-p))
   (backpack-enable-on-sync! treesit-auto))
 
 (leaf treesit-auto
   :doc "activate treesit everywhere"
-  :unless (gearp! :ui -treesit)
+  :unless (or (gearp! :ui -treesit)
+              (not (backpack-treesit-available-p)))
   :ensure (treesit-auto :ref "016bd286a1ba4628f833a626f8b9d497882ecdf3")
   :require t
   :advice
