@@ -7,14 +7,14 @@
     :url "https://github.com/tree-sitter/tree-sitter-typescript"
     :source-dir "typescript/src"
     :ext "\\.ts\\'"
-    :versions ((:until-emacs "29.4" :revision "75b3874edb2dc714fb1fd77a32013d0f8699989f")))
+    :versions ((:until-abi 14 :revision "75b3874edb2dc714fb1fd77a32013d0f8699989f")))
   (backpack-treesit-recipe! tsx
     :ts-mode 'tsx-ts-mode
     :remap 'tsx-mode
     :url "https://github.com/tree-sitter/tree-sitter-typescript"
     :source-dir "tsx/src"
     :ext "\\.tsx\\'"
-    :versions ((:until-emacs "29.4" :revision "75b3874edb2dc714fb1fd77a32013d0f8699989f"))))
+    :versions ((:until-abi 14 :revision "75b3874edb2dc714fb1fd77a32013d0f8699989f"))))
 
 (leaf typescript-ts-mode
   :doc "tree-sitter support for TypeScript"

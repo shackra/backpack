@@ -6,7 +6,7 @@
     :remap 'js-mode
     :url "https://github.com/tree-sitter/tree-sitter-javascript"
     :ext "\\.js\\'"
-    :versions ((:until-emacs "29.4" :revision "58404d8cf191d69f2674a8fd507bd5776f46cb11"))))
+    :versions ((:until-abi 14 :revision "58404d8cf191d69f2674a8fd507bd5776f46cb11"))))
 
 (leaf js
   :doc "the language that keeps giving (and taking away semicolons)"

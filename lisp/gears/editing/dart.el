@@ -6,7 +6,7 @@
     :remap 'dart-mode
     :url "https://github.com/UserNobody14/tree-sitter-dart"
     :ext "\\.dart\\'"
-    :versions ((:until-emacs "29.4" :revision "0fc19c3a57b1109802af41d2b8f60d8835c5da3a"))))
+    :versions ((:until-abi 14 :revision "0fc19c3a57b1109802af41d2b8f60d8835c5da3a"))))
 
 (leaf dart-mode
   :doc "the language where everything is a widget and nothing is simple"

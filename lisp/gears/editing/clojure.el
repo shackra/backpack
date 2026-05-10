@@ -6,7 +6,7 @@
     :remap 'clojure-mode
     :url "https://github.com/sogaiu/tree-sitter-clojure"
     :ext "\\\.clj[csx]?\\'"
-    :versions ((:until-emacs "29.4" :revision "e43eff80d17cf34852dcd92ca5e6986d23a7040f")))
+    :versions ((:until-abi 14 :revision "e43eff80d17cf34852dcd92ca5e6986d23a7040f")))
   ;; clojure-ts-mode embeds markdown-inline (docstrings) and regex
   ;; (regex literal highlighting) grammars by default
   (backpack-treesit-recipe! markdown-inline

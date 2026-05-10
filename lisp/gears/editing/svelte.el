@@ -6,7 +6,7 @@
     :remap 'svelte-mode
     :url "https://github.com/tree-sitter-grammars/tree-sitter-svelte"
     :ext "\\.svelte\\'"
-    :versions ((:until-emacs "29.4" :revision "ae5199db47757f785e43a14b332118a5474de1a2"))))
+    :versions ((:until-abi 14 :revision "ae5199db47757f785e43a14b332118a5474de1a2"))))
 
 (leaf svelte-mode
   :doc "a minor mode for Svelte component files"

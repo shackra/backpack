@@ -6,7 +6,7 @@
     :remap 'kotlin-mode
     :url "https://github.com/fwcd/tree-sitter-kotlin"
     :ext "\\.kt\\'"
-    :versions ((:until-emacs "29.4" :revision "55622a49bd59ca42cec5c01ba5251bb4da9b8930"))))
+    :versions ((:until-abi 14 :revision "55622a49bd59ca42cec5c01ba5251bb4da9b8930"))))
 
 (leaf kotlin-mode
   :doc "null pointer exceptions, but make it concise"

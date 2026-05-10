@@ -8,10 +8,10 @@
     :remap 'java-mode
     :url "https://github.com/tree-sitter/tree-sitter-java"
     :ext "\\.java\\'"
-    :versions ((:until-emacs "29.4" :revision "e10607b45ff745f5f876bfa3e94fbcc6b44bdc11")))
+    :versions ((:until-abi 14 :revision "e10607b45ff745f5f876bfa3e94fbcc6b44bdc11")))
   (backpack-treesit-recipe! doxygen
     :url "https://github.com/tree-sitter-grammars/tree-sitter-doxygen"
-    :versions ((:until-emacs "29.4" :revision "ccd998f378c3f9345ea4eeb223f56d7b84d16687"))
+    :versions ((:until-abi 14 :revision "ccd998f378c3f9345ea4eeb223f56d7b84d16687"))
     :source-dir "src"))
 
 (leaf cc-mode
