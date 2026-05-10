@@ -201,6 +201,68 @@ This macro does two things at load time:
 			   :content "monitor=,preferred,auto,1\n"
 			   :treesit hyprlang)
 
+(backpack-e2e-treesit-test javascript
+			   :gear (javascript)
+			   :file "main.js"
+			   :content "const x = 1;\n"
+			   :treesit javascript)
+
+(backpack-e2e-treesit-test typescript
+			   :gear (typescript)
+			   :file "main.ts"
+			   :content "const x: number = 1;\n"
+			   :treesit typescript)
+
+(backpack-e2e-treesit-test tsx
+			   :gear (typescript)
+			   :file "main.tsx"
+			   :content "const App = () => <div />;\n"
+			   :treesit tsx)
+
+(backpack-e2e-treesit-test html
+			   :gear (html)
+			   :file "index.html"
+			   :content "<!DOCTYPE html>\n<html></html>\n"
+			   :treesit html)
+
+(backpack-e2e-treesit-test css
+			   :gear (css)
+			   :file "main.css"
+			   :content "body { margin: 0; }\n"
+			   :treesit css)
+
+(backpack-e2e-treesit-test svelte
+			   :gear (svelte)
+			   :file "App.svelte"
+			   :content "<script>let count = 0;</script>\n"
+			   :treesit svelte)
+
+;; clojure-ts-mode requires Emacs 30+; skip on older versions.
+(when (> emacs-major-version 29)
+  (backpack-e2e-treesit-test clojure
+			     :gear (clojure)
+			     :file "core.clj"
+			     :content "(ns core)\n"
+			     :treesit clojure))
+
+(backpack-e2e-treesit-test kotlin
+			   :gear (kotlin)
+			   :file "Main.kt"
+			   :content "fun main() {}\n"
+			   :treesit kotlin)
+
+(backpack-e2e-treesit-test java
+			   :gear (java)
+			   :file "Main.java"
+			   :content "class Main {}\n"
+			   :treesit java)
+
+(backpack-e2e-treesit-test dart
+			   :gear (dart)
+			   :file "main.dart"
+			   :content "void main() {}\n"
+			   :treesit dart)
+
 ;;; --- Interactive test runner (used by step 4 of the orchestrator) ---------
 
 (defvar backpack-e2e--results-file nil
