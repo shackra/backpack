@@ -195,13 +195,8 @@ skip recompilation when the upstream grammar has not changed.")
   (unless noninteractive
     (setq frame-inhibit-implied-resize t)
 
-    (setq inhibit-startup-screen t
-          inhibit-startup-echo-area-message user-login-name
-          initial-major-mode 'fundamental-mode
+    (setq initial-major-mode 'fundamental-mode
           initial-scratch-message nil)
-
-    (advice-add #'display-startup-echo-area-message :override #'ignore)
-    (advice-add #'display-startup-screen :override #'ignore)
 
     (unless initial-window-system
       (define-advice tty-run-terminal-initialization (:override (&rest _) defer)
@@ -223,8 +218,6 @@ skip recompilation when the upstream grammar has not changed.")
         (remove-hook 'post-command-hook #'backpack--reset-inhibited-vars-h))
       (add-hook 'post-command-hook #'backpack--reset-inhibited-vars-h -100))
 
-    (advice-add #'tool-bar-setup :override #'ignore)
-
     (put 'site-run-file 'initial-value site-run-file)
     (setq site-run-file nil)
 
@@ -232,11 +225,6 @@ skip recompilation when the upstream grammar has not changed.")
       "Undo Doom's startup optimizations to prep for the user's session."
       (unwind-protect (apply fn args)
 	(setq-default inhibit-message nil)
-	(advice-remove #'tool-bar-setup #'ignore)
-
-	(add-hook 'tool-bar-mode-hook (defun --tool-bar-setup ()
-					(tool-bar-setup)
-					(remove-hook 'tool-bar-mode-hook '--tool-bar-setup)))
 	(unless (default-toplevel-value 'mode-line-format)
 	  (setq-default mode-line-format (get 'mode-line-format 'initial-value)))))
 
