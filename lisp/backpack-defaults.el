@@ -1,4 +1,3 @@
-;; -*- lexical-binding: t; -*-
 ;;; backpack-defaults.el --- Sensible default settings for Backpack  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 Jorge Javier Araya Navarro and Backpack contributors

@@ -3,7 +3,6 @@
   :doc "Sane defaults for Emacs"
   :leaf-defer nil
   :bind
-  ("C-x k" . kill-current-buffer)
   ("C-z" . nil)
   (:minibuffer-mode-map
    ("TAB" . minibuffer-complete))
