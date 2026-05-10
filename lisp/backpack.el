@@ -362,6 +362,7 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/config/default" backpack-core-dir))
   (load (expand-file-name "gears/ui/theme" backpack-core-dir))
   (load (expand-file-name "gears/ui/treesit" backpack-core-dir))
+  (load (expand-file-name "gears/completion/consult" backpack-core-dir))
   (load (expand-file-name "gears/completion/corfu" backpack-core-dir))
   (load (expand-file-name "gears/completion/eglot" backpack-core-dir))
   (load (expand-file-name "gears/completion/marginalia" backpack-core-dir))
