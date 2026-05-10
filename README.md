@@ -13,15 +13,26 @@ This starter kit uses [leaf.el](https://github.com/conao3/leaf.el) as the DSL fo
 
 ### Installing Backpack Emacs
 
-Make a backup of your old Emacs configuration. Then, clone this repository either in your `$HOME` or in your `$XDG_CONFIG_HOME`:
+Make a backup of your old Emacs configuration. Then, clone this repository either in your `$HOME` or in your `$XDG_CONFIG_HOME`. Regardless of where you decide to clone, please be sure to add the `bin/` directory to your PATH, otherwise your shell won't know where the `backpack` command is.
+
+#### From Radicle
+
+In case you didn't know, Radicle is a self-described *open source*, peer-to-peer code collaboration stack built on Git. Is a really cool project and I encourage you to check it out! You **don't need to have** a radicle node to clone Backpack from mine.
+
+```sh
+git clone --recurse-submodules https://jardin.jorgearaya.dev/zecRiYjpjFnZWFhygfVM7shaCzJh.git ~/.emacs.d
+```
+
+#### From GitHub
 
 ```sh
 git clone --recurse-submodules https://github.com/shackra/backpack.git ~/.emacs.d
 ```
 
-Be sure to put `$HOME/.emacs.d/bin/` in your path, otherwise your shell won't know where `backpack` is.
-
 ### Writing your initial configuration
+
+> [!IMPORTANT]
+> You can learn what's available in Backpack with `backpack-inventory` (bound to `C-h B`).
 
 Now that you have the starter kit cloned with its corresponding sub-modules (right?), you need to write your configuration. It has to go in either `$HOME/.backpack.d` or `$XDG_CONFIG_HOME/backpack`, in any of those two directories make a file called `init.el`:
 
@@ -43,7 +54,7 @@ Some features are turned on by default if some gear is activated. To turn them o
 
 ### Please, run `backpack ensure` on a terminal every time you change your configuration
 
-Please do the above. It helps speed up the initialization of Emacs and run functions that won't be called in a normal execution of Emacs. When running `backpack ensure` you are supposed to see the elpaca information panel, among many other things, and then Emacs exiting.
+Please do the above. It helps speed up the initialization of Emacs and run functions that won't be called in a normal execution of Emacs. When running `backpack ensure` you are supposed to see the elpaca logging its progress, among many other things, and then Emacs exiting.
 
 ### Finding out what is available in your Backpack
 
