@@ -5,19 +5,19 @@
 (when (and (gearp! :editing markdown)
            (not (gearp! :editing markdown -treesit)))
   (backpack-treesit-recipe! markdown
-			    :ts-mode 'markdown-ts-mode
-			    :remap '(markdown-mode gfm-mode)
-			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-			    :revision "split_parser"
-			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
-			    :source-dir "tree-sitter-markdown/src")
+    :ts-mode 'markdown-ts-mode
+    :remap '(markdown-mode gfm-mode)
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+    :revision "split_parser"
+    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+    :source-dir "tree-sitter-markdown/src")
 
   (backpack-treesit-recipe! markdown-inline
-			    :ts-mode 'markdown-ts-mode
-			    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-			    :revision "split_parser"
-			    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
-			    :source-dir "tree-sitter-markdown-inline/src"))
+    :ts-mode 'markdown-ts-mode
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+    :revision "split_parser"
+    :versions ((:until-emacs "29.4" :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+    :source-dir "tree-sitter-markdown-inline/src"))
 
 (leaf markdown-mode
   :doc "the markup language everyone thinks they know until they hit nested lists"
@@ -32,8 +32,16 @@
     (add-hook 'markdown-ts-mode-hook #'display-line-numbers-mode)))
 
 (leaf markdown-ts-mode
-  :doc "tree-sitter support for Markdown"
+  :doc "tree-sitter support for Markdown (external, Emacs < 31)"
+  :emacs< 31
   :ensure (markdown-ts-mode :ref "2f1ee8b94cdf53cebc31ae08ecfbba846193d5e1")
+  :when (and (gearp! :editing markdown)
+	     (not (gearp! :editing markdown -treesit)))
+  :require t)
+
+(leaf markdown-ts-mode
+  :doc "tree-sitter support for Markdown (built-in, Emacs >= 31)"
+  :emacs>= 31
   :when (and (gearp! :editing markdown)
 	     (not (gearp! :editing markdown -treesit)))
   :require t)
