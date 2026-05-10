@@ -593,7 +593,9 @@ Returns a list of gear-info plists, or nil if the form isn't relevant."
                       results)))
 
              ;; 2-arg gearp! in :when => opt-in gear
-             ((and (null g-flag) (eq gate-context :when))
+             ;; Skip -prefixed names: those are guard checks (not (gearp! :p -gear))
+             ((and (null g-flag) (eq gate-context :when)
+                   (not (backpack-inventory--flag-default-on-p g-gear)))
               (push (list :type :gear
                           :name g-gear
                           :leaf-name leaf-name
