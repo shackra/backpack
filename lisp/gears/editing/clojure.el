@@ -6,7 +6,14 @@
     :remap 'clojure-mode
     :url "https://github.com/sogaiu/tree-sitter-clojure"
     :ext "\\\.clj[csx]?\\'"
-    :versions ((:until-emacs "29.4" :revision "e43eff80d17cf34852dcd92ca5e6986d23a7040f"))))
+    :versions ((:until-emacs "29.4" :revision "e43eff80d17cf34852dcd92ca5e6986d23a7040f")))
+  ;; clojure-ts-mode embeds markdown-inline (docstrings) and regex
+  ;; (regex literal highlighting) grammars by default
+  (backpack-treesit-recipe! markdown-inline
+    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+    :source-dir "tree-sitter-markdown-inline/src")
+  (backpack-treesit-recipe! regex
+    :url "https://github.com/tree-sitter/tree-sitter-regex"))
 
 (leaf clojure-mode
   :doc "a monad is just a monoid in the category of endofunctors, what's the problem?"
@@ -25,7 +32,11 @@
   :when (gearp! :editing clojure)
   :unless (gearp! :editing clojure -treesit)
   :ensure (clojure-ts-mode :ref "ba6de87b0acb5aa5483f6012611b30f6bf0414f3")
-  :after clojure-mode)
+  :after clojure-mode
+  :custom
+  ;; Backpack handles grammar installation; disable clojure-ts-mode's
+  ;; own installer to avoid redundant recompilation on file visit.
+  (clojure-ts-ensure-grammars . nil))
 
 (leaf cider
   :doc "the Clojure Interactive Development Environment that Rocks"
