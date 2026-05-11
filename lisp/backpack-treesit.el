@@ -21,9 +21,10 @@
 ;;; Commentary:
 
 ;; Tree-sitter grammar declaration, installation, state tracking, and
-;; introspection.  Gear files use `backpack-treesit-langs!' and
+;; introspection. Gear files use `backpack-treesit-langs!' and
 ;; `backpack-treesit-recipe!' to declare grammars; `backpack ensure'
 ;; calls `backpack--install-treesit-grammars' to build them.
+;; `backpack-treesit-was-asked' helps with conditional statements.
 
 ;;; Code:
 
@@ -687,6 +688,16 @@ non-existent grammar."
                      abi-str lib-range
                      (or short-path "path unknown")
                      commit-str))))))))
+
+(defun backpack-treesit-was-asked (gear &optional minimal-emacs-version-expected)
+  "Return t if tree-sitter support was asked for editing gear GEAR."
+  (let* ((asked (eval `(and (gearp! :editing ,gear)
+			    (not (gearp! :editing ,gear -treesit)))))
+	 (version-ok (or (null minimal-emacs-version-expected)
+			 (not (version< emacs-version minimal-emacs-version-expected)))))
+    (if minimal-emacs-version-expected
+	(and asked version-ok)
+      asked)))
 
 (provide 'backpack-treesit)
 ;;; backpack-treesit.el ends here
