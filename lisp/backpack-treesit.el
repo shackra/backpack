@@ -498,70 +498,70 @@ with a single informational message and does no work."
                      (so-path (backpack--treesit-grammar-so-path lang))
                      (so-exists (file-exists-p so-path))
                      (prev-rev (alist-get lang state)))
-                 (if (not source)
-                     (progn
-                       (message "Backpack: No recipe found for %s, skipping" lang)
-                       (cl-incf failed))
-                   ;; Determine the effective remote revision.
-                   ;; When the recipe pins a full commit hash we use it
-                   ;; directly: git ls-remote cannot resolve bare SHAs
-                   ;; (it only lists named refs) and would return nil,
-                   ;; which we would otherwise misinterpret as a network
-                   ;; error.  A pinned hash is inherently stable -- the
-                   ;; same SHA always points to the same commit.
-                   (let ((remote-rev
-                          (if (backpack--treesit-commit-hash-p revision)
-                              revision
-                            (backpack--treesit-remote-rev url revision))))
-                     (cond
-                      ;; Network failure -- cannot determine state
-                      ((null remote-rev)
-                       (message "Backpack: WARNING: Cannot check updates for %s (network error?), skipping" lang)
-                       (cl-incf failed))
+                (if (not source)
+                    (progn
+                      (message "Backpack: No recipe found for %s, skipping" lang)
+                      (cl-incf failed))
+                  ;; Determine the effective remote revision.
+                  ;; When the recipe pins a full commit hash we use it
+                  ;; directly: git ls-remote cannot resolve bare SHAs
+                  ;; (it only lists named refs) and would return nil,
+                  ;; which we would otherwise misinterpret as a network
+                  ;; error.  A pinned hash is inherently stable -- the
+                  ;; same SHA always points to the same commit.
+                  (let ((remote-rev
+                         (if (backpack--treesit-commit-hash-p revision)
+                             revision
+                           (backpack--treesit-remote-rev url revision))))
+                    (cond
+                     ;; Network failure -- cannot determine state
+                     ((null remote-rev)
+                      (message "Backpack: WARNING: Cannot check updates for %s (network error?), skipping" lang)
+                      (cl-incf failed))
                      ;; Already compiled and up to date
                      ((and so-exists prev-rev (string= remote-rev prev-rev))
                       (message "Backpack: Grammar for %s is up to date, skipping" lang)
                       (cl-incf up-to-date))
-                      ;; Needs (re)compilation
-                      (t
-                       (message "Backpack: Installing grammar for %s..." lang)
-                       ;; When the revision is a bare commit hash we must not
-                       ;; pass it as-is to treesit-install-language-grammar:
-                       ;; Emacs always uses the revision as the -b argument to
-                       ;; `git clone', which only accepts branch/tag names.
-                       ;;
-                       ;; Strategy:
-                       ;;   1. Temporarily replace the revision in
-                       ;;      treesit-language-source-alist with nil so that
-                       ;;      Emacs clones the default branch (no -b flag).
-                       ;;   2. Bind backpack--treesit-pending-sha to the SHA.
-                       ;;      The advice backpack--treesit-clone-advice on
-                       ;;      treesit--call-process-signal detects this and
-                       ;;      injects a `git checkout SHA' step after the
-                       ;;      clone succeeds, pinning the tree to the exact
-                       ;;      commit before compilation.
-                       (let* ((sha-p (backpack--treesit-commit-hash-p revision))
-                              (backpack--treesit-pending-sha (when sha-p revision))
-                              ;; Shadow the source alist: replace SHA revision
-                              ;; with nil so treesit clones the default branch.
-                              (treesit-language-source-alist
-                               (if sha-p
-                                   (cons (cons lang
-                                               (list url nil
-                                                     (nth 2 source)
-                                                     (nth 3 source)
-                                                     (nth 4 source)))
-                                         (assoc-delete-all
-                                          lang treesit-language-source-alist))
-                                 treesit-language-source-alist)))
-                         ;; Emacs 29: treesit-install-language-grammar only
-                         ;; accepts one argument; grammars land in the default
-                         ;; location (<user-emacs-directory>/tree-sitter/).
-                         ;; Emacs 30+: pass the custom directory explicitly.
-                         (if (>= emacs-major-version 30)
-                             (treesit-install-language-grammar
-                              lang backpack-tree-sitter-installation-dir)
-                           (treesit-install-language-grammar lang)))
+                     ;; Needs (re)compilation
+                     (t
+                      (message "Backpack: Installing grammar for %s..." lang)
+                      ;; When the revision is a bare commit hash we must not
+                      ;; pass it as-is to treesit-install-language-grammar:
+                      ;; Emacs always uses the revision as the -b argument to
+                      ;; `git clone', which only accepts branch/tag names.
+                      ;;
+                      ;; Strategy:
+                      ;;   1. Temporarily replace the revision in
+                      ;;      treesit-language-source-alist with nil so that
+                      ;;      Emacs clones the default branch (no -b flag).
+                      ;;   2. Bind backpack--treesit-pending-sha to the SHA.
+                      ;;      The advice backpack--treesit-clone-advice on
+                      ;;      treesit--call-process-signal detects this and
+                      ;;      injects a `git checkout SHA' step after the
+                      ;;      clone succeeds, pinning the tree to the exact
+                      ;;      commit before compilation.
+                      (let* ((sha-p (backpack--treesit-commit-hash-p revision))
+                             (backpack--treesit-pending-sha (when sha-p revision))
+                             ;; Shadow the source alist: replace SHA revision
+                             ;; with nil so treesit clones the default branch.
+                             (treesit-language-source-alist
+                              (if sha-p
+                                  (cons (cons lang
+                                              (list url nil
+                                                    (nth 2 source)
+                                                    (nth 3 source)
+                                                    (nth 4 source)))
+                                        (assoc-delete-all
+                                         lang treesit-language-source-alist))
+                                treesit-language-source-alist)))
+                        ;; Emacs 29: treesit-install-language-grammar only
+                        ;; accepts one argument; grammars land in the default
+                        ;; location (<user-emacs-directory>/tree-sitter/).
+                        ;; Emacs 30+: pass the custom directory explicitly.
+                        (if (>= emacs-major-version 30)
+                            (treesit-install-language-grammar
+                             lang backpack-tree-sitter-installation-dir)
+                          (treesit-install-language-grammar lang)))
                       ;; Verify the installed grammar is actually loadable.
                       ;; A version-mismatch means the grammar was compiled
                       ;; against a newer ABI than this Emacs binary supports.
@@ -655,39 +655,39 @@ non-existent grammar."
   (interactive)
   (if (not (backpack-treesit-available-p))
       (message "Backpack: This Emacs build was not compiled with tree-sitter support.")
-  (let* ((lang (backpack-treesit--buffer-language))
-         (propertize (lambda (str) (propertize str 'face 'font-lock-type-face))))
-    (if (not lang)
-        (message "No tree-sitter language in current buffer")
-      (let ((abi (when (fboundp 'treesit-language-abi-version)
-                   (treesit-language-abi-version lang)))
-            (lib-max (when (fboundp 'treesit-library-abi-version)
-                       (treesit-library-abi-version)))
-            (lib-min (when (fboundp 'treesit-library-abi-version)
-                       (treesit-library-abi-version t)))
-            (path (when (fboundp 'treesit-grammar-location)
-                    (treesit-grammar-location lang)))
-            (commit (backpack-treesit--state-commit lang))
-            (short-lang (symbol-name lang)))
-        (if (not abi)
-            (message "%s: grammar not installed" (funcall propertize short-lang))
-          (let* ((home-dir (expand-file-name "~/"))
-                 (short-path (if (and path (string-prefix-p home-dir path))
-                                 (concat "~/" (substring path (length home-dir)))
-                               path))
-                 (abi-str (format "ABI %s" abi))
-                 (lib-range (if (and lib-min lib-max)
-                                (format " (lib %s–%s)" lib-min lib-max)
-                              ""))
-                 (commit-str (if commit
-                                (format ", commit %s"
-                                        (backpack-treesit--short-hash commit))
-                              "")))
-            (message "%s: %s%s, %s%s"
-                     (funcall propertize short-lang)
-                     abi-str lib-range
-                     (or short-path "path unknown")
-                     commit-str))))))))
+    (let* ((lang (backpack-treesit--buffer-language))
+           (propertize (lambda (str) (propertize str 'face 'font-lock-type-face))))
+      (if (not lang)
+          (message "No tree-sitter language in current buffer")
+	(let ((abi (when (fboundp 'treesit-language-abi-version)
+                     (treesit-language-abi-version lang)))
+              (lib-max (when (fboundp 'treesit-library-abi-version)
+			 (treesit-library-abi-version)))
+              (lib-min (when (fboundp 'treesit-library-abi-version)
+			 (treesit-library-abi-version t)))
+              (path (when (fboundp 'treesit-grammar-location)
+                      (treesit-grammar-location lang)))
+              (commit (backpack-treesit--state-commit lang))
+              (short-lang (symbol-name lang)))
+          (if (not abi)
+              (message "%s: grammar not installed" (funcall propertize short-lang))
+            (let* ((home-dir (expand-file-name "~/"))
+                   (short-path (if (and path (string-prefix-p home-dir path))
+                                   (concat "~/" (substring path (length home-dir)))
+				 path))
+                   (abi-str (format "ABI %s" abi))
+                   (lib-range (if (and lib-min lib-max)
+                                  (format " (lib %s–%s)" lib-min lib-max)
+				""))
+                   (commit-str (if commit
+                                   (format ", commit %s"
+                                           (backpack-treesit--short-hash commit))
+				 "")))
+              (message "%s: %s%s, %s%s"
+                       (funcall propertize short-lang)
+                       abi-str lib-range
+                       (or short-path "path unknown")
+                       commit-str))))))))
 
 (defun backpack-treesit-was-asked (gear &optional minimal-emacs-version-expected)
   "Return t if tree-sitter support was asked for editing gear GEAR."
