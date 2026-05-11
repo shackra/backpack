@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing rust)
-           (not (gearp! :editing rust -treesit)))
+(when (backpack-treesit-was-asked 'rust)
   (backpack-treesit-recipe! rust
     :ts-mode 'rust-ts-mode
     :remap 'rust-mode

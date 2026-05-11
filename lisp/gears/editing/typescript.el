@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing typescript)
-           (not (gearp! :editing typescript -treesit)))
+(when (backpack-treesit-was-asked 'typescript)
   (backpack-treesit-recipe! typescript
     :ts-mode 'typescript-ts-mode
     :remap 'typescript-mode

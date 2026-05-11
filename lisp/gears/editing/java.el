@@ -1,8 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear.
 ;; doxygen is an auxiliary grammar that provides Javadoc highlighting
 ;; inside java-ts-mode buffers.  It does not define its own major mode.
-(when (and (gearp! :editing java)
-           (not (gearp! :editing java -treesit)))
+(when (backpack-treesit-was-asked 'java)
   (backpack-treesit-recipe! java
     :ts-mode 'java-ts-mode
     :remap 'java-mode

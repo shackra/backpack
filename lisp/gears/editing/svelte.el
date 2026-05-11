@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing svelte)
-           (not (gearp! :editing svelte -treesit)))
+(when (backpack-treesit-was-asked 'svelte "30.1")
   (backpack-treesit-recipe! svelte
     :ts-mode 'svelte-ts-mode
     :remap 'svelte-mode
@@ -24,6 +23,7 @@
   :doc "tree-sitter support for Svelte"
   :when (gearp! :editing svelte)
   :unless (gearp! :editing svelte -treesit)
+  :emacs>= "30.1"
   :ensure (svelte-ts-mode :ref "d079050fc1ba70f8fba9e596638daa2ca96e0fdd" :host github :repo "leafOfTree/svelte-ts-mode")
   :after svelte-mode)
 

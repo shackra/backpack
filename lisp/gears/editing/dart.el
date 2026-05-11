@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing dart)
-           (not (gearp! :editing dart -treesit)))
+(when (backpack-treesit-was-asked 'dart)
   (backpack-treesit-recipe! dart
     :ts-mode 'dart-ts-mode
     :remap 'dart-mode

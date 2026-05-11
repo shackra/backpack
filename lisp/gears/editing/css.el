@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing css)
-           (not (gearp! :editing css -treesit)))
+(when (backpack-treesit-was-asked 'css)
   (backpack-treesit-recipe! css
     :ts-mode 'css-ts-mode
     :remap 'css-mode

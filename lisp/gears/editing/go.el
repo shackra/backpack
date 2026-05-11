@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing go)
-           (not (gearp! :editing go -treesit)))
+(when (backpack-treesit-was-asked 'go)
   (backpack-treesit-recipe! go
     :ts-mode 'go-ts-mode
     :remap 'go-mode

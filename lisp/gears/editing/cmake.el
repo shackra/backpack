@@ -1,8 +1,7 @@
 ;;; cmake.el --- CMake support -*- lexical-binding: t; -*-
 
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing cmake)
-           (not (gearp! :editing cmake -treesit)))
+(when (backpack-treesit-was-asked 'cmake)
   (backpack-treesit-recipe! cmake
     :versions ((:until-abi 14 :revision "c7b2a71e7f8ecb167fad4c97227c838439280175"))))
 

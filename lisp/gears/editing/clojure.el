@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing clojure)
-           (not (gearp! :editing clojure -treesit)))
+(when (backpack-treesit-was-asked 'clojure "30.1")
   (backpack-treesit-recipe! clojure
     :ts-mode 'clojure-ts-mode
     :remap 'clojure-mode
@@ -30,6 +29,7 @@
   :doc "tree-sitter support for Clojure"
   :when (gearp! :editing clojure)
   :unless (gearp! :editing clojure -treesit)
+  :emacs>= "30.1"
   :ensure (clojure-ts-mode :ref "ba6de87b0acb5aa5483f6012611b30f6bf0414f3")
   :after clojure-mode
   :custom

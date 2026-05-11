@@ -1,7 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing lua)
-           (not (gearp! :editing lua -treesit))
-	   (>= emacs-major-version 30))
+(when (backpack-treesit-was-asked 'lua "30")
   (backpack-treesit-recipe! lua
     :ts-mode 'lua-ts-mode
     :remap 'lua-mode
