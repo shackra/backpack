@@ -3,7 +3,8 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing cmake)
            (not (gearp! :editing cmake -treesit)))
-  (backpack-treesit-langs! cmake))
+  (backpack-treesit-recipe! cmake
+    :versions ((:until-abi 14 :revision "c7b2a71e7f8ecb167fad4c97227c838439280175"))))
 
 (leaf cmake-mode
   :doc "the build system you need a build system to understand"

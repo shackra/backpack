@@ -1,7 +1,8 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing nix)
            (not (gearp! :editing nix -treesit)))
-  (backpack-treesit-langs! nix))
+  (backpack-treesit-recipe! nix
+    :versions ((:until-abi 13 :revision "35b2a51e93625e50e0bbff58b4aad45706cdc299"))))
 
 (leaf nix-mode
   :doc "it works on my machine -- then let's ship your machine"

@@ -6,14 +6,13 @@
     :remap 'clojure-mode
     :url "https://github.com/sogaiu/tree-sitter-clojure"
     :revision "unstable-20250526"
-    :ext "\\\.clj[csx]?\\'")
+    :ext "\\\.clj[csx]?\\'"
+    :versions ((:until-abi 14 :revision "e43eff80d17cf34852dcd92ca5e6986d23a7040f")))
   ;; clojure-ts-mode embeds markdown-inline (docstrings) and regex
   ;; (regex literal highlighting) grammars by default
-  (backpack-treesit-recipe! markdown-inline
-    :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-    :source-dir "tree-sitter-markdown-inline/src")
   (backpack-treesit-recipe! regex
-    :url "https://github.com/tree-sitter/tree-sitter-regex"))
+    :url "https://github.com/tree-sitter/tree-sitter-regex"
+    :versions ((:until-abi 14 :revision "cf769a1b4d712590eefbe613c3431e82c1cf04f7"))))
 
 (leaf clojure-mode
   :doc "a monad is just a monoid in the category of endofunctors, what's the problem?"

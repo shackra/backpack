@@ -2,21 +2,24 @@
 ;; The split_parser branch reorganised the repo so there is no src/ in the
 ;; root; both markdown and markdown-inline grammars live in subdirectories.
 ;; markdown-inline is not in treesit-auto's default recipe list at all.
-(when (and (gearp! :editing markdown)
-           (not (gearp! :editing markdown -treesit)))
+(when (or (and (gearp! :editing markdown)
+               (not (gearp! :editing markdown -treesit)))
+	  ;; Clojure needs markdown inline
+	  (and (gearp! :editing clojure)
+	       (not (gearp! :editing clojure -treesit))))
   (backpack-treesit-recipe! markdown
     :ts-mode 'markdown-ts-mode
     :remap '(markdown-mode gfm-mode)
     :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
     :revision "split_parser"
-    :versions ((:until-abi 14 :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+    :versions ((:until-abi 14 :revision "31c557edb2702e753accdb21c95451d5b9877037"))
     :source-dir "tree-sitter-markdown/src")
 
   (backpack-treesit-recipe! markdown-inline
     :ts-mode 'markdown-ts-mode
     :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
     :revision "split_parser"
-    :versions ((:until-abi 14 :revision "7fe453beacecf02c86f7736439f238f5bb8b5c9b"))
+    :versions ((:until-abi 14 :revision "31c557edb2702e753accdb21c95451d5b9877037"))
     :source-dir "tree-sitter-markdown-inline/src"))
 
 (leaf markdown-mode

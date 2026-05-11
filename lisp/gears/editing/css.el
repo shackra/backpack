@@ -1,7 +1,10 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing css)
            (not (gearp! :editing css -treesit)))
-  (backpack-treesit-langs! css))
+  (backpack-treesit-recipe! css
+    :ts-mode 'css-ts-mode
+    :remap 'css-mode
+    :versions ((:until-abi 14 :revision "4a9aab1668bf13d024710420648ef9a9ee6ccc17"))))
 
 (leaf css
   :doc "making the web pretty since 1996"

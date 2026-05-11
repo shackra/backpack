@@ -1,7 +1,8 @@
 ;; Declare tree-sitter languages needed by this gear
 (when (and (gearp! :editing json)
            (not (gearp! :editing json -treesit)))
-  (backpack-treesit-langs! json))
+  (backpack-treesit-recipe! json
+    :versions ((:until-abi 14 :revision "001c28d7a29832b06b0e831ec77845553c89b56d"))))
 
 (leaf json
   :doc "the format that mass-produces missing commas and trailing comma debates"
