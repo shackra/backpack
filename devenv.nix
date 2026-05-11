@@ -43,6 +43,26 @@ let
     pkgs.writeShellScriptBin "for-each-emacs" (builtins.readFile ./etc/scripts/for-each-emacs.sh)
   );
 
+  abiCheck = pkgs.stdenv.mkDerivation {
+    name = "abi-check";
+    src = ./etc/scripts/abi-check.c;
+    unpackPhase = "true";
+    buildPhase = ''
+      cc -o abi-check $src -ldl
+    '';
+    installPhase = ''
+      mkdir -p $out/bin
+      cp abi-check $out/bin/
+    '';
+  };
+
+  abiFinder = (pkgs.writeShellScriptBin "abi-finder" (
+    builtins.replaceStrings
+      [ "@ABI_CHECK@" ]
+      [ "${abiCheck}/bin/abi-check" ]
+      (builtins.readFile ./etc/scripts/abi-finder.sh)
+  ));
+
   driveConf = (pkgs.writeShellScriptBin "drive-conf" (builtins.readFile ./etc/scripts/drive-conf.sh));
 
   # Wrapper that auto-fills the project dir from $DEVENV_ROOT
@@ -64,6 +84,7 @@ in
     prepareAndRunTest
     runE2eTreesit
     run-for-each-emacs
+    abiFinder
     driveConf
     driveConfHere
     (renameEmacs pkgs "emacs-rolling")
