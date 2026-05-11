@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing html)
-           (not (gearp! :editing html -treesit)))
+(when (backpack-treesit-was-asked 'html)
   (backpack-treesit-recipe! html
     :ts-mode 'html-ts-mode
     :remap '(mhtml-mode sgml-mode html-mode)

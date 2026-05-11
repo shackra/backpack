@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing yaml)
-           (not (gearp! :editing yaml -treesit)))
+(when (backpack-treesit-was-asked 'yaml)
   (backpack-treesit-recipe! yaml
     :ts-mode 'yaml-ts-mode
     :remap 'yaml-mode

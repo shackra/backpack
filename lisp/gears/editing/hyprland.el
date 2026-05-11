@@ -3,8 +3,7 @@
 ;; is required.  This must be outside the leaf form so it runs immediately
 ;; when the gear loads, not deferred inside elpaca's forms (which are skipped
 ;; in sync mode).
-(when (and (gearp! :editing hyprland)
-           (not (gearp! :ui -treesit)))
+(when (backpack-treesit-was-asked 'hyprland)
   (backpack-treesit-recipe! hyprlang
     :ts-mode 'hyprlang-ts-mode
     :url "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"

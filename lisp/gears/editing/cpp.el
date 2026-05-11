@@ -1,8 +1,7 @@
 ;;; cpp.el --- C++ language support -*- lexical-binding: t; -*-
 
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing cpp)
-           (not (gearp! :editing cpp -treesit)))
+(when (backpack-treesit-was-asked 'cpp)
   (backpack-treesit-recipe! cpp
     :ts-mode 'c++-ts-mode
     :remap 'c++-mode

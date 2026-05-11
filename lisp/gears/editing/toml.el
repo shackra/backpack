@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing toml)
-           (not (gearp! :editing toml -treesit)))
+(when (backpack-treesit-was-asked 'toml)
   (backpack-treesit-recipe! toml
     :ts-mode 'toml-ts-mode
     :remap '(conf-toml-mode toml-mode)

@@ -1,7 +1,6 @@
 ;; Declare tree-sitter languages needed by this gear.
 ;; The HCL grammar hosts Terraform as a dialect under dialects/terraform/src.
-(when (and (gearp! :editing terraform)
-	   (not (gearp! :editing terraform -treesit)))
+(when (backpack-treesit-was-asked 'terraform)
   (backpack-treesit-recipe! terraform
     :ts-mode 'terraform-ts-mode
     :remap 'terraform-mode

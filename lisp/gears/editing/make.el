@@ -1,5 +1,3 @@
-;;; make.el --- GNU Make support -*- lexical-binding: t; -*-
-
 (leaf make-mode
   :doc "tabs vs spaces? here there's only tabs. always tabs."
   :when (gearp! :editing make)

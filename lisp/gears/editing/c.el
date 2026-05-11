@@ -1,8 +1,7 @@
 ;;; c.el --- C language support -*- lexical-binding: t; -*-
 
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing c)
-           (not (gearp! :editing c -treesit)))
+(when (backpack-treesit-was-asked 'c)
   (backpack-treesit-recipe! c
     :ts-mode 'c-ts-mode
     :remap 'c-mode

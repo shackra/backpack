@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing kotlin)
-           (not (gearp! :editing kotlin -treesit)))
+(when (backpack-treesit-was-asked 'kotlin "30.1")
   (backpack-treesit-recipe! kotlin
     :ts-mode 'kotlin-ts-mode
     :remap 'kotlin-mode
@@ -24,6 +23,7 @@
   :doc "tree-sitter support for Kotlin"
   :when (gearp! :editing kotlin)
   :unless (gearp! :editing kotlin -treesit)
+  :emacs>= "30.1"
   :ensure (kotlin-ts-mode :ref "136d8d1fd3158fc5558aff866041c1935b574588" :host github :repo "emacsmirror/kotlin-ts-mode")
   :after kotlin-mode)
 

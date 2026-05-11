@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing javascript)
-           (not (gearp! :editing javascript -treesit)))
+(when (backpack-treesit-was-asked 'javascript)
   (backpack-treesit-recipe! javascript
     :ts-mode 'js-ts-mode
     :remap 'js-mode

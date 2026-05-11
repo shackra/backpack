@@ -1,5 +1,3 @@
-;;; objc.el --- Objective-C language support -*- lexical-binding: t; -*-
-
 (leaf cc-mode
   :doc "[NSLanguage sendMessage:@\"from the 80s with love\"]"
   :when (gearp! :editing objc)

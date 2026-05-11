@@ -1,8 +1,7 @@
 ;; Declare tree-sitter languages needed by this gear.
 ;; haskell is not in treesit-auto's default recipe list, so a custom recipe
 ;; is required.
-(when (and (gearp! :editing haskell)
-           (not (gearp! :editing haskell -treesit)))
+(when (backpack-treesit-was-asked 'haskell "29.3")
   (backpack-treesit-recipe! haskell
     :ts-mode 'haskell-ts-mode
     :remap 'haskell-mode
@@ -37,6 +36,7 @@
   :doc "tree-sitter support for Haskell"
   :ensure (haskell-ts-mode :ref "bf143ee8382f09e0a68d775d80445065f32929c3")
   :unless (gearp! :editing haskell -treesit)
+  :emacs>= "29.3"
   :after haskell-mode)
 
 (leaf ob-haskell

@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing json)
-           (not (gearp! :editing json -treesit)))
+(when (backpack-treesit-was-asked 'json)
   (backpack-treesit-recipe! json
     :versions ((:until-abi 14 :revision "001c28d7a29832b06b0e831ec77845553c89b56d"))))
 

@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing nix)
-           (not (gearp! :editing nix -treesit)))
+(when (backpack-treesit-was-asked 'nix)
   (backpack-treesit-recipe! nix
     :versions ((:until-abi 13 :revision "35b2a51e93625e50e0bbff58b4aad45706cdc299"))))
 

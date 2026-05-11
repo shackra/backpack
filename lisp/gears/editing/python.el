@@ -1,6 +1,5 @@
 ;; Declare tree-sitter languages needed by this gear
-(when (and (gearp! :editing python)
-           (not (gearp! :editing python -treesit)))
+(when (backpack-treesit-was-asked 'python)
   (backpack-treesit-recipe! python
     :ts-mode 'python-ts-mode
     :remap 'python-mode
