@@ -692,7 +692,8 @@ non-existent grammar."
 (defun backpack-treesit-was-asked (gear &optional minimal-emacs-version-expected)
   "Return t if tree-sitter support was asked for editing gear GEAR."
   (let* ((asked (eval `(and (gearp! :editing ,gear)
-			    (not (gearp! :editing ,gear -treesit)))))
+			    (not (gearp! :editing ,gear -treesit)) ;; not disabled in gear
+			    (not (gearp! :ui -treesit)))))	   ;; not disabled globally
 	 (version-ok (or (null minimal-emacs-version-expected)
 			 (not (version< emacs-version minimal-emacs-version-expected)))))
     (if minimal-emacs-version-expected
