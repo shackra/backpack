@@ -29,6 +29,24 @@ git clone --recurse-submodules https://jardin.jorgearaya.dev/zecRiYjpjFnZWFhygfV
 git clone --recurse-submodules https://github.com/shackra/backpack.git ~/.emacs.d
 ```
 
+On Windows, use `backpack.cmd` instead of `backpack`:
+
+```
+backpack.cmd ensure
+backpack.cmd gc --dry-run
+```
+
+Make sure `emacs.exe` is on your PATH.
+
+On Windows, use `backpack.cmd` instead of `backpack`:
+
+```
+backpack.cmd ensure
+backpack.cmd gc --dry-run
+```
+
+Make sure `emacs.exe` is on your PATH.
+
 ### Writing your initial configuration
 
 > [!IMPORTANT]
