@@ -5,7 +5,8 @@
     :ts-mode 'html-ts-mode
     :remap '(mhtml-mode sgml-mode html-mode)
     :url "https://github.com/tree-sitter/tree-sitter-html"
-    :ext "\\.html\\'"))
+    :ext "\\.html\\'"
+    :versions ((:until-abi 14 :revision "73a3947324f6efddf9e17c0ea58d454843590cc0"))))
 
 (leaf mhtml-mode
   :doc "the backbone of the world wide web"

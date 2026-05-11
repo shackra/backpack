@@ -6,13 +6,13 @@
     :remap 'go-mode
     :url "https://github.com/tree-sitter/tree-sitter-go"
     :ext "\\.go\\'"
-    :versions ((:until-abi 14 :revision "12fe553fdaaa7449f764bc876fd777704d4fb752")))
+    :versions ((:until-abi 14 :revision "c350fa54d38af725c40d061a602ee3205ef1e072")))
   (backpack-treesit-recipe! gomod
     :ts-mode 'go-mod-ts-mode
     :remap 'go-mod-mode
     :url "https://github.com/camdencheek/tree-sitter-go-mod"
     :ext "go\\.mod\\'"
-    :versions ((:until-abi 14 :revision "bbe2fe3be4b87e06a613e685250f473d2267f430"))))
+    :versions ((:until-abi 14 :revision "6efb59652d30e0e9cd5f3b3a669afd6f1a926d3c"))))
 
 (leaf go-mode
   :doc "if err != nil { return nil, err } -- the language"

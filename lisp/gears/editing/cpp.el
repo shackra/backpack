@@ -8,7 +8,7 @@
     :remap 'c++-mode
     :url "https://github.com/tree-sitter/tree-sitter-cpp"
     :ext "\\.cpp\\'"
-    :versions ((:until-abi 14 :revision "7ce8946cae4bb25adebe5b50394f702beb007026"))))
+    :versions ((:until-abi 14 :revision "a0d1092dd724f7a6a62ac6bc755e65e6fceb19d4"))))
 
 (leaf cc-mode
   :doc "C but with templates that make the compiler question its existence"

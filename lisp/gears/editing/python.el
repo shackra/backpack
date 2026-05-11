@@ -6,7 +6,7 @@
     :remap 'python-mode
     :url "https://github.com/tree-sitter/tree-sitter-python"
     :ext "\\.py[iw]?\\'"
-    :versions ((:until-abi 14 :revision "71778c2a472ed00a64abf4219544edbf8e4b86d7"))))
+    :versions ((:until-abi 14 :revision "c5fca1a186e8e528115196178c28eefa8d86b0b0"))))
 
 (leaf python-mode
   :doc "significant whitespace: where one wrong indent ruins your afternoon"

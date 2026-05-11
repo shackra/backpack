@@ -6,7 +6,8 @@
     :ts-mode 'lua-ts-mode
     :remap 'lua-mode
     :url "https://github.com/tree-sitter-grammars/tree-sitter-lua"
-    :ext "\\.lua\\'"))
+    :ext "\\.lua\\'"
+    :versions ((:until-abi 14 :revision "d802696c0f7ee00d0d92bfb816dda577045d0723"))))
 
 (leaf lua-mode
   :doc "arrays start at 1 and we're not sorry"
