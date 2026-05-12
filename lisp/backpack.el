@@ -402,7 +402,14 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/editing/terraform" backpack-core-dir))
   (load (expand-file-name "gears/editing/toml" backpack-core-dir))
   (load (expand-file-name "gears/editing/typescript" backpack-core-dir))
-  (load (expand-file-name "gears/editing/yaml" backpack-core-dir)))
+  (load (expand-file-name "gears/editing/yaml" backpack-core-dir))
+  ;;; User defined leaf blocks
+  ;; any variable set here will be overridden by the user's
+  ;; configuration on `backpack-user-dir'/init.el. Packages here will
+  ;; load unconditionally unless the user place guards and activate
+  ;; them in `gear!'
+  (when (file-exists-p (expand-file-name "packages.el" backpack-user-dir))
+    (load (expand-file-name "packages.el" backpack-user-dir))))
 
 (provide 'backpack)
 ;;; backpack.el ends here
