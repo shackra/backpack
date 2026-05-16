@@ -358,6 +358,7 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/completion/nerd-icons-completion" backpack-core-dir))
   (load (expand-file-name "gears/completion/orderless" backpack-core-dir))
   (load (expand-file-name "gears/completion/vertico" backpack-core-dir))
+  (load (expand-file-name "gears/tools/activities" backpack-core-dir))
   (load (expand-file-name "gears/tools/eldoc" backpack-core-dir))
   (load (expand-file-name "gears/tools/envrc" backpack-core-dir))
   (load (expand-file-name "gears/tools/magit" backpack-core-dir))

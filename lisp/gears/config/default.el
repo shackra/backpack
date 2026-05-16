@@ -45,6 +45,11 @@
     (save-place-file . `,(expand-file-name "places" backpack-nonessential-dir))
     :global-minor-mode save-place-mode)
 
+  (leaf bookmark
+    :tag "builtin"
+    :custom
+    (bookmark-default-file . `,(expand-file-name "bookmarks" backpack-nonessential-dir)))
+
   (line-number-mode t)		     ; show current line in modeline
   (column-number-mode t)	     ; show current column in modeline
 
