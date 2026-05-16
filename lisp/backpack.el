@@ -305,8 +305,8 @@ The behavior depends on `backpack-mode':
                   (eval form)))
             ;; No init file: load gears with empty configuration
             (backpack-load-gear-files)))
-	  ;; load custom file
-	  (load custom-file t))
+	;; load custom file
+	(load custom-file t))
     (progn ;; CLI/batch mode
       nil))
 
