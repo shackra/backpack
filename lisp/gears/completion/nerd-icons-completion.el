@@ -1,5 +1,3 @@
-(require 'backpack-pouch)
-
 (leaf nerd-icons-completion
   :doc "use nerd-icons on completion candidates"
   :ensure (nerd-icons-completion :ref "63a6b3f1eb98bb381c86a1658ac401c8967079b8")

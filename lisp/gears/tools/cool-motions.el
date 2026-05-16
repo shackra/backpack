@@ -1,5 +1,3 @@
-(require 'backpack-pouch)
-
 (leaf cool-motions
   :unless (gearp! :tools -cool-motions)
   :doc "Smart motions: C-a cycles between first non-whitespace character and beginning of line"

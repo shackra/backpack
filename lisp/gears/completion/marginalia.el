@@ -1,5 +1,3 @@
-(require 'backpack-pouch)
-
 (leaf marginalia
   :doc "adds marginalia to the minibuffer completions"
   :unless (gearp! :completion -marginalia)

@@ -30,6 +30,18 @@ On Emacs < 31 in terminal, uses corfu-terminal (overlay-based popup)."
   (read-extended-command-predicate	.	#'command-completion-default-include-p)
   :hook
   (corfu-mode-hook . corfu-popupinfo-mode)
+  :config
+  ;; Emacs 30 bug: elisp--shorthand-aware-fboundp is a C subr that
+  ;; only accepts symbols, but try-completion passes strings to
+  ;; predicates.  This causes wrong-type-argument on corfu-complete
+  ;; in emacs-lisp-mode.  Fixed in Emacs 31.
+  (when (and (< emacs-major-version 31)
+	     (fboundp 'elisp--shorthand-aware-fboundp))
+    (advice-add 'elisp--shorthand-aware-fboundp :filter-args
+		(lambda (args)
+		  (if (stringp (car args))
+		      (list (intern (car args)))
+		    args))))
   :global-minor-mode global-corfu-mode)
 
 (leaf popon

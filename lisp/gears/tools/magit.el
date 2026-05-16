@@ -1,5 +1,3 @@
-(require 'backpack-pouch)
-
 (leaf transient
   :doc "Transient command dispatching (needed by Magit and diff-hl menu)"
   :when (or (gearp! :tools magit)
