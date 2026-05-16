@@ -131,6 +131,60 @@ Prefers vterm when active, then eat, then eshell."
              (not (gearp! :term eshell -eat)))
   :ensure (eat :host codeberg :repo "akib/emacs-eat"
                :ref "c8d54d649872bfe7b2b9f49ae5c2addbf12d3b99")
+  :preface
+  ;; Eat hardcodes "/usr/bin/env" "sh" for a stty+exec bootstrap; that path
+  ;; does not exist on native Windows.  Git Bash / MSYS2 provide bash.exe.
+  (defun backpack--make-process-eat-windows (orig &rest plist)
+    "Around-advice for `make-process'.
+Rewrite eat's POSIX-only bootstrap command when bash is available."
+    (let ((cmd (plist-get plist :command))
+          (bash (backpack--windows-posix-bash-executable)))
+      (if (and backpack--system-windows-p
+               bash
+               (listp cmd)
+               (>= (length cmd) 4)
+               (equal (car cmd) "/usr/bin/env")
+               (equal (nth 1 cmd) "sh")
+               (equal (nth 2 cmd) "-c")
+               (stringp (nth 3 cmd))
+               (string-match-p "\\bstty\\b" (nth 3 cmd)))
+          (let* ((tail (nthcdr 3 cmd))
+                 (script (car tail))
+                 (dotdot (cadr tail))
+                 (rest (cddr tail))
+                 (script-fixed
+                  (if (stringp script)
+                      (let ((s (replace-regexp-in-string " 2>[^ ;]+" "" script)))
+                        ;; Eat uses `[ $1 = .. ]' with unquoted `$1'; a spaced path
+                        ;; becomes multiple words → `[: too many arguments]'.
+                        (setq s (replace-regexp-in-string
+                                 "if \\[ \\$1 = \\.\\. \\]; then shift; fi"
+                                 "if [ \"$1\" = .. ]; then shift; fi"
+                                 s))
+                        ;; Pipe IPC is not a tty — stty ioctl fails; do not abort.
+                        (replace-regexp-in-string
+                         "^\\(stty[^;]+\\);"
+                         "(\\1) || true;"
+                         s))
+                    script))
+                 (rest-fixed
+                  (if (and (equal dotdot "..")
+                           (= (length rest) 4)
+                           (equal (nth 0 rest) "/usr/bin/env")
+                           (equal (nth 1 rest) "sh")
+                           (equal (nth 2 rest) "-c")
+                           (stringp (nth 3 rest))
+                           (let ((inner (nth 3 rest)))
+                             (or (file-exists-p inner)
+                                 (file-exists-p (expand-file-name inner)))))
+                      ;; Avoid `sh -c c:/Program Files/...' word-splitting; `+m'
+                      ;; quiets job-control complaints when stdin is not a pty.
+                      (list (nth 3 rest) "-i" "+m")
+                    rest))
+                 (tail-fixed (cons script-fixed (cons dotdot rest-fixed))))
+            (apply orig (plist-put (copy-tree plist) :command
+                                   (cons bash (cons "-c" tail-fixed)))))
+        (apply orig plist))))
   :bind
   ("C-c t a" . backpack/eat-toggle)
   :custom
@@ -139,6 +193,10 @@ Prefers vterm when active, then eat, then eshell."
   ;; Enable automatic line rewrapping on window resize
   (eat-enable-auto-line-translation . t)
   :config
+  (when-let ((bash (backpack--windows-posix-bash-executable)))
+    (setq eat-shell bash)
+    (advice-remove #'make-process #'backpack--make-process-eat-windows)
+    (advice-add #'make-process :around #'backpack--make-process-eat-windows))
   ;; Integrate eat with eshell -- this makes eshell handle TUI/curses
   ;; applications correctly by delegating rendering to eat.
   (eat-eshell-mode +1)

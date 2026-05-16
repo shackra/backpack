@@ -15,6 +15,14 @@
       (load backpack nil nil nil t))
     (setq user-init-file (expand-file-name "early-init" user-emacs-directory))
     (setq load-prefer-newer t)
-    (setq gc-cons-threshold (* 16 1024 1024))))
+    (if backpack--system-windows-p
+	;; ─── Garbage collection ───
+	;; Windows pipe/IPC buffers are large (256 KB + 1 MiB read-max);
+	;; the default 16 MiB post-init threshold triggers GC too often
+	;; during LSP indexing bursts.  64 MiB is a good balance.
+	;; See: https://emacs-lsp.github.io/lsp-mode/page/performance/
+	;;      https://emacsredux.com/blog/2025/03/28/speed-up-emacs-startup-by-tweaking-the-gc-settings/
+	(setq gc-cons-threshold (* 64 1024 1024))
+      (setq gc-cons-threshold (* 16 1024 1024)))))
 
 (backpack-start (not noninteractive))

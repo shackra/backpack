@@ -12,6 +12,7 @@ if [ -z "$ACTION" ]; then
     echo "Available actions:" >&2
     echo "  ensure        Install and build all packages (without activation)" >&2
     echo "  gc [--dry-run] Remove orphaned packages no longer needed by configuration" >&2
+    echo "  bench          Run the Backpack benchmark suite (A/B vs :os windows)" >&2
     exit 1
 fi
 
@@ -55,8 +56,21 @@ elif [ "$ACTION" = "gc" ]; then
         -l "$BACKPACK_DIR/gc.el"
     exit $?
 
+elif [ "$ACTION" = "bench" ]; then
+    echo "Backpack: Running benchmark suite..."
+    echo "Backpack directory: $BACKPACK_DIR"
+    echo ""
+    echo "Tip: set BACKPACK_BENCH_FILTER=substring to run a subset"
+    echo "     set BACKPACK_BENCH_ITERATIONS=N to override the default sample count"
+    echo ""
+    # Run Emacs in batch mode with bench.el
+    emacs --batch \
+        --eval "(setq user-emacs-directory \"$BACKPACK_DIR/\")" \
+        -l "$BACKPACK_DIR/bench.el"
+    exit $?
+
 else
     echo "Error: unknown action '$ACTION'" >&2
-    echo "Available actions: ensure, gc" >&2
+    echo "Available actions: ensure, gc, bench" >&2
     exit 1
 fi
