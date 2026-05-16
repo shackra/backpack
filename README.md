@@ -32,7 +32,7 @@ git clone --recurse-submodules https://github.com/shackra/backpack.git ~/.emacs.
 ### Writing your initial configuration
 
 > [!IMPORTANT]
-> You can learn what's available in Backpack with `backpack-inventory` (bound to `C-h B`).
+> You can learn what's available in Backpack with `backpack-inventory` (bound to `C-h I`).
 
 Now that you have the starter kit cloned with its corresponding sub-modules (right?), you need to write your configuration. It has to go in either `$HOME/.backpack.d` or `$XDG_CONFIG_HOME/backpack`, in any of those two directories make a file called `init.el`:
 
@@ -58,11 +58,11 @@ Please do the above. It helps speed up the initialization of Emacs and run funct
 
 ### Finding out what is available in your Backpack
 
-Press `C-h B` or run `M-x backpack-inventory` to browse all available pouches, gears and flags interactively. The inventory shows what's enabled in your configuration, what's available, and how to configure each feature -- including flags, external tools, required fonts, and pinned package versions.
+Press `C-h I` or run `M-x backpack-inventory` to browse all available pouches, gears and flags interactively. The inventory shows what's enabled in your configuration, what's available, and how to configure each feature -- including flags, external tools, required fonts, and pinned package versions.
 
 ## What's in the Backpack?
 
-Backpack is self-documenting. Rather than maintaining a static list of features here, run `M-x backpack-inventory` (or `C-h B`) inside Emacs to see everything that's available. The inventory browser lets you navigate pouches, drill into gears, and inspect flags, external tool requirements, fonts, example `gear!` snippets, and pinned package refs -- all extracted automatically from the source code.
+Backpack is self-documenting. Rather than maintaining a static list of features here, run `M-x backpack-inventory` (or `C-h I`) inside Emacs to see everything that's available. The inventory browser lets you navigate pouches, drill into gears, and inspect flags, external tool requirements, fonts, example `gear!` snippets, and pinned package refs -- all extracted automatically from the source code.
 
 ## Tips
 

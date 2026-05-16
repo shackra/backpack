@@ -65,7 +65,7 @@
 (require 'backpack-inventory)
 (require 'backpack-treesit)
 
-(define-key help-map (kbd "B") #'backpack-inventory)
+(define-key help-map (kbd "I") #'backpack-inventory)
 
 (leaf-keywords-init)
 
