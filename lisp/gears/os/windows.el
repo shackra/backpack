@@ -31,6 +31,11 @@ Lisp-level setting in this gear combined."
   (setq-default process-connection-type nil)
   ;; LSP-mode and eglot both recommend >= 1 MiB on Windows.
   (setq read-process-output-max (* 1024 1024))
+  ;; Suppress Windows abort dialog — prevents zombie dialogs from
+  ;; blocking the process on async native-comp crashes.
+  ;; See: https://lists.defectivebydesign.org/archive/html/emacs-diffs/2022-12/msg00541.html
+  (when (boundp 'w32-disable-abort-dialog)
+    (setq w32-disable-abort-dialog t))
 
   ;; ─── File I/O ───
   ;; NTFS stat is 5-10× slower; skip owner/mode lookups for local
@@ -41,6 +46,12 @@ Lisp-level setting in this gear combined."
     (setq w32-get-true-file-attributes 'local))
   (when (boundp 'w32-get-true-file-link-count)
     (setq w32-get-true-file-link-count nil))
+  ;; NTFS lock files = extra stat + symlink emulation per save;
+  ;; rarely useful on single-user Windows machines.
+  ;; Opt back in with: (gear! :os (windows lockfiles))
+  ;; See: https://www.gnu.org/software/emacs/manual/html_node/elisp/File-Locks.html
+  (unless (gearp! :os windows lockfiles)
+    (setq create-lockfiles nil))
 
   ;; ─── Display / rendering ───
   ;; Windows font rendering (Uniscribe/DirectWrite) is expensive;
@@ -49,6 +60,10 @@ Lisp-level setting in this gear combined."
   (setq fast-but-imprecise-scrolling t)
   (when (boundp 'redisplay-skip-fontification-on-input)
     (setq redisplay-skip-fontification-on-input t))
+  ;; Defer fontification 50ms while input pending — complements
+  ;; redisplay-skip-fontification-on-input at the JIT-lock level.
+  ;; See: https://www.emacswiki.org/emacs/FontLockSpeed
+  (setq jit-lock-defer-time 0.05)
   (setq cursor-in-non-selected-windows nil
         highlight-nonselected-windows nil)
   ;; For LTR-only users: skip bidi algorithm entirely
@@ -59,6 +74,11 @@ Lisp-level setting in this gear combined."
           bidi-inhibit-bpa t))
   ;; Case-insensitive FS: no point re-scanning auto-mode-alist
   (setq auto-mode-case-fold nil)
+  ;; Long-line protection — Windows rendering is 2-3× slower on
+  ;; long lines (minified JS/JSON, log files).
+  ;; See: https://200ok.ch/posts/2020-09-29_comprehensive_guide_on_handling_long_lines_in_emacs.html
+  (when (fboundp 'global-so-long-mode)
+    (global-so-long-mode 1))
 
   ;; ─── Native compilation ───
   ;; Windows I/O is slower; defer async compilation to reduce contention
