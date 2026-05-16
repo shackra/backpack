@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (leaf windows
-  :when (gearp! :os windows)
+  :when (and (gearp! :os windows) backpack--system-windows-p)
   :doc "Performance optimizations for native Windows.
 
 For maximum throughput, also add an exclusion in Windows Defender for
@@ -99,7 +99,7 @@ Lisp-level setting in this gear combined."
             shell-command-switch "-c"))))
 
 (leaf windows-legacy
-  :when (gearp! :os windows)
+  :when (and (gearp! :os windows) backpack--system-windows-p)
   :emacs< "30.1"
   :doc "Defensive Windows perf settings for Emacs 29.x.
 
