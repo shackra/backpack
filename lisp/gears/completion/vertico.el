@@ -1,5 +1,3 @@
-(require 'backpack-pouch)
-
 (leaf vertico
   :doc "provides a performant and minimalistic vertical completion UI based on the default completion system"
   :unless (gearp! :completion -vertico)
@@ -31,3 +29,33 @@
   :when (gearp! :completion vertico flat)
   :config
   (vertico-flat-mode))
+
+(leaf vertico-quick
+  :doc "Avy-style quick selection with labeled candidates.
+Credit: backpack-vertico-quick-embark adapted from chiply/.zetta.d"
+  :after vertico
+  :when (gearp! :completion vertico quick)
+  :preface
+  (defun backpack-vertico-quick-embark (&optional arg)
+    "Embark on candidate using quick keys."
+    (interactive)
+    (when (vertico-quick-jump)
+      (embark-act arg)))
+  :bind (:vertico-map
+	 ("C-'"  . vertico-quick-exit)
+	 ("C-\"" . backpack-vertico-quick-embark)))
+
+(leaf vertico-repeat
+  :doc "resume last completion session"
+  :after vertico
+  :when (gearp! :completion vertico repeat)
+  :bind ("s-V" . vertico-repeat)
+  :hook (minibuffer-setup-hook . vertico-repeat-save))
+
+(leaf vertico-suspend
+  :doc "suspend and resume completion sessions"
+  :after vertico
+  :when (gearp! :completion vertico suspend)
+  :bind
+  ("M-S"        . vertico-suspend)
+  (:vertico-map ("M-S" . vertico-suspend)))

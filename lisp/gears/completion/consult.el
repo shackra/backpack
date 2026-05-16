@@ -35,11 +35,22 @@
   ("M-s f"	.	consult-find)
   ("M-s k"	.	consult-keep-lines)
   ("M-s u"	.	consult-focus-lines)
+  ("M-s i"	.	consult-info)
+  ("M-s m"	.	consult-man)
   ;; Other
   ("C-c h"	.	consult-history)
+  ("C-c r"	.	consult-recent-file)
   :custom
-  (consult-narrow-key	.	"<")
+  (consult-narrow-key		.	"<")
+  (consult-async-split-style	.	'comma)
+  :defer-config
+  (consult-customize
+   consult-ripgrep
+   consult-buffer
+   consult-bookmark
+   :preview-key "C-=")
   :config
+  (recentf-mode t)
   (setq xref-show-xrefs-function #'consult-xref
 	xref-show-definitions-function #'consult-xref))
 

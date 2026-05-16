@@ -1,5 +1,3 @@
-(require 'backpack-pouch)
-
 (leaf ws-butler
   :unless (gearp! :tools -whitespaces)
   :doc "unobtrusive way to trim whitespace"

@@ -1,5 +1,3 @@
-(require 'backpack-pouch)
-
 (leaf themes
   :doc "Change the color theme of your Emacs"
   :tag "ui" "theme"
