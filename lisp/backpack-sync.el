@@ -358,5 +358,74 @@ Packages in `backpack--enable-on-sync-packages' will still have their forms run.
 
   (advice-add 'elpaca--finalize-queue :around #'backpack--elpaca-skip-forms-in-sync-mode))
 
+;;; Interactive ensure command
+
+(defun backpack--reload-packages ()
+  "Reload packages in-place after a successful ensure.
+Resets elpaca queues, re-loads gear files so packages are re-declared,
+then activates them (since they are now built on disk).
+Inspired by Doom Emacs's `doom/reload'."
+  (setq elpaca--queues (list (elpaca-q<-create)))
+  (backpack--setup-elpaca-for-mode)
+  (let ((init-file (expand-file-name "init.el" backpack-user-dir)))
+    (when (file-exists-p init-file)
+      (pcase-let ((`(,gear-form . ,_rest)
+                   (backpack--extract-gear-form init-file)))
+        (when gear-form
+          (eval gear-form)))))
+  (backpack-load-gear-files)
+  (backpack--activate-packages)
+  (message "Backpack: Packages reloaded successfully."))
+
+(declare-function backpack--extract-gear-form "backpack")
+
+;;;###autoload
+(defun backpack/ensure ()
+  "Run `backpack ensure' in a subprocess, then reload packages in-place.
+Inspired by Doom Emacs's `doom/reload' command.  Spawns a batch
+Emacs process that installs/builds all packages, then activates
+them in the current session without requiring a restart."
+  (interactive)
+  (let* ((buf-name "*backpack ensure*")
+         (emacs (concat invocation-directory invocation-name))
+         (ensure-file (expand-file-name "ensure.el" backpack-emacs-dir))
+         (default-directory backpack-emacs-dir))
+    (with-current-buffer (get-buffer-create buf-name)
+      (let ((inhibit-read-only t))
+        (erase-buffer))
+      (special-mode)
+      (pop-to-buffer (current-buffer)))
+    (message "Backpack: Running ensure...")
+    (make-process
+     :name "backpack-ensure"
+     :buffer buf-name
+     :command (list emacs
+                    "--batch"
+                    "--eval" (format "(setq user-emacs-directory %S)"
+                                    backpack-emacs-dir)
+                    "-l" ensure-file)
+     :sentinel
+     (lambda (proc _event)
+       (when (memq (process-status proc) '(exit signal))
+         (let ((exit-code (process-exit-status proc)))
+           (if (zerop exit-code)
+               (progn
+                 (message "Backpack: ensure completed. Reloading packages...")
+                 (backpack--reload-packages))
+             (message "Backpack: ensure failed (exit %d). Check *backpack ensure* buffer."
+                      exit-code)))))
+     :filter
+     (lambda (proc output)
+       (when (buffer-live-p (process-buffer proc))
+         (with-current-buffer (process-buffer proc)
+           (let ((inhibit-read-only t)
+                 (moving (= (point) (process-mark proc))))
+             (save-excursion
+               (goto-char (process-mark proc))
+               (insert output)
+               (set-marker (process-mark proc) (point)))
+             (when moving
+               (goto-char (process-mark proc))))))))))
+
 (provide 'backpack-sync)
 ;;; backpack-sync.el ends here
