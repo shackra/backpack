@@ -56,12 +56,13 @@ let
     '';
   };
 
-  abiFinder = (pkgs.writeShellScriptBin "abi-finder" (
-    builtins.replaceStrings
-      [ "@ABI_CHECK@" ]
-      [ "${abiCheck}/bin/abi-check" ]
-      (builtins.readFile ./etc/scripts/abi-finder.sh)
-  ));
+  abiFinder = (
+    pkgs.writeShellScriptBin "abi-finder" (
+      builtins.replaceStrings [ "@ABI_CHECK@" ] [ "${abiCheck}/bin/abi-check" ] (
+        builtins.readFile ./etc/scripts/abi-finder.sh
+      )
+    )
+  );
 
   driveConf = (pkgs.writeShellScriptBin "drive-conf" (builtins.readFile ./etc/scripts/drive-conf.sh));
 
@@ -75,6 +76,20 @@ in
 {
   env = {
     EMACS_VERSIONS_TO_TEST = "emacs-rolling emacs-30-1 emacs-29-4 emacs-29-3 emacs-29-2 emacs-29-1";
+  };
+
+  claude.code = {
+    enable = true;
+    mcpServers = {
+      devenv = {
+        type = "stdio";
+        command = "devenv";
+        args = [ "mcp" ];
+        env = {
+          DEVENV_ROOT = config.devenv.root;
+        };
+      };
+    };
   };
 
   packages = [
