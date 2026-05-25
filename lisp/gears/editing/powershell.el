@@ -10,3 +10,13 @@
    (lambda ()
      (unless (gearp! :editing powershell -display-line-numbers)
        (display-line-numbers-mode +1)))))
+
+;; When only the editing gear is active (no :term powershell), remove
+;; the autoloaded inferior shell command to avoid exposing it in M-x.
+;; Must run after all packages are activated so the autoload exists.
+(when (and (gearp! :editing powershell)
+           (not (gearp! :term powershell)))
+  (add-hook 'backpack-user-after-init-hook
+            (lambda ()
+              (when (fboundp 'powershell)
+                (fmakunbound 'powershell)))))

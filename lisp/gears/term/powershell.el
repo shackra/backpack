@@ -2,32 +2,33 @@
 
 ;; -- Toggle & project helpers --
 
-(defun backpack/powershell-toggle ()
-  "Toggle a PowerShell inferior buffer in a bottom side window.
+(when (gearp! :term powershell)
+  (defun backpack/powershell-toggle ()
+    "Toggle a PowerShell inferior buffer in a bottom side window.
 If a PowerShell window is visible, delete it.  Otherwise open one."
-  (interactive)
-  (if-let* ((buf (get-buffer "*PowerShell*"))
-            (win (get-buffer-window buf)))
-      (delete-window win)
-    (if (get-buffer "*PowerShell*")
-        (pop-to-buffer "*PowerShell*")
-      (powershell "*PowerShell*"))))
-
-(defun backpack/powershell-project ()
-  "Open PowerShell at the current project root.
-Creates a per-project buffer named *PowerShell:<project>*."
-  (interactive)
-  (let* ((pr (project-current t))
-         (root (project-root pr))
-         (name (format "*PowerShell:%s*" (file-name-nondirectory
-                                          (directory-file-name root))))
-         (default-directory root))
-    (if-let* ((buf (get-buffer name))
+    (interactive)
+    (if-let* ((buf (get-buffer "*PowerShell*"))
               (win (get-buffer-window buf)))
         (delete-window win)
-      (if (get-buffer name)
-          (pop-to-buffer name)
-        (powershell name)))))
+      (if (get-buffer "*PowerShell*")
+          (pop-to-buffer "*PowerShell*")
+        (powershell "*PowerShell*"))))
+
+  (defun backpack/powershell-project ()
+    "Open PowerShell at the current project root.
+Creates a per-project buffer named *PowerShell:<project>*."
+    (interactive)
+    (let* ((pr (project-current t))
+           (root (project-root pr))
+           (name (format "*PowerShell:%s*" (file-name-nondirectory
+                                            (directory-file-name root))))
+           (default-directory root))
+      (if-let* ((buf (get-buffer name))
+                (win (get-buffer-window buf)))
+          (delete-window win)
+        (if (get-buffer name)
+            (pop-to-buffer name)
+          (powershell name))))))
 
 ;; -- Display rule: PowerShell buffers appear at the bottom --
 
