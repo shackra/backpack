@@ -64,9 +64,12 @@ Creates a per-project buffer named *eat:<project>*."
 
 (defun backpack/term-project ()
   "Open a terminal at the current project root.
-Prefers vterm when active, then eat, then eshell."
+Prefers powershell when active, then vterm, then eat, then eshell."
   (interactive)
   (cond
+   ((and (gearp! :term powershell)
+         (fboundp 'backpack/powershell-project))
+    (backpack/powershell-project))
    ((and (gearp! :term vterm)
          (fboundp 'backpack/vterm-project))
     (backpack/vterm-project))
