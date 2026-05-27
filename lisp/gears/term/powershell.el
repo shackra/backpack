@@ -69,5 +69,7 @@ Creates a per-project buffer named *PowerShell:<project>*."
                            (let ((win (get-buffer-window buf t)))
                              (kill-buffer buf)
                              (when (and win (window-live-p win))
-                               (ignore-errors (delete-window win)))))))))))))))
+                               (ignore-errors (delete-window win))))))))))))))
+
+
 
