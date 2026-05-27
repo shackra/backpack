@@ -208,4 +208,12 @@ Rewrite eat's POSIX-only bootstrap command when bash is available."
   (add-hook 'eat-exit-hook
             (lambda (_process)
               (when-let* ((win (get-buffer-window)))
-                (delete-window win)))))
+                (delete-window win))))
+  (add-hook 'eat-mode-hook
+            (lambda ()
+              ;; Close window when buffer is manually killed
+              (add-hook 'kill-buffer-hook
+                        (lambda ()
+                          (when-let* ((win (get-buffer-window)))
+                            (delete-window win)))
+                        nil t))))

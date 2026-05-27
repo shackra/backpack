@@ -48,4 +48,26 @@ Creates a per-project buffer named *PowerShell:<project>*."
   :doctor ("pwsh" . ("PowerShell 7+ cross-platform shell" required))
   :bind
   ("C-c t s" . backpack/powershell-toggle)
-  ("C-c t p" . backpack/term-project))
+  ("C-c t p" . backpack/term-project)
+  :config
+  ;; Kill buffer and close window when the PowerShell process exits or is killed.
+  (add-hook 'comint-exec-hook
+            (lambda ()
+              (when (string-prefix-p "*PowerShell" (buffer-name))
+                (add-hook 'kill-buffer-hook
+                          (lambda ()
+                            (when-let* ((win (get-buffer-window)))
+                              (delete-window win)))
+                          nil t)
+                (when-let* ((proc (get-buffer-process (current-buffer))))
+                  (set-process-sentinel
+                   proc
+                   (lambda (p _event)
+                     (unless (process-live-p p)
+                       (when-let* ((buf (process-buffer p)))
+                         (when (buffer-live-p buf)
+                           (let ((win (get-buffer-window buf t)))
+                             (kill-buffer buf)
+                             (when (and win (window-live-p win))
+                               (ignore-errors (delete-window win)))))))))))))))
+
