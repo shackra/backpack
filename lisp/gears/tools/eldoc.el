@@ -5,9 +5,12 @@
 
 (leaf eldoc-box
   :doc "Display eldoc documentation in a childframe at point (GUI) or concise echo area (TTY).
-Use C-h . to show documentation in a side window; C-u C-h . to dismiss it."
+Use C-h . to show documentation in a side window; C-u C-h . to dismiss it.
+Use C-, to toggle the hover childframe on/off."
   :when (gearp! :tools eldoc box)
   :ensure (eldoc-box :ref "fead2cef661790417267e5498d4d14806e020f99")
+  :bind
+  ("C-," . backpack/eldoc-box-toggle)
   :custom
   (eldoc-box-hover-display-frame-above-point . t)
   :hook
@@ -30,6 +33,16 @@ Use C-h . to show documentation in a side window; C-u C-h . to dismiss it."
 
   (add-to-list 'display-buffer-alist
                '("\\*eldoc\\*" backpack--display-eldoc-side-window))
+
+  (defun backpack/eldoc-box-toggle ()
+    "Toggle eldoc-box hover display at point.
+First call hides the childframe and disables automatic display.
+Second call re-enables it."
+    (interactive)
+    (if (bound-and-true-p eldoc-box-hover-at-point-mode)
+        (eldoc-box-hover-at-point-mode -1)
+      (when (display-graphic-p)
+        (eldoc-box-hover-at-point-mode +1))))
 
   (defvar-local backpack--eldoc-box-was-on nil
     "Whether eldoc-box-hover-at-point-mode was active before C-h . toggled it off.")
