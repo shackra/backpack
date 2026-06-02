@@ -391,6 +391,7 @@ The behavior depends on `backpack-mode':
   (load (expand-file-name "gears/editing/java" backpack-core-dir))
   (load (expand-file-name "gears/editing/javascript" backpack-core-dir))
   (load (expand-file-name "gears/editing/json" backpack-core-dir))
+  (load (expand-file-name "gears/editing/kdl" backpack-core-dir))
   (load (expand-file-name "gears/editing/kotlin" backpack-core-dir))
   (load (expand-file-name "gears/editing/latex" backpack-core-dir))
   (load (expand-file-name "gears/editing/less" backpack-core-dir))
