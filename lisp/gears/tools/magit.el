@@ -35,3 +35,11 @@
   (with-eval-after-load 'project
     (keymap-set project-prefix-map "m" #'magit-project-status)
     (add-to-list 'project-switch-commands '(magit-project-status "Magit") t)))
+
+(leaf magit-difftastic
+  :when (gearp! :tools magit difftastic)
+  :doc "difftastic integration for Magit"
+  :ensure (magit-difftastic :host github :repo "rschmukler/magit-difftastic" :ref "570332725e4c2998605db433e9ce9a377862ce66")
+  :doctor (executable-find "difft")
+  :config
+  (magit-difftastic-setup))
