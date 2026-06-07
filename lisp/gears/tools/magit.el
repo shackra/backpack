@@ -24,6 +24,14 @@
   :ensure (forge :ref "315e8e9a2b45d050ca7fc717595cc698e175b140")
   :config
   (setq forge-database-file (expand-file-name "forge-database.sqlite" backpack-cache-dir)))
+
+(leaf magit-difftastic
+  :when (gearp! :tools magit difftastic)
+  :doc "difftastic integration for Magit"
+  :ensure (magit-difftastic :host github :repo "rschmukler/magit-difftastic" :ref "570332725e4c2998605db433e9ce9a377862ce66")
+  :doctor (executable-find "difft")
+  :global-minor-mode magit-difftastic-mode)
+
 ;; Register magit-project-status in project-switch-commands eagerly
 ;; so it appears in C-x p p dispatch before magit is loaded.
 ;; magit-extras.el does this after loading, but we want it available
@@ -35,11 +43,3 @@
   (with-eval-after-load 'project
     (keymap-set project-prefix-map "m" #'magit-project-status)
     (add-to-list 'project-switch-commands '(magit-project-status "Magit") t)))
-
-(leaf magit-difftastic
-  :when (gearp! :tools magit difftastic)
-  :doc "difftastic integration for Magit"
-  :ensure (magit-difftastic :host github :repo "rschmukler/magit-difftastic" :ref "570332725e4c2998605db433e9ce9a377862ce66")
-  :doctor (executable-find "difft")
-  :config
-  (magit-difftastic-setup))
