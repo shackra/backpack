@@ -2,13 +2,13 @@
   :doc "Transient command dispatching (needed by Magit and diff-hl menu)"
   :when (or (gearp! :tools magit)
             (gearp! :ui diff-hl))
-  :ensure (transient :ref "1f7039ef8d548d6fe858084fcbeae7588eba4190"))
+  :ensure (transient :ref "3d20a780605f0a33d6360dc0a2ce9174c69a9a92"))
 
 (leaf magit
   :when (gearp! :tools magit)
   :doc "an interface to the version control system Git"
   :bind ("C-x g" . magit-status)
-  :ensure (magit :ref "c800f79c2061621fde847f6a53129eca0e8da728")
+  :ensure (magit :ref "b6c512597fd66abe69883a058a2d13bcea76bf33")
   :custom
   ;; Show magit-status in the entire frame; other magit buffers use
   ;; the traditional split behaviour.  The pre-display-buffer-hook
@@ -21,14 +21,14 @@
 (leaf forge
   :when (gearp! :tools magit forge)
   :doc "work with Git forges from Magit"
-  :ensure (forge :ref "315e8e9a2b45d050ca7fc717595cc698e175b140")
+  :ensure (forge :ref "9628f76740aec9270e9fb31457ff4cb38d9f3f16")
   :config
   (setq forge-database-file (expand-file-name "forge-database.sqlite" backpack-cache-dir)))
 
 (leaf magit-difftastic
   :when (gearp! :tools magit difftastic)
   :doc "difftastic integration for Magit"
-  :ensure (magit-difftastic :host github :repo "rschmukler/magit-difftastic" :ref "570332725e4c2998605db433e9ce9a377862ce66")
+  :ensure (magit-difftastic :host github :repo "rschmukler/magit-difftastic" :ref "0df64c67ba4b73cca705f72f7357aedce82f8529")
   :doctor (executable-find "difft")
   :global-minor-mode magit-difftastic-mode)
 
