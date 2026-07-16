@@ -5,8 +5,12 @@
 
 A self-documenting GNU Emacs starter kit inspired by [Bedrock](https://codeberg.org/ashton314/emacs-bedrock) and [Doom](https://github.com/doomemacs/doomemacs).
 
-> [!IMPORTANT]  
-> The repository on GitHub is just a backup/mirror, **the canonical repository is on Radicle.**
+> [!IMPORTANT]
+> **This GitHub repository is only a backup mirror.**  
+> The **canonical repository** is on **Radicle**: `rad:zecRiYjpjFnZWFhygfVM7shaCzJh`
+>
+> Please submit **[issues](https://radicle.network/nodes/jardin.jorgearaya.dev/rad:zecRiYjpjFnZWFhygfVM7shaCzJh/issues) and [patches](https://radicle.network/nodes/jardin.jorgearaya.dev/rad:zecRiYjpjFnZWFhygfVM7shaCzJh/patches)** exclusively to the repository
+> on the Radicle network.
 
 > [!WARNING]  
 > This starter kit is bare bones and in rapid development, things may not work, be missing or break in following releases.
