@@ -19,8 +19,17 @@
   :config
   (setq anvil-optional-modules
         (append
-         (when (gearp! :ai anvil ide)     '(ide))
-         (when (gearp! :ai anvil state)   '(sqlite org-index))
-         (when (gearp! :ai anvil cron)    '(cron))
-         (when (gearp! :ai anvil http)    '(http sqlite org-index))
-         (when (gearp! :ai anvil browser) '(browser)))))
+         (when (gearp! :ai anvil ide)						'(ide))
+         (when (gearp! :ai anvil state)						'(sqlite org-index))
+         (when (gearp! :ai anvil cron)						'(cron))
+         (when (gearp! :ai anvil http)						'(http sqlite org-index))
+         (when (gearp! :ai anvil browser)					'(browser))
+	 (when (gearp! :ai anvil mu4e)						'(mu4e))
+	 (when (gearp! :ai anvil wanderlust)					'(wl))
+	 (when (gearp! :ai anvil elisp)						'(elisp))
+	 (when (gearp! :ai anvil memory)					'(memory))
+	 (when (gearp! :ai anvil worklog)					'(worklog))
+	 (when (gearp! :ai anvil state)						'(state))
+	 (when (gearp! :ai anvil defs)						'(defs))
+	 (when (and (gearp! :ai anvil context) (gearp! :ai anvil state))	'(context))
+	 (when (and (gearp! :ai anvil shell-filter) (gearp! :ai anvil state))	'(shell-filter)))))
