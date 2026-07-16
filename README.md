@@ -1,8 +1,12 @@
 # Backpack Emacs
 
-![Only compatible with GNU Emacs 29.1 and up](https://img.shields.io/badge/compatible-29.1%20and%20up-grey?style=for-the-badge&logo=gnuemacs&logoColor=white&logoSize=auto&label=GNU%20Emacs&labelColor=%237F5AB6)
+![Only compatible with GNU Emacs 29.1 and up](https://img.shields.io/badge/compatible-29.1%20and%20up-grey?style=for-the-badge&logo=gnuemacs&logoColor=white&logoSize=auto&label=GNU%20Emacs&labelColor=%237F5AB6) [![Radicle](https://img.shields.io/badge/Radicle-rad%3AzecRiY...haCzJh-purple?style=for-the-badge)](https://radicle.network/nodes/jardin.jorgearaya.dev/rad:zecRiYjpjFnZWFhygfVM7shaCzJh)
+[![Backup on GitHub](https://img.shields.io/badge/Backup-GitHub-black?style=for-the-badge&logo=github)](https://github.com/shackra/backpack)
 
 A self-documenting GNU Emacs starter kit inspired by [Bedrock](https://codeberg.org/ashton314/emacs-bedrock) and [Doom](https://github.com/doomemacs/doomemacs).
+
+> [!IMPORTANT]  
+> The repository on GitHub is just a backup/mirror, **the canonical repository is on Radicle.**
 
 > [!WARNING]  
 > This starter kit is bare bones and in rapid development, things may not work, be missing or break in following releases.
